@@ -2,6 +2,12 @@
 #include "settings_storage.h"
 #include <Ethernet.h>
 
+CommManager* CommManager::_instance = nullptr;
+
+void CommManager::_onMessageCb(int size) {
+    if (_instance) _instance->_handleMessage(size);
+}
+
 CommManager::CommManager(SystemStatus& status, AlarmState& alarms, IOState& io)
     : _mqtt(_ethClient), _status(status), _alarms(alarms), _io(io)
 {}
@@ -17,6 +23,10 @@ void CommManager::begin() {
     _mqtt.setId("opta2_hottub");
     _mqtt.setKeepAliveInterval(15 * 1000L);
     _mqtt.setConnectionTimeout(5 * 1000L);
+
+    // Register static callback — ArduinoMqttClient does not support lambdas
+    _instance = this;
+    _mqtt.onMessage(_onMessageCb);
 }
 
 // ---------------------------------------------------------------------------
@@ -24,16 +34,12 @@ void CommManager::update(const Settings& settings) {
     if (!_mqtt.connected()) {
         _reconnect(settings);
     }
-    // Poll with lambda capturing this + settings ref
-    _mqtt.onMessage([this, &settings](int size){
-        _handleMessage(size, settings);
-    });
     _mqtt.poll();
     _checkCommTimeout(settings);
 }
 
 // ---------------------------------------------------------------------------
-bool CommManager::connected() const { return _mqtt.connected(); }
+bool CommManager::connected() { return _mqtt.connected(); }
 
 // ---------------------------------------------------------------------------
 void CommManager::publish(const char* topic, const char* payload, bool retain) {
@@ -47,7 +53,8 @@ void CommManager::publish(const char* topic, int value, bool retain) {
     publish(topic, buf, retain);
 }
 void CommManager::publish(const char* topic, float value, uint8_t decimals, bool retain) {
-    char buf[16]; dtostrf(value, 1, decimals, buf);
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%.*f", (int)decimals, (double)value);
     publish(topic, buf, retain);
 }
 
@@ -69,7 +76,7 @@ void CommManager::_reconnect(const Settings& settings) {
 }
 
 // ---------------------------------------------------------------------------
-void CommManager::_handleMessage(int messageSize, const Settings& settings) {
+void CommManager::_handleMessage(int messageSize) {
     String topic = _mqtt.messageTopic();
     char   buf[32] = {};
     int    len = min(messageSize, (int)sizeof(buf) - 1);

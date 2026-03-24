@@ -19,7 +19,10 @@ public:
     void publish(const char* topic, int value,   bool retain = false);
     void publish(const char* topic, float value, uint8_t decimals = 1, bool retain = false);
 
-    bool connected() const;
+    bool connected();
+
+    // Static callback required by ArduinoMqttClient
+    static void _onMessageCb(int size);
 
     // Called externally when a HA command topic arrives
     void handleCommand(const String& topic, const char* payload, int len,
@@ -33,11 +36,13 @@ private:
     AlarmState&   _alarms;
     IOState&      _io;
 
+    static CommManager* _instance;
+
     bool          _lastHeartbeatBit    = false;
     bool          _heartbeatEverRx     = false;
     unsigned long _lastHeartbeatRxMs   = 0;
 
     void _reconnect(const Settings& settings);
-    void _handleMessage(int messageSize, const Settings& settings);
+    void _handleMessage(int messageSize);
     void _checkCommTimeout(const Settings& settings);
 };

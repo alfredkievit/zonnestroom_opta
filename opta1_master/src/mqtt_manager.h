@@ -18,9 +18,13 @@ public:
     void publish(const char* topic, int value, bool retain = false);
     void publish(const char* topic, float value, uint8_t decimals = 1, bool retain = false);
 
-    bool connected() const;
+    bool connected();
+
+    // Static callback required by ArduinoMqttClient (no lambda support)
+    static void _onMessageCb(int size);
 
 private:
+    static MqttManager* _instance;
     EthernetClient  _ethClient;
     MqttClient      _mqtt;
 
@@ -44,4 +48,5 @@ private:
     void _handleMessage(int messageSize);
     void _checkTimeout(const Settings& settings);
     int  _parseP(const char* payload, int payloadLen);
+
 };

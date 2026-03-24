@@ -2,6 +2,13 @@
 #include <Ethernet.h>
 #include <ArduinoJson.h>
 
+// Static instance pointer required for ArduinoMqttClient plain-function callback
+MqttManager* MqttManager::_instance = nullptr;
+
+void MqttManager::_onMessageCb(int size) {
+    if (_instance) _instance->_handleMessage(size);
+}
+
 // ---------------------------------------------------------------------------
 MqttManager::MqttManager(SystemStatus& status, AlarmState& alarms, IOState& io)
     : _mqtt(_ethClient), _status(status), _alarms(alarms), _io(io)
@@ -20,7 +27,9 @@ void MqttManager::begin() {
     _mqtt.setKeepAliveInterval(15 * 1000L);
     _mqtt.setConnectionTimeout(5 * 1000L);
 
-    _mqtt.onMessage([this](int size){ _handleMessage(size); });
+    // Register static callback (ArduinoMqttClient does not support lambdas)
+    _instance = this;
+    _mqtt.onMessage(_onMessageCb);
 
     _reconnect();
 }
@@ -35,7 +44,7 @@ void MqttManager::update(const Settings& settings) {
 }
 
 // ---------------------------------------------------------------------------
-bool MqttManager::connected() const {
+bool MqttManager::connected() {
     return _mqtt.connected();
 }
 
@@ -55,7 +64,7 @@ void MqttManager::publish(const char* topic, int value, bool retain) {
 
 void MqttManager::publish(const char* topic, float value, uint8_t decimals, bool retain) {
     char buf[16];
-    dtostrf(value, 1, decimals, buf);
+    snprintf(buf, sizeof(buf), "%.*f", (int)decimals, (double)value);
     publish(topic, buf, retain);
 }
 
