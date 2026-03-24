@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <Arduino.h>
+
 // ─── Network ───────────────────────────────────────────────────────────────
 static const uint8_t  OPTA2_MAC[]  = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02 };
 static const uint8_t  OPTA2_IP[]   = { 192, 168, 0, 51 };
