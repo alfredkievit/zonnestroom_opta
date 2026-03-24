@@ -1,0 +1,160 @@
+#include "mqtt_manager.h"
+#include <Ethernet.h>
+#include <ArduinoJson.h>
+
+// ---------------------------------------------------------------------------
+MqttManager::MqttManager(SystemStatus& status, AlarmState& alarms, IOState& io)
+    : _mqtt(_ethClient), _status(status), _alarms(alarms), _io(io)
+{}
+
+// ---------------------------------------------------------------------------
+void MqttManager::begin() {
+    byte mac[] = { OPTA1_MAC[0], OPTA1_MAC[1], OPTA1_MAC[2],
+                   OPTA1_MAC[3], OPTA1_MAC[4], OPTA1_MAC[5] };
+    IPAddress ip(OPTA1_IP[0], OPTA1_IP[1], OPTA1_IP[2], OPTA1_IP[3]);
+    Ethernet.begin(mac, ip);
+    delay(500);
+
+    IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);
+    _mqtt.setId("opta1_master");
+    _mqtt.setKeepAliveInterval(15 * 1000L);
+    _mqtt.setConnectionTimeout(5 * 1000L);
+
+    _mqtt.onMessage([this](int size){ _handleMessage(size); });
+
+    _reconnect();
+}
+
+// ---------------------------------------------------------------------------
+void MqttManager::update(const Settings& settings) {
+    if (!_mqtt.connected()) {
+        _reconnect();
+    }
+    _mqtt.poll();
+    _checkTimeout(settings);
+}
+
+// ---------------------------------------------------------------------------
+bool MqttManager::connected() const {
+    return _mqtt.connected();
+}
+
+// ---------------------------------------------------------------------------
+void MqttManager::publish(const char* topic, const char* payload, bool retain) {
+    if (!_mqtt.connected()) return;
+    _mqtt.beginMessage(topic, retain);
+    _mqtt.print(payload);
+    _mqtt.endMessage();
+}
+
+void MqttManager::publish(const char* topic, int value, bool retain) {
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", value);
+    publish(topic, buf, retain);
+}
+
+void MqttManager::publish(const char* topic, float value, uint8_t decimals, bool retain) {
+    char buf[16];
+    dtostrf(value, 1, decimals, buf);
+    publish(topic, buf, retain);
+}
+
+// ---------------------------------------------------------------------------
+void MqttManager::_reconnect() {
+    IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);
+    if (!_mqtt.connect(broker, BROKER_PORT)) {
+        // Connection failed – timeout will fire and force safe state
+        return;
+    }
+    // Subscribe to energy meter channels
+    _mqtt.subscribe(TOPIC_METER_CH1);
+    _mqtt.subscribe(TOPIC_METER_CH10);
+    _mqtt.subscribe(TOPIC_METER_CH13);
+    _mqtt.subscribe(TOPIC_METER_CH14);
+
+    // Subscribe to HA command topics (retained settings arrive immediately)
+    _mqtt.subscribe(TOPIC_CMD_ENABLE_SYSTEM);
+    _mqtt.subscribe(TOPIC_CMD_ENABLE_WP);
+    _mqtt.subscribe(TOPIC_CMD_ENABLE_ELEMENT);
+    _mqtt.subscribe(TOPIC_CMD_ENABLE_HOTTUB);
+    _mqtt.subscribe(TOPIC_CMD_SP_WP_TARGET);
+    _mqtt.subscribe(TOPIC_CMD_SP_WP_HYST);
+    _mqtt.subscribe(TOPIC_CMD_SP_ELEMENT_TARGET);
+    _mqtt.subscribe(TOPIC_CMD_SP_ELEMENT_HYST);
+    _mqtt.subscribe(TOPIC_CMD_SP_SURPLUS_WP);
+    _mqtt.subscribe(TOPIC_CMD_SP_SURPLUS_ELEMENT);
+    _mqtt.subscribe(TOPIC_CMD_SP_SURPLUS_HOTTUB);
+    _mqtt.subscribe(TOPIC_CMD_SP_SURPLUS_STOP);
+    _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_WP);
+    _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_ELEM);
+    _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_HOTTUB);
+    _mqtt.subscribe(TOPIC_CMD_FAULT_RESET);
+}
+
+// ---------------------------------------------------------------------------
+// Called by the ArduinoMqttClient onMessage callback
+void MqttManager::_handleMessage(int messageSize) {
+    String topic   = _mqtt.messageTopic();
+    char   buf[64] = {};
+    int    len     = min(messageSize, (int)sizeof(buf) - 1);
+    for (int i = 0; i < len; i++) buf[i] = (char)_mqtt.read();
+    // Drain any remaining bytes
+    while (_mqtt.available()) _mqtt.read();
+
+    // ── Energy meter channels ────────────────────────────────────────────
+    if (topic == TOPIC_METER_CH1)  { _ch1W  = _parseP(buf, len); _ch1Rx  = true; }
+    else if (topic == TOPIC_METER_CH10) { _ch10W = _parseP(buf, len); _ch10Rx = true; }
+    else if (topic == TOPIC_METER_CH13) { _ch13W = _parseP(buf, len); _ch13Rx = true; }
+    else if (topic == TOPIC_METER_CH14) { _ch14W = _parseP(buf, len); _ch14Rx = true; }
+    else {
+        // ── HA command topics ────────────────────────────────────────────
+        // Forward raw payload to io struct; ha_interface will parse & route
+        // Store in a simple key-value manner via topic suffix
+        // (ha_interface.update() reads directly from _io on next loop)
+        return;  // ha_interface handles cmd topics separately via subscribe
+    }
+
+    // If all four channels received at least once → data is valid
+    if (_ch1Rx && _ch10Rx && _ch13Rx && _ch14Rx) {
+        _status.surplusFase1W   = _ch1W  - _ch10W;
+        _status.surplusTotaalW  = _ch13W - _ch14W;
+        _status.mqttLastUpdateMs = millis();
+        _status.mqttRxOk         = true;
+        _status.mqttValid        = true;
+        _alarms.mqttTimeout      = false;
+        _alarms.invalidPowerData = false;
+        _io.inSurplusFase1W      = _status.surplusFase1W;
+        _io.inSurplusTotaalW     = _status.surplusTotaalW;
+        _io.inMqttPowerValid     = true;
+    }
+}
+
+// ---------------------------------------------------------------------------
+void MqttManager::_checkTimeout(const Settings& settings) {
+    if (!_status.mqttRxOk) return;  // never received anything yet → already invalid
+    unsigned long elapsed = millis() - _status.mqttLastUpdateMs;
+    if (elapsed > (unsigned long)settings.mqttTimeoutSec * 1000UL) {
+        _status.mqttValid        = false;
+        _alarms.mqttTimeout      = true;
+        _io.inMqttPowerValid     = false;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Parse "P" field from JSON payload: {"P":"123", ...}
+int MqttManager::_parseP(const char* payload, int payloadLen) {
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, payload, payloadLen);
+    if (err) {
+        _alarms.invalidPowerData = true;
+        return 0;
+    }
+    // "P" is transmitted as string by this meter firmware
+    const char* pStr = doc["P"];
+    if (pStr == nullptr) {
+        // Try numeric
+        int pVal = doc["P"] | 0;
+        return pVal;
+    }
+    return atoi(pStr);
+}
