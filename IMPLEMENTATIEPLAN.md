@@ -108,21 +108,57 @@ Uitvoeringsstatus (hardware):
 - Seriele verbinding op `COM6` gedetecteerd met Arduino VID/PID (`2341:0164`)
 - Runtime logoutput is momenteel minimaal (geen uitgebreide `Serial.println` diagnostiek actief)
 
-## 8. Open punten voor inbedrijfstelling
+## 8. Commissioning Phase 1-2 Resultaten (2026-03-25)
 
-1. Drempelwaarden in het veld tunen:
-   - `SP_SURPLUS_WP_START_W`
-   - `SP_SURPLUS_ELEMENT_START_W`
-   - `SP_SURPLUS_HOTTUB_START_W`
-2. Startvertragingen finetunen op stabiliteit
-3. Definitieve pin mapping valideren tegen kast/wiring
-4. HA entiteiten finaliseren (namen, retain beleid, dashboard)
-5. End-to-end test met echte vermogenslasten en beveiligingen
-6. Eventueel extra runtime logging toevoegen voor commissioning (MQTT valid, priority state, output flags)
+**MQTT Connectivity**: ✓ VERIFIED
+- MQTT broker operationeel op 192.168.0.10:1883
+- Opta1 & Opta2 beide live en communicerend
+- Energy meter publiceert live CH1/CH10/CH13/CH14 data
+- Heartbeat mechanism werkt (Opta1→Opta2 coupling actief)
 
-## 9. Aanbevolen vervolgstappen
+**MQTT Command Routing**: ✓ FIXED
+- Issue gevonden: Enable flags werden niet verwerkt
+- Root cause: mqtt_manager forwarde commands niet naar ha_interface
+- Fix: Added pointer wiring tussen mqtt_manager en ha_interface
+- Firmware updated 2026-03-25 COM12
 
-1. Hardware-in-the-loop testscenario maken
-2. Alarm reset-flow op beide Opta's volledig valideren
-3. Integratietestscript voor MQTT input sequenties toevoegen
-4. Eventueel loggingniveau en diagnostische topics uitbreiden
+**State Machine Debugging**: ⏳ IN PROGRESS
+- WP nog niet activerend ondanks sufficient surplus
+- Mogelijk: Settings storage, enable flags, of sensor fault
+- **REQUIRES**: Offline testing zonder legacy system actief!
+
+## 9. KRITIEKE VEILIGHEID NOTITIE
+
+⚠️ **GEVAAR**: Test scripts mogen NIET naar echte meter topics publiceert terwijl legacy systeem actief!
+- Kan ongewild WP + element gelijktijdig activeren
+- Gebruikt enerzijds echte energiemeter data
+
+**VEILGE Test Procedure**:
+1. Gebruik alleen `test_safe_connectivity.js` (heartbeat monitoring, geen injecties)
+2. Voor state machine testen: legacy systeem offline zetten EERST
+3. Pas daarna volledig commissioning test starten
+
+## 10. Open punten voor inbedrijfstelling
+
+1. **PRIORITEIT 1**: Offline het WP activation probleem debuggen
+   - Drempelwaarden in het veld tunen
+   - Enable flags in KVStore verificatie
+   - Serial logging toevoegen voor diagnostiek
+
+2. **PRIORITEIT 2**: Safety & Verification
+   - Definitieve pin mapping valideren tegen kast/wiring
+   - Alarm reset-flow volledig valideren
+   - Fail-safe interlocks stress-testen
+
+3. **PRIORITEIT 3**: Integration & Tuning
+   - HA dashboard finaliseren
+   - Startvertragingen op stabiliteit finetunen
+   - Runtime logging & diagnostische topics
+
+## 11. Aanbevolen vervolgstappen (Offline Phase)
+
+1. Legacy systeem offline zetten
+2. Opta1/Opta2 state machine debugging met Serial logging
+3. Surplus injection tests (now safe)
+4. HA integration & dashboard verificatie
+5. Full system acceptance test met werkende warmwater voorraad
