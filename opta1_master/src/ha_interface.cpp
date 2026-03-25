@@ -9,6 +9,11 @@ HaInterface::HaInterface(MqttManager& mqtt, Settings& settings, SystemStatus& st
 {}
 
 // ---------------------------------------------------------------------------
+void HaInterface::setMqttManager(MqttManager* mqtt) {
+    _mqttPtr = mqtt;
+}
+
+// ---------------------------------------------------------------------------
 void HaInterface::update() {
     unsigned long now = millis();
 

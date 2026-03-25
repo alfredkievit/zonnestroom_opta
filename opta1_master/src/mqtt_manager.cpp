@@ -1,4 +1,5 @@
 #include "mqtt_manager.h"
+#include "ha_interface.h"
 #include <Ethernet.h>
 #include <ArduinoJson.h>
 
@@ -69,6 +70,11 @@ void MqttManager::publish(const char* topic, float value, uint8_t decimals, bool
 }
 
 // ---------------------------------------------------------------------------
+void MqttManager::setHaInterface(HaInterface* ha) {
+    _ha = ha;
+}
+
+// ---------------------------------------------------------------------------
 void MqttManager::_reconnect() {
     IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);
     if (!_mqtt.connect(broker, BROKER_PORT)) {
@@ -117,10 +123,11 @@ void MqttManager::_handleMessage(int messageSize) {
     else if (topic == TOPIC_METER_CH14) { _ch14W = _parseP(buf, len); _ch14Rx = true; }
     else {
         // ── HA command topics ────────────────────────────────────────────
-        // Forward raw payload to io struct; ha_interface will parse & route
-        // Store in a simple key-value manner via topic suffix
-        // (ha_interface.update() reads directly from _io on next loop)
-        return;  // ha_interface handles cmd topics separately via subscribe
+        // Forward to HaInterface for command processing
+        if (_ha) {
+            _ha->handleCommand(topic, buf, len);
+        }
+        return;
     }
 
     // If all four channels received at least once → data is valid

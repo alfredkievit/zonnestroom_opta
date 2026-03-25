@@ -94,6 +94,10 @@ void setup() {
     gIo     = {};
 
     gMqtt.begin();
+    
+    // Wire up HaInterface so MQTT manager can forward commands
+    gHa.setMqttManager(&gMqtt);
+    gMqtt.setHaInterface(&gHa);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

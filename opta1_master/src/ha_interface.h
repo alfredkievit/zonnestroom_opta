@@ -13,12 +13,14 @@ public:
     HaInterface(MqttManager& mqtt, Settings& settings, SystemStatus& status,
                 AlarmState& alarms, IOState& io, SettingsStorage& storage);
 
+    void setMqttManager(MqttManager* mqtt);  // Optional setter for late binding
     void update();
     // Called by MqttManager when a HA command topic arrives
     void handleCommand(const String& topic, const char* payload, int len);
 
 private:
     MqttManager&    _mqtt;
+    MqttManager*    _mqttPtr = nullptr;  // Optional for late command forwarding
     Settings&       _settings;
     SystemStatus&   _status;
     AlarmState&     _alarms;

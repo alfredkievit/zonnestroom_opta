@@ -100,6 +100,14 @@ Resultaat laatste build:
 - `opta1_master`: SUCCESS
 - `opta2_hottub`: SUCCESS
 
+Uitvoeringsstatus (hardware):
+
+- `2026-03-25`: Opta1 firmware succesvol geupload via `COM12` (DFU upload SUCCESS)
+- Seriele verbinding op `COM12` gedetecteerd met Arduino VID/PID (`2341:0064`)
+- `2026-03-25`: Opta2 (hottub) firmware succesvol geupload via `COM6` (DFU upload SUCCESS)
+- Seriele verbinding op `COM6` gedetecteerd met Arduino VID/PID (`2341:0164`)
+- Runtime logoutput is momenteel minimaal (geen uitgebreide `Serial.println` diagnostiek actief)
+
 ## 8. Open punten voor inbedrijfstelling
 
 1. Drempelwaarden in het veld tunen:
@@ -110,6 +118,7 @@ Resultaat laatste build:
 3. Definitieve pin mapping valideren tegen kast/wiring
 4. HA entiteiten finaliseren (namen, retain beleid, dashboard)
 5. End-to-end test met echte vermogenslasten en beveiligingen
+6. Eventueel extra runtime logging toevoegen voor commissioning (MQTT valid, priority state, output flags)
 
 ## 9. Aanbevolen vervolgstappen
 

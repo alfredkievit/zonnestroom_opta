@@ -5,11 +5,16 @@
 #include "types.h"
 #include "config.h"
 
+// Forward declare HaInterface to avoid circular deps
+class HaInterface;
+
 class MqttManager {
 public:
     MqttManager(SystemStatus& status, AlarmState& alarms, IOState& io);
 
     void begin();
+    void setHaInterface(HaInterface* ha);  // Called by setup() to wire up callbacks
+    
     // Must be called every loop iteration
     void update(const Settings& settings);
 
@@ -24,6 +29,7 @@ public:
     static void _onMessageCb(int size);
 
 private:
+    HaInterface* _ha = nullptr;  // To forward command topics
     static MqttManager* _instance;
     EthernetClient  _ethClient;
     MqttClient      _mqtt;
