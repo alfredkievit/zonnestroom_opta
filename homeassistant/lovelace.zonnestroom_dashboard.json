@@ -259,11 +259,11 @@
                 },
                 {
                   "entity": "number.opta2_hottub_controller_circulatiepomp_start_1_uur",
-                  "name": "Start 1 Uur"
+                  "name": "Eerste Start Tijd 0-24"
                 },
                 {
                   "entity": "number.opta2_hottub_controller_circulatiepomp_start_2_uur",
-                  "name": "Start 2 Uur"
+                  "name": "Tweede Start Tijd 0-24"
                 }
               ]
             },

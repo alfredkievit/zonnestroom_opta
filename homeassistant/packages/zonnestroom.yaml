@@ -522,7 +522,7 @@ mqtt:
       device:
         identifiers: [opta2_hottub]
 
-    - name: "Circulatiepomp Start 1 Uur"
+    - name: "Eerste Start Tijd 0-24"
       unique_id: opta2_sp_pump_1_hour
       command_topic: "opta2/cmd/sp_pump_run1_hour"
       state_topic: "opta2/cmd/sp_pump_run1_hour"
@@ -534,7 +534,7 @@ mqtt:
       device:
         identifiers: [opta2_hottub]
 
-    - name: "Circulatiepomp Start 2 Uur"
+    - name: "Tweede Start Tijd 0-24"
       unique_id: opta2_sp_pump_2_hour
       command_topic: "opta2/cmd/sp_pump_run2_hour"
       state_topic: "opta2/cmd/sp_pump_run2_hour"
