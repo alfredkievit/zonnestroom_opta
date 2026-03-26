@@ -130,6 +130,26 @@ De map [homeassistant](c:/Users/alfre/VSC%20projects/Zonnestroom_Opta/homeassist
 - Lovelace dashboard voor Opta1 en Opta2
 - MQTT-klokpublicatie voor de geplande circulatiepompruns
 
+### Dashboard beheer
+
+Het live dashboard wordt beheerd via het HA storage-bestand, **niet** via een YAML config-bestand.
+
+| Lokale kopie | Server pad |
+|---|---|
+| `homeassistant/lovelace.zonnestroom_dashboard.json` | `/config/.storage/lovelace.zonnestroom_dashboard` |
+
+**Wijzigingen aanbrengen:**
+1. Bewerk `homeassistant/lovelace.zonnestroom_dashboard.json` lokaal
+2. Deploy via SCP:
+   ```bash
+   scp homeassistant/lovelace.zonnestroom_dashboard.json \
+       HAS:/config/.storage/lovelace.zonnestroom_dashboard
+   ```
+3. Hard refresh in de browser (Ctrl+Shift+R) – HA herstart is **niet** nodig
+
+> Een YAML-gestuurd dashboard (`/config/dashboards/`) is **niet** in gebruik.
+> HA beheert dit dashboard in storage-modus (via de UI aangemaakt).
+
 Belangrijke bediening in Home Assistant:
 
 - Verwarming bij surplus toestaan

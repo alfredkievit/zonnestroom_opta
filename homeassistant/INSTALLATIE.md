@@ -7,12 +7,64 @@ De bestanden staan klaar in je workspace:
 | Bestand | Doel |
 |---|---|
 | `homeassistant/packages/zonnestroom.yaml` | Alle MQTT entities (sensors, switches, numbers) |
-| `homeassistant/dashboards/zonnestroom_dashboard.yaml` | Lovelace dashboard (4 tabs) |
+| `homeassistant/lovelace.zonnestroom_dashboard.json` | Lovelace dashboard (4 tabs) – HA storage formaat |
 | `homeassistant/deploy.sh` | Automatisch deployen via SSH |
+
+> **Let op:** Het dashboard werkt via HA's interne storage (`/config/.storage/`), **niet** via een YAML config-bestand.
+
+---
+
+## Dashboard wijzigen en deployen
+
+1. Bewerk `homeassistant/lovelace.zonnestroom_dashboard.json` lokaal in VS Code
+2. Deploy via SCP:
+   ```bash
+   scp homeassistant/lovelace.zonnestroom_dashboard.json \
+       HAS:/config/.storage/lovelace.zonnestroom_dashboard
+   ```
+3. Hard refresh in browser (Ctrl+Shift+R) – HA herstart **niet** nodig
+
+Of gebruik `bash homeassistant/deploy.sh` om alles (packages + dashboard) in één keer te deployen.
 
 ---
 
 ## Stap 1 – SSH addon inschakelen (eenmalig)
+
+Als SSH nog niet beschikbaar is:
+
+1. Open HA via browser: `http://192.168.0.60:8123`
+2. **Instellingen → Add-ons → Add-on winkel**
+3. Zoek: **Advanced SSH & Web Terminal**
+4. Installeer → Configureer → **Start**
+
+---
+
+## Stap 2 – Package bestanden deployen
+
+```bash
+bash homeassistant/deploy.sh
+```
+
+Dit kopieert de MQTT package naar `/config/packages/` en herstart HA.
+
+---
+
+## Stap 3 – configuration.yaml aanpassen (eenmalig)
+
+Voeg toe aan `/config/configuration.yaml` (als nog niet aanwezig):
+
+```yaml
+homeassistant:
+  packages: !include_dir_named packages
+```
+
+---
+
+## Stap 4 – HA herstarten (na package wijzigingen)
+
+1. **Ontwikkelaarstools → YAML valideren** (controleer eerst op fouten)
+2. **Instellingen → Systeem → Opnieuw opstarten**
+
 
 Als SSH nog niet beschikbaar is:
 

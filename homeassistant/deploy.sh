@@ -3,6 +3,15 @@
 #  Zonnestroom Opta – HA Deployment Script
 #  HA server: 192.168.0.60  SSH alias: HAS
 #  Gebruiksaanwijzing: bash homeassistant/deploy.sh
+#
+#  Wat wordt gedeployed:
+#   - homeassistant/packages/zonnestroom.yaml  →  /config/packages/
+#   - homeassistant/lovelace.zonnestroom_dashboard.json
+#                                              →  /config/.storage/lovelace.zonnestroom_dashboard
+#
+#  Het dashboard werkt via HA storage (JSON), NIET via een YAML config-bestand.
+#  Na deploy: hard refresh browser (Ctrl+Shift+R) – HA herstart is niet nodig
+#  voor dashboard wijzigingen; voor package wijzigingen wel.
 # ============================================================
 
 set -e
@@ -19,18 +28,13 @@ if ! ssh -o ConnectTimeout=5 HAS "echo OK" 2>/dev/null; then
   echo "   Controleer of de SSH addon actief is in HA:"
   echo "   Instellingen → Add-ons → 'Advanced SSH & Web Terminal' → Start"
   echo ""
-  echo "   Probeer ook poort 22222:"
-  echo "   ssh -p 22222 root@$HA_HOST"
-  echo ""
-  echo "   Alternatief: kopieer bestanden handmatig via HA Samba share"
-  echo "   of via de File Editor addon."
   exit 1
 fi
 
 echo "==> SSH OK. Bestanden kopiëren..."
 
-# Maak directories aan
-$HA_SSH "mkdir -p $HA_CONFIG/packages $HA_CONFIG/dashboards"
+# Maak packages directory aan
+$HA_SSH "mkdir -p $HA_CONFIG/packages"
 
 # Kopieer package YAML
 $HA_SCP homeassistant/packages/zonnestroom.yaml \
@@ -38,11 +42,11 @@ $HA_SCP homeassistant/packages/zonnestroom.yaml \
 
 echo "==> Package YAML gekopieerd."
 
-# Kopieer dashboard YAML
-$HA_SCP homeassistant/dashboards/zonnestroom_dashboard.yaml \
-        HAS:$HA_CONFIG/dashboards/zonnestroom_dashboard.yaml
+# Kopieer dashboard (HA storage JSON)
+$HA_SCP homeassistant/lovelace.zonnestroom_dashboard.json \
+        HAS:$HA_CONFIG/.storage/lovelace.zonnestroom_dashboard
 
-echo "==> Dashboard YAML gekopieerd."
+echo "==> Dashboard JSON gekopieerd naar .storage."
 
 # Controleer of packages al in configuration.yaml staan
 if ! $HA_SSH "grep -q 'packages' $HA_CONFIG/configuration.yaml"; then
@@ -55,19 +59,11 @@ if ! $HA_SSH "grep -q 'packages' $HA_CONFIG/configuration.yaml"; then
   echo ""
 fi
 
-# HA config check
-echo "==> HA configuratie valideren..."
+# HA config check + herstarten (alleen nodig na package wijzigingen)
+echo "==> HA configuratie valideren en herstarten..."
 $HA_SSH "ha core check" || echo "!! Config check mislukt – controleer de YAML syntax"
-
-echo ""
-echo "==> Herstarten van HA core..."
 $HA_SSH "ha core restart"
 
 echo ""
 echo "✓ Deployment klaar!"
-echo ""
-echo "  Dashboard instellen in HA:"
-echo "  1. Ga naar Instellingen → Dashboards → Dashboard toevoegen"
-echo "  2. Kies 'Vanuit YAML (opgeslagen modus)'"
-echo "  3. Of: gebruik onderstaand lovelace-raw YAML in een nieuw dashboard"
-echo "     Bestand staat op: $HA_CONFIG/dashboards/zonnestroom_dashboard.yaml"
+echo "  Dashboard: hard refresh browser (Ctrl+Shift+R)"

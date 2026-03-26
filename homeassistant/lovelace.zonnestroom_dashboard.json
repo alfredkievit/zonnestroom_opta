@@ -286,6 +286,7 @@
             {
               "type": "entities",
               "title": "Hottub Bediening",
+              "show_header_toggle": false,
               "entities": [
                 {
                   "entity": "switch.opta2_hottub_controller_hottub_verwarming_inschakelen",
