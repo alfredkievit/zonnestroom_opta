@@ -156,11 +156,6 @@ views:
           - type: divider
           - entity: number.opta2_hottub_controller_circulatiepomp_duur_automatisch
             name: Circulatiepomp Duur (min)
-
-      - type: entities
-        title: Circulatiepomp Schema
-        show_header_toggle: false
-        entities:
           - entity: number.opta2_hottub_controller_circulatiepomp_start_1_uur
             name: Start 1 Uur
           - entity: number.opta2_hottub_controller_circulatiepomp_start_1_minuut
@@ -204,7 +199,7 @@ views:
             name: Circulatiepomp Handmatig
             icon: mdi:pump
           - entity: switch.opta2_hottub_controller_circulatiepomp_automatisch
-            name: Filter Pomp Automatisch
+            name: Circulatiepomp Filteren Automatisch
             icon: mdi:autorenew
           - type: divider
           - entity: switch.opta1_energie_master_hottub_inschakelen_opta1
