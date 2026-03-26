@@ -6,12 +6,11 @@
 #
 #  Wat wordt gedeployed:
 #   - homeassistant/packages/zonnestroom.yaml  →  /config/packages/
-#   - homeassistant/lovelace.zonnestroom_dashboard.json
-#                                              →  /config/.storage/lovelace.zonnestroom_dashboard
+#   - homeassistant/dashboards/zonnestroom_dashboard.yaml
+#                                              →  /config/dashboards/
 #
-#  Het dashboard werkt via HA storage (JSON), NIET via een YAML config-bestand.
-#  Na deploy: hard refresh browser (Ctrl+Shift+R) – HA herstart is niet nodig
-#  voor dashboard wijzigingen; voor package wijzigingen wel.
+#  Het dashboard staat in YAML-modus (mode: yaml in lovelace_dashboards).
+#  Na deploy is een HA HERSTART VERPLICHT – browser refresh is niet genoeg.
 # ============================================================
 
 set -e
@@ -33,8 +32,8 @@ fi
 
 echo "==> SSH OK. Bestanden kopiëren..."
 
-# Maak packages directory aan
-$HA_SSH "mkdir -p $HA_CONFIG/packages"
+# Maak directories aan
+$HA_SSH "mkdir -p $HA_CONFIG/packages $HA_CONFIG/dashboards"
 
 # Kopieer package YAML
 $HA_SCP homeassistant/packages/zonnestroom.yaml \
@@ -42,11 +41,11 @@ $HA_SCP homeassistant/packages/zonnestroom.yaml \
 
 echo "==> Package YAML gekopieerd."
 
-# Kopieer dashboard (HA storage JSON)
-$HA_SCP homeassistant/lovelace.zonnestroom_dashboard.json \
-        HAS:$HA_CONFIG/.storage/lovelace.zonnestroom_dashboard
+# Kopieer dashboard YAML (YAML-modus – vereist HA herstart)
+$HA_SCP homeassistant/dashboards/zonnestroom_dashboard.yaml \
+        HAS:$HA_CONFIG/dashboards/zonnestroom_dashboard.yaml
 
-echo "==> Dashboard JSON gekopieerd naar .storage."
+echo "==> Dashboard YAML gekopieerd."
 
 # Controleer of packages al in configuration.yaml staan
 if ! $HA_SSH "grep -q 'packages' $HA_CONFIG/configuration.yaml"; then
@@ -59,11 +58,11 @@ if ! $HA_SSH "grep -q 'packages' $HA_CONFIG/configuration.yaml"; then
   echo ""
 fi
 
-# HA config check + herstarten (alleen nodig na package wijzigingen)
+# HA config check + herstarten (verplicht voor YAML dashboard)
 echo "==> HA configuratie valideren en herstarten..."
 $HA_SSH "ha core check" || echo "!! Config check mislukt – controleer de YAML syntax"
 $HA_SSH "ha core restart"
 
 echo ""
-echo "✓ Deployment klaar!"
-echo "  Dashboard: hard refresh browser (Ctrl+Shift+R)"
+echo "✓ Deployment klaar! HA herstart is gestart."
+echo "  Wacht ~30 seconden en refresh dan de browser."

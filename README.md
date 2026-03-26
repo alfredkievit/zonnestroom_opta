@@ -132,23 +132,25 @@ De map [homeassistant](c:/Users/alfre/VSC%20projects/Zonnestroom_Opta/homeassist
 
 ### Dashboard beheer
 
-Het live dashboard wordt beheerd via het HA storage-bestand, **niet** via een YAML config-bestand.
+Het live dashboard staat in **YAML-modus** en leest van `/config/dashboards/`.
 
 | Lokale kopie | Server pad |
 |---|---|
-| `homeassistant/lovelace.zonnestroom_dashboard.json` | `/config/.storage/lovelace.zonnestroom_dashboard` |
+| `homeassistant/dashboards/zonnestroom_dashboard.yaml` | `/config/dashboards/zonnestroom_dashboard.yaml` |
 
 **Wijzigingen aanbrengen:**
-1. Bewerk `homeassistant/lovelace.zonnestroom_dashboard.json` lokaal
+1. Bewerk `homeassistant/dashboards/zonnestroom_dashboard.yaml` lokaal
 2. Deploy via SCP:
    ```bash
-   scp homeassistant/lovelace.zonnestroom_dashboard.json \
-       HAS:/config/.storage/lovelace.zonnestroom_dashboard
+   scp homeassistant/dashboards/zonnestroom_dashboard.yaml \
+       HAS:/config/dashboards/zonnestroom_dashboard.yaml
    ```
-3. Hard refresh in de browser (Ctrl+Shift+R) – HA herstart is **niet** nodig
+3. **HA herstarten is verplicht** – browser refresh alleen is niet genoeg:
+   ```bash
+   ssh HAS "ha core restart"
+   ```
 
-> Een YAML-gestuurd dashboard (`/config/dashboards/`) is **niet** in gebruik.
-> HA beheert dit dashboard in storage-modus (via de UI aangemaakt).
+> Browser refresh (Ctrl+Shift+R) werkt **niet** – HA herleest YAML alleen bij opstart.
 
 Belangrijke bediening in Home Assistant:
 

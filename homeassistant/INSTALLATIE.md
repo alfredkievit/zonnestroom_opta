@@ -16,15 +16,20 @@ De bestanden staan klaar in je workspace:
 
 ## Dashboard wijzigen en deployen
 
-1. Bewerk `homeassistant/lovelace.zonnestroom_dashboard.json` lokaal in VS Code
+1. Bewerk `homeassistant/dashboards/zonnestroom_dashboard.yaml` lokaal in VS Code
 2. Deploy via SCP:
    ```bash
-   scp homeassistant/lovelace.zonnestroom_dashboard.json \
-       HAS:/config/.storage/lovelace.zonnestroom_dashboard
+   scp homeassistant/dashboards/zonnestroom_dashboard.yaml \
+       HAS:/config/dashboards/zonnestroom_dashboard.yaml
    ```
-3. Hard refresh in browser (Ctrl+Shift+R) – HA herstart **niet** nodig
+3. **HA herstarten is verplicht** – browser refresh alleen is niet voldoende:
+   ```bash
+   ssh HAS "ha core restart"
+   ```
 
-Of gebruik `bash homeassistant/deploy.sh` om alles (packages + dashboard) in één keer te deployen.
+> Het dashboard staat in YAML-modus (`mode: yaml`). HA herleest de YAML alleen bij opstart.
+
+Of gebruik `bash homeassistant/deploy.sh` om alles (packages + dashboard + herstart) in één keer te doen.
 
 ---
 
