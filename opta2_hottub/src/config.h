@@ -21,13 +21,23 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_LEVEL_PUMP_ACT   "opta2/status/level_pump_active"
 #define TOPIC_HA_COMM_OK          "opta2/status/comm_ok"
 #define TOPIC_HA_ALARM_JSON       "opta2/status/alarms"
+#define TOPIC_HA_CLOCK_OK         "opta2/status/clock_ok"
 
 // ─── MQTT – Home Assistant → Opta2 commands ────────────────────────────────
 #define TOPIC_CMD_SP_HOTTUB_TARGET  "opta2/cmd/sp_hottub_target_c"
 #define TOPIC_CMD_SP_HOTTUB_HYST    "opta2/cmd/sp_hottub_hyst_c"
 #define TOPIC_CMD_SP_HOTTUB_MAX     "opta2/cmd/sp_hottub_max_c"
+#define TOPIC_CMD_SP_PUMP_1_HOUR    "opta2/cmd/sp_pump_run1_hour"
+#define TOPIC_CMD_SP_PUMP_1_MINUTE  "opta2/cmd/sp_pump_run1_minute"
+#define TOPIC_CMD_SP_PUMP_2_HOUR    "opta2/cmd/sp_pump_run2_hour"
+#define TOPIC_CMD_SP_PUMP_2_MINUTE  "opta2/cmd/sp_pump_run2_minute"
+#define TOPIC_CMD_SP_PUMP_DURATION  "opta2/cmd/sp_pump_run_duration_min"
 #define TOPIC_CMD_ENABLE_HOTTUB     "opta2/cmd/enable_hottub"
+#define TOPIC_CMD_ENABLE_AUTO_PUMP  "opta2/cmd/enable_auto_pump"
+#define TOPIC_CMD_MANUAL_PUMP       "opta2/cmd/manual_force_pump"
+#define TOPIC_CMD_MANUAL_LEVEL_PUMP "opta2/cmd/manual_force_level_pump"
 #define TOPIC_CMD_ENABLE_LEVELPUMP  "opta2/cmd/enable_level_pump"
+#define TOPIC_CMD_CLOCK_MINUTE      "opta2/device/current_minute_of_day"
 
 // ─── Pin mapping – Opta2 ───────────────────────────────────────────────────
 // Relay outputs
@@ -53,3 +63,4 @@ static const uint16_t BROKER_PORT  = 1883;
 
 // ─── Timing constants ──────────────────────────────────────────────────────
 #define HA_PUBLISH_INTERVAL_MS  5000UL
+#define FILTER_PUMP_RUN_DURATION_MS  (5UL  * 60UL * 1000UL)

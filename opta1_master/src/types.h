@@ -51,7 +51,7 @@ inline Settings defaultSettings() {
     s.enableBoilerElement    = true;
     s.enableHottub           = true;
     s.enableLevelPump        = true;
-    s.mqttTimeoutSec         = 10;
+    s.mqttTimeoutSec         = 30;
     s.surplusFilterTimeSec   = 0;
 
     s.spSurplusWpStartW      = 1500;   // to be tuned in practice
@@ -131,4 +131,5 @@ struct IOState {
     bool  manualForceWp;
     bool  manualForceElement;
     bool  manualForceHottub;
+    bool  manualForceComfort;  // D1 – comfortverwarming WP
 };

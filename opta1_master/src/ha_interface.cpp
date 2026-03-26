@@ -1,6 +1,7 @@
 #include "ha_interface.h"
 #include "config.h"
 #include <ArduinoJson.h>
+#include <math.h>
 
 HaInterface::HaInterface(MqttManager& mqtt, Settings& settings, SystemStatus& status,
                          AlarmState& alarms, IOState& io, SettingsStorage& storage)
@@ -34,7 +35,7 @@ void HaInterface::update() {
         _mqtt.publish(TOPIC_HA_SURPLUS_TOTAAL, _status.surplusTotaalW);
         _prevSurplusTot = _status.surplusTotaalW;
     }
-    if (_status.boilerTempLowC != _prevBoilerLow) {
+    if (fabsf(_status.boilerTempLowC - _prevBoilerLow) >= 0.5f) {
         _mqtt.publish(TOPIC_HA_BOILER_TEMP_LOW, _status.boilerTempLowC);
         _prevBoilerLow = _status.boilerTempLowC;
     }
@@ -78,6 +79,8 @@ void HaInterface::_publishAll() {
     _mqtt.publish(TOPIC_HA_WP_ACTIVE,       _status.wpActive     ? "1" : "0");
     _mqtt.publish(TOPIC_HA_ELEMENT_ACTIVE,  _status.elementActive? "1" : "0");
     _mqtt.publish(TOPIC_HA_HOTTUB_PERM,     _status.hottubPermitted ? "1" : "0");
+    _mqtt.publish(TOPIC_HA_COMFORT_ACTIVE,  _io.doWpComfortExtra ? "1" : "0");
+    _mqtt.publish(TOPIC_HA_MANUAL_MODE,     _io.inManualMode     ? "1" : "0");
 }
 
 // ---------------------------------------------------------------------------
@@ -125,10 +128,12 @@ void HaInterface::handleCommand(const String& topic, const char* payload, int le
     else if (topic == TOPIC_CMD_SP_SURPLUS_ELEMENT)  { _settings.spSurplusElementStartW = (int)val; changed = true; }
     else if (topic == TOPIC_CMD_SP_SURPLUS_HOTTUB)   { _settings.spSurplusHottubStartW  = (int)val; changed = true; }
     else if (topic == TOPIC_CMD_SP_SURPLUS_STOP)     { _settings.spSurplusStopW         = (int)val; changed = true; }
-    else if (topic == TOPIC_CMD_MANUAL_FORCE_WP)     { _io.manualForceWp      = bval; }
-    else if (topic == TOPIC_CMD_MANUAL_FORCE_ELEM)   { _io.manualForceElement = bval; }
-    else if (topic == TOPIC_CMD_MANUAL_FORCE_HOTTUB) { _io.manualForceHottub  = bval; }
-    else if (topic == TOPIC_CMD_FAULT_RESET)         { _io.inFaultReset = bval; }
+    else if (topic == TOPIC_CMD_MANUAL_FORCE_WP)      { _io.manualForceWp      = bval; }
+    else if (topic == TOPIC_CMD_MANUAL_FORCE_ELEM)    { _io.manualForceElement = bval; }
+    else if (topic == TOPIC_CMD_MANUAL_FORCE_HOTTUB)  { _io.manualForceHottub  = bval; }
+    else if (topic == TOPIC_CMD_MANUAL_FORCE_COMFORT) { _io.manualForceComfort = bval; }
+    else if (topic == TOPIC_CMD_MANUAL_MODE)          { _io.inManualMode       = bval; }
+    else if (topic == TOPIC_CMD_FAULT_RESET)          { _io.inFaultReset       = bval; }
 
     if (changed) {
         _storage.save(_settings);

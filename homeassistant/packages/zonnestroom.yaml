@@ -1,0 +1,702 @@
+# ============================================================
+#  Zonnestroom Opta – Home Assistant Package
+#  Opta1 (192.168.0.50) = energie master / boiler / WP
+#  Opta2 (192.168.0.51) = hottub controller
+#  MQTT broker 192.168.0.10:1883
+# ============================================================
+
+mqtt:
+
+  # ──────────────────────────────────────────────────────────
+  #  OPTA1 – SENSOREN
+  # ──────────────────────────────────────────────────────────
+  sensor:
+    - name: "Opta1 Surplus Fase1"
+      unique_id: opta1_surplus_fase1
+      state_topic: "opta1/status/surplus_fase1_w"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [opta1_master]
+        name: "Opta1 Energie Master"
+        manufacturer: "Arduino"
+        model: "Opta WiFi"
+
+    - name: "Opta1 Surplus Totaal"
+      unique_id: opta1_surplus_totaal
+      state_topic: "opta1/status/surplus_totaal_w"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Boiler Temperatuur Laag"
+      unique_id: opta1_boiler_temp_low
+      state_topic: "opta1/status/boiler_temp_low"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Boiler Temperatuur Hoog"
+      unique_id: opta1_boiler_temp_high
+      state_topic: "opta1/status/boiler_temp_high"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Opta1 Actieve Prioriteit"
+      unique_id: opta1_active_priority
+      state_topic: "opta1/status/active_priority"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Opta1 Alarms"
+      unique_id: opta1_alarms
+      state_topic: "opta1/status/alarms"
+      value_template: "{{ value }}"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Opta1 Heartbeat"
+      unique_id: opta1_heartbeat
+      state_topic: "opta1/device/heartbeat"
+      device:
+        identifiers: [opta1_master]
+
+    # ── OPTA2 – SENSOREN ──────────────────────────────────
+    - name: "Hottub Temperatuur"
+      unique_id: opta2_hottub_temp
+      state_topic: "opta2/status/hottub_temp"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      device:
+        identifiers: [opta2_hottub]
+        name: "Opta2 Hottub Controller"
+        manufacturer: "Arduino"
+        model: "Opta WiFi"
+
+    - name: "Opta2 Alarms"
+      unique_id: opta2_alarms
+      state_topic: "opta2/status/alarms"
+      value_template: "{{ value }}"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Opta2 Heartbeat"
+      unique_id: opta2_heartbeat
+      state_topic: "opta2/device/heartbeat"
+      device:
+        identifiers: [opta2_hottub]
+
+  # ──────────────────────────────────────────────────────────
+  #  OPTA1 – BINAIRE SENSOREN
+  # ──────────────────────────────────────────────────────────
+  binary_sensor:
+    - name: "MQTT Geldig"
+      unique_id: opta1_mqtt_valid
+      state_topic: "opta1/status/mqtt_valid"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: connectivity
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Warmtepomp Actief"
+      unique_id: opta1_wp_active
+      state_topic: "opta1/status/wp_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Boiler Element Actief"
+      unique_id: opta1_element_active
+      state_topic: "opta1/status/element_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Hottub Permissie"
+      unique_id: opta1_hottub_permission
+      state_topic: "opta1/status/hottub_permission"
+      payload_on: "1"
+      payload_off: "0"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "WP Comfort Verwarming Actief"
+      unique_id: opta1_comfort_active
+      state_topic: "opta1/status/comfort_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Handmatige Modus Actief"
+      unique_id: opta1_manual_mode
+      state_topic: "opta1/status/manual_mode"
+      payload_on: "1"
+      payload_off: "0"
+      device:
+        identifiers: [opta1_master]
+
+    # ── OPTA2 – BINAIRE SENSOREN ──────────────────────────
+    - name: "Hottub Verwarming Actief"
+      unique_id: opta2_heater_active
+      state_topic: "opta2/status/heater_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Hottub Pomp Actief"
+      unique_id: opta2_pump_active
+      state_topic: "opta2/status/pump_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Hottub Niveau Hoog"
+      unique_id: opta2_level_high
+      state_topic: "opta2/status/level_high"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: problem
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Hottub Niveau Pomp Actief"
+      unique_id: opta2_level_pump_active
+      state_topic: "opta2/status/level_pump_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Opta2 Communicatie OK"
+      unique_id: opta2_comm_ok
+      state_topic: "opta2/status/comm_ok"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: connectivity
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Opta2 Klok OK"
+      unique_id: opta2_clock_ok
+      state_topic: "opta2/status/clock_ok"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: connectivity
+      device:
+        identifiers: [opta2_hottub]
+
+  # ──────────────────────────────────────────────────────────
+  #  OPTA1 – SCHAKELAARS (enable flags)
+  # ──────────────────────────────────────────────────────────
+  switch:
+    - name: "Systeem Inschakelen"
+      unique_id: opta1_enable_system
+      command_topic: "opta1/cmd/enable_system"
+      state_topic: "opta1/cmd/enable_system"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      optimistic: false
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Warmtepomp Inschakelen"
+      unique_id: opta1_enable_wp
+      command_topic: "opta1/cmd/enable_wp_boiler"
+      state_topic: "opta1/cmd/enable_wp_boiler"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      optimistic: false
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Boiler Element Inschakelen"
+      unique_id: opta1_enable_element
+      command_topic: "opta1/cmd/enable_boiler_element"
+      state_topic: "opta1/cmd/enable_boiler_element"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      optimistic: false
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Hottub Inschakelen (Opta1)"
+      unique_id: opta1_enable_hottub
+      command_topic: "opta1/cmd/enable_hottub"
+      state_topic: "opta1/cmd/enable_hottub"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      optimistic: false
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Handmatige Modus"
+      unique_id: opta1_manual_mode_sw
+      command_topic: "opta1/cmd/manual_mode"
+      state_topic: "opta1/status/manual_mode"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:hand-back-right"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Handmatig WP Extra Warm Water"
+      unique_id: opta1_manual_force_wp
+      command_topic: "opta1/cmd/manual_force_wp"
+      state_topic: "opta1/cmd/manual_force_wp"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:water-boiler"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Handmatig WP Comfort Verwarming"
+      unique_id: opta1_manual_force_comfort
+      command_topic: "opta1/cmd/manual_force_comfort"
+      state_topic: "opta1/status/comfort_active"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:radiator"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Handmatig Boiler Element"
+      unique_id: opta1_manual_force_element
+      command_topic: "opta1/cmd/manual_force_element"
+      state_topic: "opta1/cmd/manual_force_element"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:lightning-bolt"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Handmatig Hottub Permissie"
+      unique_id: opta1_manual_force_hottub
+      command_topic: "opta1/cmd/manual_force_hottub"
+      state_topic: "opta1/cmd/manual_force_hottub"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:hot-tub"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Fault Reset"
+      unique_id: opta1_fault_reset
+      command_topic: "opta1/cmd/fault_reset"
+      payload_on: "1"
+      payload_off: "0"
+      icon: "mdi:restart-alert"
+      device:
+        identifiers: [opta1_master]
+
+    # ── OPTA2 – SCHAKELAARS ───────────────────────────────
+    - name: "Hottub Verwarming Inschakelen"
+      unique_id: opta2_enable_hottub
+      command_topic: "opta2/cmd/enable_hottub"
+      state_topic: "opta2/cmd/enable_hottub"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:hot-tub"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Circulatiepomp Automatisch"
+      unique_id: opta2_enable_auto_pump
+      command_topic: "opta2/cmd/enable_auto_pump"
+      state_topic: "opta2/cmd/enable_auto_pump"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:autorenew"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Niveau Pomp Inschakelen"
+      unique_id: opta2_enable_level_pump
+      command_topic: "opta2/cmd/enable_level_pump"
+      state_topic: "opta2/cmd/enable_level_pump"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:pump"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Circulatiepomp Handmatig"
+      unique_id: opta2_manual_force_pump
+      command_topic: "opta2/cmd/manual_force_pump"
+      state_topic: "opta2/cmd/manual_force_pump"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:pump"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Niveaupomp Handmatig"
+      unique_id: opta2_manual_force_level_pump
+      command_topic: "opta2/cmd/manual_force_level_pump"
+      state_topic: "opta2/cmd/manual_force_level_pump"
+      payload_on: "1"
+      payload_off: "0"
+      retain: true
+      icon: "mdi:water-pump"
+      device:
+        identifiers: [opta2_hottub]
+
+  # ──────────────────────────────────────────────────────────
+  #  SETPOINTS – NUMMERS
+  # ──────────────────────────────────────────────────────────
+  number:
+    # Boiler WP setpoints
+    - name: "Boiler WP Doel Temperatuur"
+      unique_id: opta1_sp_boiler_wp_target
+      command_topic: "opta1/cmd/sp_boiler_wp_target_c"
+      state_topic: "opta1/cmd/sp_boiler_wp_target_c"
+      unit_of_measurement: "°C"
+      min: 30
+      max: 65
+      step: 1
+      retain: true
+      icon: "mdi:thermometer"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Boiler WP Hysterese"
+      unique_id: opta1_sp_boiler_wp_hyst
+      command_topic: "opta1/cmd/sp_boiler_wp_hyst_c"
+      state_topic: "opta1/cmd/sp_boiler_wp_hyst_c"
+      unit_of_measurement: "°C"
+      min: 0.5
+      max: 5.0
+      step: 0.5
+      retain: true
+      device:
+        identifiers: [opta1_master]
+
+    # Boiler Element setpoints
+    - name: "Boiler Element Doel Temperatuur"
+      unique_id: opta1_sp_boiler_element_target
+      command_topic: "opta1/cmd/sp_boiler_element_target_c"
+      state_topic: "opta1/cmd/sp_boiler_element_target_c"
+      unit_of_measurement: "°C"
+      min: 30
+      max: 75
+      step: 1
+      retain: true
+      icon: "mdi:thermometer"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Boiler Element Hysterese"
+      unique_id: opta1_sp_boiler_element_hyst
+      command_topic: "opta1/cmd/sp_boiler_element_hyst_c"
+      state_topic: "opta1/cmd/sp_boiler_element_hyst_c"
+      unit_of_measurement: "°C"
+      min: 0.5
+      max: 5.0
+      step: 0.5
+      retain: true
+      device:
+        identifiers: [opta1_master]
+
+    # Surplus drempelwaarden
+    - name: "Surplus Start WP"
+      unique_id: opta1_sp_surplus_wp
+      command_topic: "opta1/cmd/sp_surplus_wp_start_w"
+      state_topic: "opta1/cmd/sp_surplus_wp_start_w"
+      unit_of_measurement: "W"
+      min: 500
+      max: 5000
+      step: 100
+      retain: true
+      icon: "mdi:solar-power"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Surplus Start Element"
+      unique_id: opta1_sp_surplus_element
+      command_topic: "opta1/cmd/sp_surplus_element_start_w"
+      state_topic: "opta1/cmd/sp_surplus_element_start_w"
+      unit_of_measurement: "W"
+      min: 500
+      max: 8000
+      step: 100
+      retain: true
+      icon: "mdi:solar-power"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Surplus Start Hottub"
+      unique_id: opta1_sp_surplus_hottub
+      command_topic: "opta1/cmd/sp_surplus_hottub_start_w"
+      state_topic: "opta1/cmd/sp_surplus_hottub_start_w"
+      unit_of_measurement: "W"
+      min: 500
+      max: 5000
+      step: 100
+      retain: true
+      icon: "mdi:solar-power"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Surplus Stop Drempel"
+      unique_id: opta1_sp_surplus_stop
+      command_topic: "opta1/cmd/sp_surplus_stop_w"
+      state_topic: "opta1/cmd/sp_surplus_stop_w"
+      unit_of_measurement: "W"
+      min: -2000
+      max: 500
+      step: 100
+      retain: true
+      icon: "mdi:solar-power"
+      device:
+        identifiers: [opta1_master]
+
+    # OPTA2 – Hottub setpoints
+    - name: "Hottub Doel Temperatuur"
+      unique_id: opta2_sp_hottub_target
+      command_topic: "opta2/cmd/sp_hottub_target_c"
+      state_topic: "opta2/cmd/sp_hottub_target_c"
+      unit_of_measurement: "°C"
+      min: 20
+      max: 41
+      step: 0.5
+      retain: true
+      icon: "mdi:thermometer-water"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Hottub Hysterese"
+      unique_id: opta2_sp_hottub_hyst
+      command_topic: "opta2/cmd/sp_hottub_hyst_c"
+      state_topic: "opta2/cmd/sp_hottub_hyst_c"
+      unit_of_measurement: "°C"
+      min: 0.2
+      max: 3.0
+      step: 0.1
+      retain: true
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Hottub Max Temperatuur"
+      unique_id: opta2_sp_hottub_max
+      command_topic: "opta2/cmd/sp_hottub_max_c"
+      state_topic: "opta2/cmd/sp_hottub_max_c"
+      unit_of_measurement: "°C"
+      min: 38
+      max: 42
+      step: 0.5
+      retain: true
+      icon: "mdi:thermometer-alert"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Circulatiepomp Start 1 Uur"
+      unique_id: opta2_sp_pump_1_hour
+      command_topic: "opta2/cmd/sp_pump_run1_hour"
+      state_topic: "opta2/cmd/sp_pump_run1_hour"
+      min: 0
+      max: 23
+      step: 1
+      retain: true
+      icon: "mdi:clock-start"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Circulatiepomp Start 1 Minuut"
+      unique_id: opta2_sp_pump_1_minute
+      command_topic: "opta2/cmd/sp_pump_run1_minute"
+      state_topic: "opta2/cmd/sp_pump_run1_minute"
+      min: 0
+      max: 59
+      step: 1
+      retain: true
+      icon: "mdi:clock-start"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Circulatiepomp Start 2 Uur"
+      unique_id: opta2_sp_pump_2_hour
+      command_topic: "opta2/cmd/sp_pump_run2_hour"
+      state_topic: "opta2/cmd/sp_pump_run2_hour"
+      min: 0
+      max: 23
+      step: 1
+      retain: true
+      icon: "mdi:clock-start"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Circulatiepomp Start 2 Minuut"
+      unique_id: opta2_sp_pump_2_minute
+      command_topic: "opta2/cmd/sp_pump_run2_minute"
+      state_topic: "opta2/cmd/sp_pump_run2_minute"
+      min: 0
+      max: 59
+      step: 1
+      retain: true
+      icon: "mdi:clock-start"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Circulatiepomp Duur Automatisch"
+      unique_id: opta2_sp_pump_duration_min
+      command_topic: "opta2/cmd/sp_pump_run_duration_min"
+      state_topic: "opta2/cmd/sp_pump_run_duration_min"
+      unit_of_measurement: "min"
+      min: 1
+      max: 120
+      step: 1
+      retain: true
+      icon: "mdi:timer-outline"
+      device:
+        identifiers: [opta2_hottub]
+
+# ──────────────────────────────────────────────────────────
+#  TEMPLATE SENSOREN
+# ──────────────────────────────────────────────────────────
+template:
+  - sensor:
+      - name: "Systeem Prioriteit Tekst"
+        unique_id: opta1_priority_text
+        state: >
+          {% set p = states('sensor.opta1_energie_master_opta1_actieve_prioriteit') | int(-1) %}
+          {% if p == 0 %}IDLE
+          {% elif p == 1 %}Warmtepomp Actief
+          {% elif p == 2 %}Boiler Element Actief
+          {% elif p == 3 %}Hottub Actief
+          {% elif p == 99 %}FOUT
+          {% else %}Onbekend{% endif %}
+        icon: >
+          {% set p = states('sensor.opta1_energie_master_opta1_actieve_prioriteit') | int(-1) %}
+          {% if p == 0 %}mdi:sleep
+          {% elif p == 1 %}mdi:heat-pump
+          {% elif p == 2 %}mdi:lightning-bolt
+          {% elif p == 3 %}mdi:hot-tub
+          {% elif p == 99 %}mdi:alert-circle
+          {% else %}mdi:help-circle{% endif %}
+
+      - name: "Zonnestroom Status Kleur"
+        unique_id: opta1_status_color
+        state: >
+          {% set p = states('sensor.opta1_energie_master_opta1_actieve_prioriteit') | int(-1) %}
+          {% if p == 99 %}rood
+          {% elif p > 0 %}groen
+          {% else %}grijs{% endif %}
+
+      - name: "Opta1 Verbinding"
+        unique_id: opta1_verbinding
+        availability: "{{ now().timestamp() - as_timestamp(states.sensor.opta1_energie_master_opta1_heartbeat.last_changed, 0) < 30 }}"
+        state: >
+          {% if now().timestamp() - as_timestamp(states.sensor.opta1_energie_master_opta1_heartbeat.last_changed, 0) < 30 %}
+            Online
+          {% else %}
+            Offline
+          {% endif %}
+        icon: >
+          {% if now().timestamp() - as_timestamp(states.sensor.opta1_energie_master_opta1_heartbeat.last_changed, 0) < 30 %}
+            mdi:lan-check
+          {% else %}
+            mdi:lan-disconnect
+          {% endif %}
+
+      - name: "Opta2 Verbinding"
+        unique_id: opta2_verbinding
+        state: >
+          {% if states('binary_sensor.opta2_hottub_controller_opta2_communicatie_ok') == 'on' %}
+            Online
+          {% else %}
+            Offline
+          {% endif %}
+        icon: >
+          {% if states('binary_sensor.opta2_hottub_controller_opta2_communicatie_ok') == 'on' %}
+            mdi:lan-check
+          {% else %}
+            mdi:lan-disconnect
+          {% endif %}
+
+# ──────────────────────────────────────────────────────────
+#  AUTOMATIONS
+# ──────────────────────────────────────────────────────────
+automation:
+  # Stuur alarm melding als er een actief alarm is
+  - id: zonnestroom_alarm_notify
+    alias: "Zonnestroom – Alarm melding"
+    trigger:
+      - platform: state
+        entity_id: sensor.opta1_energie_master_opta1_alarms
+      - platform: state
+        entity_id: sensor.opta2_hottub_controller_opta2_alarms
+    condition:
+      - condition: template
+        value_template: >
+          {{ trigger.to_state.state not in ['{}', 'unavailable', 'unknown', ''] }}
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "⚠️ Zonnestroom Alarm"
+          message: >
+            {{ trigger.entity_id | replace('sensor.', '') }}: {{ trigger.to_state.state }}
+          notification_id: "zonnestroom_alarm"
+
+  # Zet handmatige modus automatisch uit na 2 uur
+  - id: zonnestroom_manual_mode_timeout
+    alias: "Zonnestroom – Handmatige modus timeout (2u)"
+    trigger:
+      - platform: state
+        entity_id: switch.opta1_energie_master_handmatige_modus
+        to: "on"
+        for: "02:00:00"
+    action:
+      - service: switch.turn_off
+        entity_id: switch.opta1_energie_master_handmatige_modus
+      - service: persistent_notification.create
+        data:
+          title: "Zonnestroom"
+          message: "Handmatige modus automatisch uitgeschakeld na 2 uur."
+          notification_id: "zonnestroom_manual_timeout"
+
+  - id: zonnestroom_hottub_clock_publish
+    alias: "Zonnestroom – Publiceer hottub klok"
+    trigger:
+      - platform: time_pattern
+        minutes: "/1"
+      - platform: homeassistant
+        event: start
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "opta2/device/current_minute_of_day"
+          payload: "{{ now().hour * 60 + now().minute }}"
+          retain: true

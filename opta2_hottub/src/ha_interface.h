@@ -25,6 +25,7 @@ private:
     bool  _prevLevelHigh    = false;
     bool  _prevLevelPumpAct = false;
     bool  _prevCommOk       = false;
+    bool  _prevClockOk      = false;
 
     void _publishAll();
     void _publishAlarms();

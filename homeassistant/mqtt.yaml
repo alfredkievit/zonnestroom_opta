@@ -1,0 +1,69 @@
+ # omdat het all als MQTT is aangemerkt hoeft niet nog een keer init van MQTT plaats te vinden
+ 
+  
+  
+  
+  
+  sensor:
+        # hieronder alle export topics
+        
+    - name: "Export Fase 1"
+      state_topic: "b0b21c913c34/PUB/CH1"
+      value_template: "{{ value_json.P }}"
+      unique_id: "export_fase1"
+    - name: "Export Fase 2"
+      state_topic: "b0b21c913c34/PUB/CH2"
+      value_template: "{{ value_json.P }}"
+      unique_id: "export_fase2"
+    - name: "Export Fase 3"
+      state_topic: "b0b21c913c34/PUB/CH3"
+      value_template: "{{ value_json.P }}"
+      unique_id: "export_fase3"
+    - name: "Export Totaal"
+      state_topic: "b0b21c913c34/PUB/CH13"
+      value_template: "{{ value_json.P }}"
+      unique_id: "Export_Totaal"
+      
+       # hieronder alle import topics
+       
+    - name: "Import Fase 1"
+      state_topic: "b0b21c913c34/PUB/CH10"
+      value_template: "{{ value_json.P }}"
+      unique_id: "import_fase1"
+    - name: "Import Fase 2"
+      state_topic: "b0b21c913c34/PUB/CH11"
+      value_template: "{{ value_json.P }}"
+      unique_id: "import_fase2"
+    - name: "Import Fase 3"
+      state_topic: "b0b21c913c34/PUB/CH12"
+      value_template: "{{ value_json.P }}"
+      unique_id: "import_fase3"
+    - name: "Import Totaal"
+      state_topic: "b0b21c913c34/PUB/CH14"
+      value_template: "{{ value_json.P }}"
+      unique_id: "import_totaal"
+      
+        # hieronder alle import topics voor dynamische heating
+        
+    - name: "Status Electrische Heater"
+      state_topic: "DynamischeEnergie/ElectrischeHeater"
+      unique_id: "DynamischeEnergie_ElectrischeHeater"
+    - name: "Start Waarde Heater"
+      state_topic: "DynamischeEnergie/StartHeater"
+      unique_id: "DynamischeEnergie_StartHeater"
+    - name: "Extra Warmte"
+      state_topic: "DynamischeEnergie/extrawarmte"
+      unique_id: "DynamischeEnergie_Extrawarmte"
+    - name: "Extra Warmwater"
+      state_topic: "DynamischeEnergie/extrawarmwater"
+      unique_id: "DynamischeEnergie_Extrawarmwater"
+      
+        # hieronder alle sensor topics 
+        
+    - name: "Temperatuur Tuin"
+      state_topic: "Sensors/Temperatuur Tuin"
+      unique_id: "Sensors_Temperatuur Tuin"
+    - name: "Luchtvochtigheid Tuin"
+      state_topic: "Sensors/Luchtvochtigheid Tuin"
+      unique_id: "Sensors_Luchtvochtigheid Tuin"
+    

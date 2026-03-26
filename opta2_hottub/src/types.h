@@ -8,12 +8,20 @@ struct Settings {
     float spHottubHystC;
     float spHottubMaxC;
 
+    // Circulatiepomp schema [uur/min]
+    int   spPumpRun1Hour;
+    int   spPumpRun1Minute;
+    int   spPumpRun2Hour;
+    int   spPumpRun2Minute;
+    int   spPumpRunDurationMin;
+
     // Timers [s]
     int   tLevelPumpMaxRunSec;
     int   tCommWatchdogSec;
 
     // Enable flags
     bool  enableHottub;
+    bool  enableAutoPump;
     bool  enableLevelPump;
 };
 
@@ -22,9 +30,15 @@ inline Settings defaultSettings() {
     s.spHottubTargetC      = 38.0f;
     s.spHottubHystC        = 0.5f;
     s.spHottubMaxC         = 42.0f;
+    s.spPumpRun1Hour       = 8;
+    s.spPumpRun1Minute     = 0;
+    s.spPumpRun2Hour       = 20;
+    s.spPumpRun2Minute     = 0;
+    s.spPumpRunDurationMin = 5;
     s.tLevelPumpMaxRunSec  = 300;    // 5 min max level pump run
     s.tCommWatchdogSec     = 30;
     s.enableHottub         = true;
+    s.enableAutoPump       = true;
     s.enableLevelPump      = true;
     return s;
 }
@@ -38,6 +52,7 @@ struct SystemStatus {
     bool  hottubPumpActive;
     bool  levelPumpActive;
     bool  commOk;
+    bool  clockOk;
     bool  hottubReady;
 };
 
@@ -59,6 +74,8 @@ struct IOState {
     bool doHottubLevelPump;
     bool doHottubStatusRun;
     bool doHottubAlarm;
+    bool manualForcePump;
+    bool manualForceLevelPump;
 
     // Inputs – physical
     float aiHottubTempC;
@@ -70,4 +87,6 @@ struct IOState {
     bool  inMasterPermissionHottub;
     bool  inMasterHeartbeat;
     bool  inMasterCommValid;
+    int   clockMinuteOfDay;
+    bool  clockMinuteValid;
 };

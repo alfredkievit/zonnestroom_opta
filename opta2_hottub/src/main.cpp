@@ -22,16 +22,29 @@ static IOState      gIo;
 
 // ── Module instances ──────────────────────────────────────────────────────────
 static SettingsStorage gStorage;
-static CommManager     gComm(gStatus, gAlarms, gIo);
+static CommManager     gComm(gSettings, gStorage, gStatus, gAlarms, gIo);
 static HottubLogic     gHottubLogic;
 static HaInterface     gHa(gComm, gSettings, gStatus, gAlarms, gIo, gStorage);
 
+static void writeOutputWithLed(uint8_t outputPin, int outputState) {
+    digitalWrite(outputPin, outputState);
+    if (outputPin == PIN_DO_HOTTUB_HEATER) {
+        digitalWrite(LED_D0, outputState);
+    } else if (outputPin == PIN_DO_HOTTUB_PUMP) {
+        digitalWrite(LED_D1, outputState);
+    } else if (outputPin == PIN_DO_HOTTUB_LEVELPUMP) {
+        digitalWrite(LED_D2, outputState);
+    } else if (outputPin == PIN_DO_HOTTUB_ALARM) {
+        digitalWrite(LED_D3, outputState);
+    }
+}
+
 // ── Helper: write physical outputs ───────────────────────────────────────────
 static void writeOutputs() {
-    digitalWrite(PIN_DO_HOTTUB_HEATER,    gIo.doHottubHeater    ? HIGH : LOW);
-    digitalWrite(PIN_DO_HOTTUB_PUMP,      gIo.doHottubPump      ? HIGH : LOW);
-    digitalWrite(PIN_DO_HOTTUB_LEVELPUMP, gIo.doHottubLevelPump ? HIGH : LOW);
-    digitalWrite(PIN_DO_HOTTUB_ALARM,     gIo.doHottubAlarm     ? HIGH : LOW);
+    writeOutputWithLed(PIN_DO_HOTTUB_HEATER,    gIo.doHottubHeater    ? HIGH : LOW);
+    writeOutputWithLed(PIN_DO_HOTTUB_PUMP,      gIo.doHottubPump      ? HIGH : LOW);
+    writeOutputWithLed(PIN_DO_HOTTUB_LEVELPUMP, gIo.doHottubLevelPump ? HIGH : LOW);
+    writeOutputWithLed(PIN_DO_HOTTUB_ALARM,     gIo.doHottubAlarm     ? HIGH : LOW);
 }
 
 // ── Helper: read physical inputs ─────────────────────────────────────────────
@@ -51,10 +64,20 @@ void setup() {
     Serial.begin(115200);
 
     // Configure outputs – safe state
-    pinMode(PIN_DO_HOTTUB_HEATER,    OUTPUT); digitalWrite(PIN_DO_HOTTUB_HEATER,    LOW);
-    pinMode(PIN_DO_HOTTUB_PUMP,      OUTPUT); digitalWrite(PIN_DO_HOTTUB_PUMP,      LOW);
-    pinMode(PIN_DO_HOTTUB_LEVELPUMP, OUTPUT); digitalWrite(PIN_DO_HOTTUB_LEVELPUMP, LOW);
-    pinMode(PIN_DO_HOTTUB_ALARM,     OUTPUT); digitalWrite(PIN_DO_HOTTUB_ALARM,     LOW);
+    pinMode(PIN_DO_HOTTUB_HEATER,    OUTPUT);
+    pinMode(PIN_DO_HOTTUB_PUMP,      OUTPUT);
+    pinMode(PIN_DO_HOTTUB_LEVELPUMP, OUTPUT);
+    pinMode(PIN_DO_HOTTUB_ALARM,     OUTPUT);
+
+    pinMode(LED_D0, OUTPUT);
+    pinMode(LED_D1, OUTPUT);
+    pinMode(LED_D2, OUTPUT);
+    pinMode(LED_D3, OUTPUT);
+
+    writeOutputWithLed(PIN_DO_HOTTUB_HEATER,    LOW);
+    writeOutputWithLed(PIN_DO_HOTTUB_PUMP,      LOW);
+    writeOutputWithLed(PIN_DO_HOTTUB_LEVELPUMP, LOW);
+    writeOutputWithLed(PIN_DO_HOTTUB_ALARM,     LOW);
 
     // Configure inputs
     pinMode(PIN_DI_LEVEL_HIGH,   INPUT);

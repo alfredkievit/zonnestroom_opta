@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 // ─── Network ───────────────────────────────────────────────────────────────
 // Opta1 Ethernet – set a fixed IP in the same subnet as the MQTT broker
 static const uint8_t  OPTA1_MAC[]  = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01 };
@@ -8,6 +10,8 @@ static const uint8_t  BROKER_IP[]  = { 192, 168, 0, 10 };
 static const uint16_t BROKER_PORT  = 1883;
 
 // ─── MQTT – energy meter topics (energiemeter ID: b0b21c913c34) ───────────
+#define TOPIC_METER_ROOT  "b0b21c913c34/PUB/#"    // wildcard: any meter publish
+#define TOPIC_METER_PREFIX "b0b21c913c34/PUB/"    // prefix for keepalive detection
 // Fase 1: WP + elektrisch element
 #define TOPIC_METER_CH1   "b0b21c913c34/PUB/CH1"    // fase 1 export [W]
 #define TOPIC_METER_CH10  "b0b21c913c34/PUB/CH10"   // fase 1 import [W]
@@ -32,6 +36,10 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_HOTTUB_PERM      "opta1/status/hottub_permission"
 #define TOPIC_HA_ALARM_JSON       "opta1/status/alarms"
 
+// ─── MQTT – Opta1 → Home Assistant extra status ───────────────────────────
+#define TOPIC_HA_COMFORT_ACTIVE   "opta1/status/comfort_active"
+#define TOPIC_HA_MANUAL_MODE      "opta1/status/manual_mode"
+
 // ─── MQTT – Home Assistant → Opta1 command topics (retained) ──────────────
 #define TOPIC_CMD_ENABLE_SYSTEM       "opta1/cmd/enable_system"
 #define TOPIC_CMD_ENABLE_WP           "opta1/cmd/enable_wp_boiler"
@@ -45,10 +53,16 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_CMD_SP_SURPLUS_ELEMENT  "opta1/cmd/sp_surplus_element_start_w"
 #define TOPIC_CMD_SP_SURPLUS_HOTTUB   "opta1/cmd/sp_surplus_hottub_start_w"
 #define TOPIC_CMD_SP_SURPLUS_STOP     "opta1/cmd/sp_surplus_stop_w"
+#define TOPIC_CMD_MANUAL_MODE         "opta1/cmd/manual_mode"
 #define TOPIC_CMD_MANUAL_FORCE_WP     "opta1/cmd/manual_force_wp"
 #define TOPIC_CMD_MANUAL_FORCE_ELEM   "opta1/cmd/manual_force_element"
 #define TOPIC_CMD_MANUAL_FORCE_HOTTUB "opta1/cmd/manual_force_hottub"
-#define TOPIC_CMD_FAULT_RESET         "opta1/cmd/fault_reset"
+#define TOPIC_CMD_MANUAL_FORCE_COMFORT "opta1/cmd/manual_force_comfort"
+#define TOPIC_CMD_FAULT_RESET          "opta1/cmd/fault_reset"
+
+// ─── MQTT – extra status (comfort / manual mode) ──────────────────────────
+#define TOPIC_HA_COMFORT_ACTIVE        "opta1/status/comfort_active"
+#define TOPIC_HA_MANUAL_MODE           "opta1/status/manual_mode"
 
 // ─── Pin mapping – Opta1 ───────────────────────────────────────────────────
 // Relay outputs (digital)

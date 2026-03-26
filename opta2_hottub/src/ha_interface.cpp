@@ -1,6 +1,7 @@
 #include "ha_interface.h"
 #include "config.h"
 #include <ArduinoJson.h>
+#include <math.h>
 
 HaInterface::HaInterface(CommManager& comm, Settings& settings, SystemStatus& status,
                          AlarmState& alarms, IOState& io, SettingsStorage& storage)
@@ -18,7 +19,7 @@ void HaInterface::update() {
     }
 
     // Change-triggered
-    if (_status.hottubTempC != _prevTemp) {
+    if (fabsf(_status.hottubTempC - _prevTemp) >= 0.5f) {
         _comm.publish(TOPIC_HA_HOTTUB_TEMP, _status.hottubTempC);
         _prevTemp = _status.hottubTempC;
     }
@@ -42,6 +43,10 @@ void HaInterface::update() {
         _comm.publish(TOPIC_HA_COMM_OK, _status.commOk ? "1" : "0");
         _prevCommOk = _status.commOk;
     }
+    if (_status.clockOk != _prevClockOk) {
+        _comm.publish(TOPIC_HA_CLOCK_OK, _status.clockOk ? "1" : "0");
+        _prevClockOk = _status.clockOk;
+    }
 }
 
 void HaInterface::_publishAll() {
@@ -51,6 +56,7 @@ void HaInterface::_publishAll() {
     _comm.publish(TOPIC_HA_LEVEL_HIGH,    _io.diHottubLevelHigh      ? "1" : "0");
     _comm.publish(TOPIC_HA_LEVEL_PUMP_ACT,_status.levelPumpActive    ? "1" : "0");
     _comm.publish(TOPIC_HA_COMM_OK,       _status.commOk             ? "1" : "0");
+    _comm.publish(TOPIC_HA_CLOCK_OK,      _status.clockOk            ? "1" : "0");
 }
 
 void HaInterface::_publishAlarms() {

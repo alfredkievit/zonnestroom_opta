@@ -1,0 +1,357 @@
+views:
+  - title: Overzicht
+    path: "0"
+    icon: mdi:solar-power-variant
+    badges: []
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.opta1_verbinding
+            name: Opta1
+            icon: mdi:cpu-64-bit
+            state_color: true
+          - type: entity
+            entity: sensor.opta2_verbinding
+            name: Opta2
+            icon: mdi:cpu-64-bit
+            state_color: true
+          - type: entity
+            entity: binary_sensor.opta1_energie_master_mqtt_geldig
+            name: MQTT Valid
+            state_color: true
+
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.opta1_energie_master_opta1_surplus_fase1
+            name: Surplus Fase 1
+            min: -3000
+            max: 3000
+            unit: W
+            needle: true
+            severity:
+              red: -3000
+              yellow: 0
+              green: 500
+          - type: gauge
+            entity: sensor.opta1_energie_master_opta1_surplus_totaal
+            name: Surplus Totaal
+            min: -6000
+            max: 9000
+            unit: W
+            needle: true
+            severity:
+              red: -6000
+              yellow: 0
+              green: 1500
+
+      - type: entities
+        title: Import / Export Nu
+        entities:
+          - entity: sensor.export_fase_1
+            name: Export Fase 1
+          - entity: sensor.export_fase_2
+            name: Export Fase 2
+          - entity: sensor.export_fase_3
+            name: Export Fase 3
+          - entity: sensor.export_totaal
+            name: Export Totaal
+          - type: divider
+          - entity: sensor.import_fase_1
+            name: Import Fase 1
+          - entity: sensor.import_fase_2
+            name: Import Fase 2
+          - entity: sensor.import_fase_3
+            name: Import Fase 3
+          - entity: sensor.import_totaal
+            name: Import Totaal
+
+      - type: entity
+        entity: sensor.systeem_prioriteit_tekst
+        name: Systeem Status
+        state_color: true
+
+      - type: glance
+        title: Actieve Apparaten
+        entities:
+          - entity: binary_sensor.opta1_energie_master_warmtepomp_actief
+            name: WP Extra WW
+            tap_action:
+              action: none
+          - entity: binary_sensor.opta1_energie_master_wp_comfort_verwarming_actief
+            name: WP Comfort
+            tap_action:
+              action: none
+          - entity: binary_sensor.opta1_energie_master_boiler_element_actief
+            name: Element
+            tap_action:
+              action: none
+          - entity: binary_sensor.opta1_energie_master_hottub_permissie
+            name: Hottub Perm.
+            tap_action:
+              action: none
+          - entity: binary_sensor.opta1_energie_master_handmatige_modus_actief
+            name: Handmatig
+            state_color: true
+            tap_action:
+              action: none
+
+      - type: history-graph
+        title: Surplus Historiek
+        hours_to_show: 4
+        entities:
+          - entity: sensor.opta1_energie_master_opta1_surplus_totaal
+            name: Surplus Totaal W
+          - entity: sensor.opta1_energie_master_opta1_surplus_fase1
+            name: Surplus Fase 1
+
+      - type: history-graph
+        title: Import / Export Historiek
+        hours_to_show: 4
+        entities:
+          - entity: sensor.export_fase_1
+            name: Export F1
+          - entity: sensor.export_fase_2
+            name: Export F2
+          - entity: sensor.export_fase_3
+            name: Export F3
+          - entity: sensor.export_totaal
+            name: Export Totaal
+          - entity: sensor.import_fase_1
+            name: Import F1
+          - entity: sensor.import_fase_2
+            name: Import F2
+          - entity: sensor.import_fase_3
+            name: Import F3
+          - entity: sensor.import_totaal
+            name: Import Totaal
+
+  - title: Hottub
+    path: "1"
+    icon: mdi:hot-tub
+    badges: []
+    cards:
+      - type: gauge
+        entity: sensor.opta2_hottub_controller_hottub_temperatuur
+        name: Hottub Temperatuur
+        min: 15
+        max: 42
+        unit: °C
+        needle: true
+        severity:
+          red: 41
+          yellow: 36
+          green: 37
+
+      - type: entities
+        title: Hottub Instelling
+        entities:
+          - entity: number.opta2_hottub_controller_hottub_doel_temperatuur
+            name: Doel Temperatuur
+          - entity: number.opta2_hottub_controller_hottub_hysterese
+            name: Hysterese
+          - entity: number.opta2_hottub_controller_hottub_max_temperatuur
+            name: Max Beveiliging
+
+      - type: glance
+        title: Hottub Status
+        entities:
+          - entity: binary_sensor.opta2_hottub_controller_hottub_verwarming_actief
+            name: Verwarming
+            state_color: true
+          - entity: binary_sensor.opta2_hottub_controller_hottub_pomp_actief
+            name: Circulatiepomp
+            state_color: true
+          - entity: binary_sensor.opta2_hottub_controller_hottub_niveau_hoog
+            name: Niveau Hoog
+            state_color: true
+          - entity: binary_sensor.opta2_hottub_controller_hottub_niveau_pomp_actief
+            name: Niveaupomp
+            state_color: true
+          - entity: binary_sensor.opta2_hottub_controller_opta2_communicatie_ok
+            name: Comm OK
+            state_color: true
+          - entity: binary_sensor.opta2_hottub_controller_opta2_klok_ok
+            name: Klok OK
+            state_color: true
+
+      - type: entities
+        entities:
+          - entity: switch.opta2_hottub_controller_hottub_verwarming_inschakelen
+            name: Verwarming bij surplus toestaan
+          - entity: switch.opta1_energie_master_hottub_inschakelen_opta1
+            name: Hottub meenemen in automaat
+          - entity: switch.opta1_energie_master_handmatig_hottub_permissie
+            name: Hottub handmatig aan tot setpoint
+            icon: mdi:hand-back-right
+          - type: divider
+          - entity: switch.opta2_hottub_controller_circulatiepomp_automatisch
+            name: Circulatiepomp automatisch
+          - entity: switch.opta2_hottub_controller_circulatiepomp_handmatig
+            name: Circulatiepomp Handmatig
+          - entity: number.opta2_hottub_controller_circulatiepomp_duur_automatisch
+            name: 2x per dag starten in min
+          - entity: number.opta2_hottub_controller_circulatiepomp_start_1_uur
+            name: Start 1 Uur
+          - entity: number.opta2_hottub_controller_circulatiepomp_start_1_minuut
+            name: Start 1 Minuut
+          - entity: number.opta2_hottub_controller_circulatiepomp_start_2_uur
+            name: Start 2 Uur
+          - entity: number.opta2_hottub_controller_circulatiepomp_start_2_minuut
+            name: Start 2 Minuut
+          - type: divider
+          - entity: switch.opta2_hottub_controller_niveau_pomp_inschakelen
+            name: Niveaupomp Automatisch Toestaan
+          - entity: switch.opta2_hottub_controller_niveaupomp_handmatig
+            name: Niveaupomp Handmatig
+
+      - type: history-graph
+        title: Hottub Temperatuur Historiek
+        hours_to_show: 12
+        entities:
+          - entity: sensor.opta2_hottub_controller_hottub_temperatuur
+            name: Hottub °C
+
+  - title: WP & Boiler
+    path: "2"
+    icon: mdi:heat-pump
+    badges: []
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.smo_40_hot_water_top_bt7
+            name: Warmwater Boven
+            min: 10
+            max: 80
+            unit: °C
+            needle: true
+            severity:
+              green: 30
+              yellow: 42
+              red: 52
+          - type: gauge
+            entity: sensor.smo_40_hot_water_charging_bt6
+            name: Warmwater Laden
+            min: 10
+            max: 80
+            unit: °C
+            needle: true
+            severity:
+              green: 32
+              yellow: 42
+              red: 52
+
+      - type: entities
+        title: Warmtepomp
+        entities:
+          - entity: switch.opta1_energie_master_warmtepomp_inschakelen
+            name: WP Inschakelen (automatisch)
+          - type: divider
+          - entity: binary_sensor.opta1_energie_master_warmtepomp_actief
+            name: WP Status – Extra Warm Water (D0)
+          - entity: binary_sensor.opta1_energie_master_wp_comfort_verwarming_actief
+            name: WP Status – Comfort Verwarming (D1)
+          - type: divider
+          - entity: switch.opta1_energie_master_handmatig_wp_extra_warm_water
+            name: Handmatig WP Extra WW (D0)
+            icon: mdi:water-boiler
+          - entity: switch.opta1_energie_master_handmatig_wp_comfort_verwarming
+            name: Handmatig Comfort Verwarming (D1)
+            icon: mdi:radiator
+
+      - type: entities
+        title: Boiler Element
+        entities:
+          - entity: switch.opta1_energie_master_boiler_element_inschakelen
+            name: Element Inschakelen (automatisch)
+          - entity: binary_sensor.opta1_energie_master_boiler_element_actief
+            name: Element Status
+
+      - type: history-graph
+        title: Boiler Temperatuur Historiek
+        hours_to_show: 8
+        entities:
+          - entity: sensor.smo_40_hot_water_top_bt7
+            name: Warmwater Boven
+          - entity: sensor.smo_40_hot_water_charging_bt6
+            name: Warmwater Laden
+
+      - type: entities
+        title: WP Temperatuur Setpoints
+        entities:
+          - entity: number.opta1_energie_master_boiler_wp_doel_temperatuur
+            name: Doel Temperatuur WP
+          - entity: number.opta1_energie_master_boiler_wp_hysterese
+            name: Hysterese WP
+          - type: divider
+          - entity: number.opta1_energie_master_boiler_element_doel_temperatuur
+            name: Doel Temperatuur Element
+          - entity: number.opta1_energie_master_boiler_element_hysterese
+            name: Hysterese Element
+
+  - title: Instellingen
+    path: "3"
+    icon: mdi:cog
+    badges: []
+    cards:
+      - type: entities
+        title: Systeem Inschakelen
+        entities:
+          - entity: switch.opta1_energie_master_systeem_inschakelen
+            name: Algeheel Systeem
+          - entity: switch.opta1_energie_master_warmtepomp_inschakelen
+            name: Warmtepomp
+          - entity: switch.opta1_energie_master_boiler_element_inschakelen
+            name: Boiler Element
+          - entity: switch.opta1_energie_master_hottub_inschakelen_opta1
+            name: Hottub (via Opta1)
+          - entity: switch.opta2_hottub_controller_hottub_verwarming_inschakelen
+            name: Hottub Verwarming (Opta2)
+          - entity: switch.opta2_hottub_controller_niveau_pomp_inschakelen
+            name: Niveau Pomp (Opta2)
+
+      - type: entities
+        title: Surplus Drempelwaarden
+        entities:
+          - entity: number.opta1_energie_master_surplus_start_wp
+            name: Start WP bij surplus ≥
+          - entity: number.opta1_energie_master_surplus_start_element
+            name: Start Element bij surplus ≥
+          - entity: number.opta1_energie_master_surplus_start_hottub
+            name: Start Hottub bij surplus ≥
+          - entity: number.opta1_energie_master_surplus_stop_drempel
+            name: Stop bij surplus <
+
+      - type: button
+        tap_action:
+          action: toggle
+        entity: switch.opta1_energie_master_fault_reset
+        name: Fault Reset
+        icon: mdi:restart-alert
+        icon_height: 48px
+
+      - type: entities
+        title: Debug / Diagnostiek
+        entities:
+          - entity: sensor.opta1_energie_master_opta1_actieve_prioriteit
+            name: Prioriteit (raw)
+          - entity: sensor.systeem_prioriteit_tekst
+            name: Prioriteit (tekst)
+          - entity: binary_sensor.opta1_energie_master_mqtt_geldig
+            name: MQTT Valid
+          - entity: binary_sensor.opta1_energie_master_handmatige_modus_actief
+            name: Manual Mode Status
+          - entity: sensor.opta1_energie_master_opta1_alarms
+            name: Opta1 Alarms (raw)
+          - entity: sensor.opta2_hottub_controller_opta2_alarms
+            name: Opta2 Alarms (raw)
+          - entity: sensor.opta1_energie_master_opta1_heartbeat
+            name: Opta1 Heartbeat
+          - entity: sensor.opta2_hottub_controller_opta2_heartbeat
+            name: Opta2 Heartbeat
+          - entity: sensor.opta1_verbinding
+            name: Opta1 Verbinding
+          - entity: sensor.opta2_verbinding
+            name: Opta2 Verbinding

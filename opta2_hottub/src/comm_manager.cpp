@@ -8,8 +8,10 @@ void CommManager::_onMessageCb(int size) {
     if (_instance) _instance->_handleMessage(size);
 }
 
-CommManager::CommManager(SystemStatus& status, AlarmState& alarms, IOState& io)
-    : _mqtt(_ethClient), _status(status), _alarms(alarms), _io(io)
+CommManager::CommManager(Settings& settings, SettingsStorage& storage,
+                                                 SystemStatus& status, AlarmState& alarms, IOState& io)
+        : _mqtt(_ethClient), _settings(settings), _storage(storage),
+            _status(status), _alarms(alarms), _io(io)
 {}
 
 // ---------------------------------------------------------------------------
@@ -71,8 +73,17 @@ void CommManager::_reconnect(const Settings& settings) {
     _mqtt.subscribe(TOPIC_CMD_SP_HOTTUB_TARGET);
     _mqtt.subscribe(TOPIC_CMD_SP_HOTTUB_HYST);
     _mqtt.subscribe(TOPIC_CMD_SP_HOTTUB_MAX);
+    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_1_HOUR);
+    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_1_MINUTE);
+    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_2_HOUR);
+    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_2_MINUTE);
+    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_DURATION);
     _mqtt.subscribe(TOPIC_CMD_ENABLE_HOTTUB);
+    _mqtt.subscribe(TOPIC_CMD_ENABLE_AUTO_PUMP);
+    _mqtt.subscribe(TOPIC_CMD_MANUAL_PUMP);
+    _mqtt.subscribe(TOPIC_CMD_MANUAL_LEVEL_PUMP);
     _mqtt.subscribe(TOPIC_CMD_ENABLE_LEVELPUMP);
+    _mqtt.subscribe(TOPIC_CMD_CLOCK_MINUTE);
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +109,25 @@ void CommManager::_handleMessage(int messageSize) {
         }
         _io.inMasterHeartbeat = bit;
     }
-    // HA commands forwarded to handleCommand (called by main)
+    else if (topic == TOPIC_CMD_CLOCK_MINUTE) {
+        int minuteOfDay = atoi(buf);
+        if (minuteOfDay >= 0 && minuteOfDay <= 1439) {
+            _io.clockMinuteOfDay = minuteOfDay;
+            _io.clockMinuteValid = true;
+            _status.clockOk = true;
+            _lastClockRxMs = millis();
+        }
+    }
+    else if (topic == TOPIC_CMD_MANUAL_PUMP) {
+        _io.manualForcePump = (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T');
+    }
+    else if (topic == TOPIC_CMD_MANUAL_LEVEL_PUMP) {
+        _io.manualForceLevelPump = (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T');
+    }
+    else {
+        handleCommand(topic, buf, len, _settings);
+        _storage.save(_settings);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -113,6 +142,11 @@ void CommManager::_checkCommTimeout(const Settings& settings) {
     } else {
         _io.inMasterCommValid = true;
     }
+
+    if (_lastClockRxMs > 0 && (millis() - _lastClockRxMs) > (2UL * 60UL * 1000UL)) {
+        _io.clockMinuteValid = false;
+        _status.clockOk = false;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -126,6 +160,12 @@ void CommManager::handleCommand(const String& topic, const char* payload, int le
     if      (topic == TOPIC_CMD_SP_HOTTUB_TARGET) { settings.spHottubTargetC     = val;  }
     else if (topic == TOPIC_CMD_SP_HOTTUB_HYST)   { settings.spHottubHystC       = val;  }
     else if (topic == TOPIC_CMD_SP_HOTTUB_MAX)    { settings.spHottubMaxC        = val;  }
+    else if (topic == TOPIC_CMD_SP_PUMP_1_HOUR)   { settings.spPumpRun1Hour      = constrain((int)val, 0, 23); }
+    else if (topic == TOPIC_CMD_SP_PUMP_1_MINUTE) { settings.spPumpRun1Minute    = constrain((int)val, 0, 59); }
+    else if (topic == TOPIC_CMD_SP_PUMP_2_HOUR)   { settings.spPumpRun2Hour      = constrain((int)val, 0, 23); }
+    else if (topic == TOPIC_CMD_SP_PUMP_2_MINUTE) { settings.spPumpRun2Minute    = constrain((int)val, 0, 59); }
+    else if (topic == TOPIC_CMD_SP_PUMP_DURATION) { settings.spPumpRunDurationMin = constrain((int)val, 1, 120); }
     else if (topic == TOPIC_CMD_ENABLE_HOTTUB)    { settings.enableHottub        = bval; }
+    else if (topic == TOPIC_CMD_ENABLE_AUTO_PUMP) { settings.enableAutoPump      = bval; }
     else if (topic == TOPIC_CMD_ENABLE_LEVELPUMP) { settings.enableLevelPump     = bval; }
 }

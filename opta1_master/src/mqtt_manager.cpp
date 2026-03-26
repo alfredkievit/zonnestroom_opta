@@ -81,11 +81,8 @@ void MqttManager::_reconnect() {
         // Connection failed – timeout will fire and force safe state
         return;
     }
-    // Subscribe to energy meter channels
-    _mqtt.subscribe(TOPIC_METER_CH1);
-    _mqtt.subscribe(TOPIC_METER_CH10);
-    _mqtt.subscribe(TOPIC_METER_CH13);
-    _mqtt.subscribe(TOPIC_METER_CH14);
+    // Subscribe to all meter publishes; keepalive is based on any meter topic
+    _mqtt.subscribe(TOPIC_METER_ROOT);
 
     // Subscribe to HA command topics (retained settings arrive immediately)
     _mqtt.subscribe(TOPIC_CMD_ENABLE_SYSTEM);
@@ -103,6 +100,8 @@ void MqttManager::_reconnect() {
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_WP);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_ELEM);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_HOTTUB);
+    _mqtt.subscribe(TOPIC_CMD_MANUAL_MODE);
+    _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_COMFORT);
     _mqtt.subscribe(TOPIC_CMD_FAULT_RESET);
 }
 
@@ -116,12 +115,8 @@ void MqttManager::_handleMessage(int messageSize) {
     // Drain any remaining bytes
     while (_mqtt.available()) _mqtt.read();
 
-    // ── Energy meter channels ────────────────────────────────────────────
-    if (topic == TOPIC_METER_CH1)  { _ch1W  = _parseP(buf, len); _ch1Rx  = true; }
-    else if (topic == TOPIC_METER_CH10) { _ch10W = _parseP(buf, len); _ch10Rx = true; }
-    else if (topic == TOPIC_METER_CH13) { _ch13W = _parseP(buf, len); _ch13Rx = true; }
-    else if (topic == TOPIC_METER_CH14) { _ch14W = _parseP(buf, len); _ch14Rx = true; }
-    else {
+    bool isMeterTopic = topic.startsWith(TOPIC_METER_PREFIX);
+    if (!isMeterTopic) {
         // ── HA command topics ────────────────────────────────────────────
         // Forward to HaInterface for command processing
         if (_ha) {
@@ -130,18 +125,29 @@ void MqttManager::_handleMessage(int messageSize) {
         return;
     }
 
+    // Any publish from the configured meter means the meter is alive.
+    _status.mqttLastUpdateMs = millis();
+    _status.mqttRxOk         = true;
+    _status.mqttValid        = true;
+    _alarms.mqttTimeout      = false;
+    _io.inMqttPowerValid     = true;
+
+    // ── Energy meter channels used for surplus calculation ──────────────
+    if (topic == TOPIC_METER_CH1)  { _ch1W  = _parseP(buf, len); _ch1Rx  = true; }
+    else if (topic == TOPIC_METER_CH10) { _ch10W = _parseP(buf, len); _ch10Rx = true; }
+    else if (topic == TOPIC_METER_CH13) { _ch13W = _parseP(buf, len); _ch13Rx = true; }
+    else if (topic == TOPIC_METER_CH14) { _ch14W = _parseP(buf, len); _ch14Rx = true; }
+    else {
+        return;  // keepalive-only meter topic, no power field needed
+    }
+
     // If all four channels received at least once → data is valid
     if (_ch1Rx && _ch10Rx && _ch13Rx && _ch14Rx) {
         _status.surplusFase1W   = _ch1W  - _ch10W;
         _status.surplusTotaalW  = _ch13W - _ch14W;
-        _status.mqttLastUpdateMs = millis();
-        _status.mqttRxOk         = true;
-        _status.mqttValid        = true;
-        _alarms.mqttTimeout      = false;
         _alarms.invalidPowerData = false;
         _io.inSurplusFase1W      = _status.surplusFase1W;
         _io.inSurplusTotaalW     = _status.surplusTotaalW;
-        _io.inMqttPowerValid     = true;
     }
 }
 

@@ -4,13 +4,15 @@
 #include <EthernetClient.h>
 #include "types.h"
 #include "config.h"
+#include "settings_storage.h"
 
 // Manages MQTT connection for Opta2.
 // Subscribes to Opta1 permission + heartbeat topics.
 // Also handles HA command subscriptions.
 class CommManager {
 public:
-    CommManager(SystemStatus& status, AlarmState& alarms, IOState& io);
+    CommManager(Settings& settings, SettingsStorage& storage,
+                SystemStatus& status, AlarmState& alarms, IOState& io);
 
     void begin();
     void update(const Settings& settings);
@@ -32,6 +34,8 @@ private:
     EthernetClient _ethClient;
     MqttClient     _mqtt;
 
+    Settings&     _settings;
+    SettingsStorage& _storage;
     SystemStatus& _status;
     AlarmState&   _alarms;
     IOState&      _io;
@@ -41,6 +45,7 @@ private:
     bool          _lastHeartbeatBit    = false;
     bool          _heartbeatEverRx     = false;
     unsigned long _lastHeartbeatRxMs   = 0;
+    unsigned long _lastClockRxMs       = 0;
 
     void _reconnect(const Settings& settings);
     void _handleMessage(int messageSize);

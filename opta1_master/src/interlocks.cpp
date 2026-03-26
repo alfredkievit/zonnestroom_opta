@@ -17,32 +17,27 @@ void Interlocks::apply(const Settings& settings, const IOState& io,
     }
 
     // ── Interlock 2: No surplus → all energy loads off ─────────────────────
+    // Manual force flags bypass the surplus interlock for direct switching.
     if (out.inSurplusFase1W <= settings.spSurplusStopW) {
-        out.doWpExtraWW     = false;
-        out.doBoilerElement = false;
+        if (!out.manualForceWp)      out.doWpExtraWW     = false;
+        if (!out.manualForceElement) out.doBoilerElement = false;
     }
     if (out.inSurplusTotaalW <= settings.spSurplusStopW) {
-        out.doMasterPermHottub = false;
+        if (!out.manualForceHottub)  out.doMasterPermHottub = false;
     }
 
     // ── Interlock 3: MQTT invalid → all energy loads off ──────────────────
+    // Manual force flags still permitted without MQTT (local override).
     if (!status.mqttValid) {
-        out.doWpExtraWW        = false;
-        out.doBoilerElement    = false;
-        out.doMasterPermHottub = false;
+        if (!out.manualForceWp)      out.doWpExtraWW        = false;
+        if (!out.manualForceElement) out.doBoilerElement     = false;
+        if (!out.manualForceHottub)  out.doMasterPermHottub = false;
     }
 
     // ── Interlock 4: Boiler sensor fault → WP and element off ─────────────
     if (alarms.boilerSensorFault) {
         out.doWpExtraWW     = false;
         out.doBoilerElement = false;
-    }
-
-    // ── Interlock 5: Comm fault to Opta2 → revoke hottub permission ────────
-    // Comm validity is tracked by ha_interface / mqtt_manager via heartbeat.
-    // If the status flag is cleared, permission is withdrawn immediately.
-    if (!status.hottubPermitted) {
-        out.doMasterPermHottub = false;
     }
 
     // ── Update status mirror fields from final output ──────────────────────

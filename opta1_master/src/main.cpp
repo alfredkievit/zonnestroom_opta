@@ -33,11 +33,24 @@ static PriorityManager gPriorityMgr;
 static Interlocks      gInterlocks;
 static HaInterface     gHa(gMqtt, gSettings, gStatus, gAlarms, gIo, gStorage);
 
+static void writeOutputWithLed(uint8_t outputPin, int outputState) {
+    digitalWrite(outputPin, outputState);
+    if (outputPin == PIN_DO_WP_EXTRA_WW) {
+        digitalWrite(LED_D0, outputState);
+    } else if (outputPin == PIN_DO_WP_COMFORT_EXTRA) {
+        digitalWrite(LED_D1, outputState);
+    } else if (outputPin == PIN_DO_BOILER_ELEMENT) {
+        digitalWrite(LED_D2, outputState);
+    } else if (outputPin == PIN_DO_SPARE) {
+        digitalWrite(LED_D3, outputState);
+    }
+}
+
 // ── Helper: write physical outputs ───────────────────────────────────────────
 static void writeOutputs() {
-    digitalWrite(PIN_DO_WP_EXTRA_WW,      gIo.doWpExtraWW      ? HIGH : LOW);
-    digitalWrite(PIN_DO_WP_COMFORT_EXTRA, gIo.doWpComfortExtra  ? HIGH : LOW);
-    digitalWrite(PIN_DO_BOILER_ELEMENT,   gIo.doBoilerElement   ? HIGH : LOW);
+    writeOutputWithLed(PIN_DO_WP_EXTRA_WW,      gIo.doWpExtraWW      ? HIGH : LOW);
+    writeOutputWithLed(PIN_DO_WP_COMFORT_EXTRA, gIo.doWpComfortExtra  ? HIGH : LOW);
+    writeOutputWithLed(PIN_DO_BOILER_ELEMENT,   gIo.doBoilerElement   ? HIGH : LOW);
     // PIN_DO_SPARE not driven by control logic
 }
 
@@ -69,11 +82,16 @@ void setup() {
     pinMode(PIN_DO_BOILER_ELEMENT,   OUTPUT);
     pinMode(PIN_DO_SPARE,            OUTPUT);
 
+    pinMode(LED_D0, OUTPUT);
+    pinMode(LED_D1, OUTPUT);
+    pinMode(LED_D2, OUTPUT);
+    pinMode(LED_D3, OUTPUT);
+
     // Safe state on boot
-    digitalWrite(PIN_DO_WP_EXTRA_WW,      LOW);
-    digitalWrite(PIN_DO_WP_COMFORT_EXTRA, LOW);
-    digitalWrite(PIN_DO_BOILER_ELEMENT,   LOW);
-    digitalWrite(PIN_DO_SPARE,            LOW);
+    writeOutputWithLed(PIN_DO_WP_EXTRA_WW,      LOW);
+    writeOutputWithLed(PIN_DO_WP_COMFORT_EXTRA, LOW);
+    writeOutputWithLed(PIN_DO_BOILER_ELEMENT,   LOW);
+    writeOutputWithLed(PIN_DO_SPARE,            LOW);
 
     // Configure inputs
     pinMode(PIN_DI_ELEMENT_THERM, INPUT);
@@ -86,6 +104,9 @@ void setup() {
     gStorage.begin();
     if (!gStorage.load(gSettings)) {
         gSettings = defaultSettings();
+    } else if (gSettings.mqttTimeoutSec == 5 || gSettings.mqttTimeoutSec == 10 || gSettings.mqttTimeoutSec == 15) {
+        gSettings.mqttTimeoutSec = 30;
+        gStorage.save(gSettings);
     }
 
     // Initialise status to safe/unknown state
