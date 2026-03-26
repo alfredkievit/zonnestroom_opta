@@ -576,7 +576,7 @@ mqtt:
       state_topic: "opta2/cmd/sp_pump_run_duration_min"
       unit_of_measurement: "min"
       min: 1
-      max: 120
+      max: 20
       step: 1
       retain: true
       icon: "mdi:timer-outline"

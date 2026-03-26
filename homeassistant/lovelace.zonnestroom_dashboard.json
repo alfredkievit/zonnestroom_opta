@@ -333,7 +333,7 @@
                 },
                 {
                   "entity": "switch.opta2_hottub_controller_circulatiepomp_automatisch",
-                  "name": "Circulatiepomp Automatisch",
+                  "name": "Filter Pomp Automatisch",
                   "icon": "mdi:autorenew"
                 },
                 {

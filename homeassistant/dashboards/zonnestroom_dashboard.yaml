@@ -204,7 +204,7 @@ views:
             name: Circulatiepomp Handmatig
             icon: mdi:pump
           - entity: switch.opta2_hottub_controller_circulatiepomp_automatisch
-            name: Circulatiepomp Automatisch
+            name: Filter Pomp Automatisch
             icon: mdi:autorenew
           - type: divider
           - entity: switch.opta1_energie_master_hottub_inschakelen_opta1
