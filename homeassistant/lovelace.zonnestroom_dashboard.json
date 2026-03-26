@@ -249,6 +249,36 @@
                 {
                   "entity": "number.opta2_hottub_controller_hottub_max_temperatuur",
                   "name": "Max Beveiliging"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "entity": "number.opta2_hottub_controller_circulatiepomp_duur_automatisch",
+                  "name": "Circulatiepomp Duur (min)"
+                }
+              ]
+            },
+            {
+              "type": "entities",
+              "title": "Circulatiepomp Schema",
+              "show_header_toggle": false,
+              "entities": [
+                {
+                  "entity": "number.opta2_hottub_controller_circulatiepomp_start_1_uur",
+                  "name": "Start 1 Uur"
+                },
+                {
+                  "entity": "number.opta2_hottub_controller_circulatiepomp_start_1_minuut",
+                  "name": "Start 1 Minuut"
+                },
+                {
+                  "entity": "number.opta2_hottub_controller_circulatiepomp_start_2_uur",
+                  "name": "Start 2 Uur"
+                },
+                {
+                  "entity": "number.opta2_hottub_controller_circulatiepomp_start_2_minuut",
+                  "name": "Start 2 Minuut"
                 }
               ]
             },
@@ -290,27 +320,42 @@
               "entities": [
                 {
                   "entity": "switch.opta2_hottub_controller_hottub_verwarming_inschakelen",
-                  "name": "Hottub Verwarming Aan"
+                  "name": "Hottub Verwarming Aan",
+                  "icon": "mdi:hot-tub"
                 },
                 {
-                  "entity": "switch.opta2_hottub_controller_niveau_pomp_inschakelen",
-                  "name": "Niveau Pomp Aan"
+                  "type": "divider"
+                },
+                {
+                  "entity": "switch.opta2_hottub_controller_circulatiepomp_handmatig",
+                  "name": "Circulatiepomp Handmatig",
+                  "icon": "mdi:pump"
+                },
+                {
+                  "entity": "switch.opta2_hottub_controller_circulatiepomp_automatisch",
+                  "name": "Circulatiepomp Automatisch",
+                  "icon": "mdi:autorenew"
                 },
                 {
                   "type": "divider"
                 },
                 {
                   "entity": "switch.opta1_energie_master_hottub_inschakelen_opta1",
-                  "name": "Hottub Permissie (Opta1)"
+                  "name": "Hottub Surplus Automatisch",
+                  "icon": "mdi:solar-power"
                 },
                 {
-                  "entity": "switch.opta1_energie_master_handmatige_modus",
-                  "name": "Handmatige Modus Opta1"
+                  "type": "divider"
                 },
                 {
-                  "entity": "switch.opta1_energie_master_handmatig_hottub_permissie",
-                  "name": "Handmatig Hottub Permissie",
-                  "icon": "mdi:hand-back-right"
+                  "entity": "switch.opta2_hottub_controller_niveau_pomp_inschakelen",
+                  "name": "Niveaupomp Automatisch",
+                  "icon": "mdi:pump"
+                },
+                {
+                  "entity": "switch.opta2_hottub_controller_niveaupomp_handmatig",
+                  "name": "Niveaupomp Handmatig",
+                  "icon": "mdi:water-pump"
                 }
               ]
             },

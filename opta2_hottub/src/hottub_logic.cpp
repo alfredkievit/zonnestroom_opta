@@ -23,13 +23,15 @@ void HottubLogic::update(const Settings& settings, IOState& io,
         bool localFault = io.diHottubFault || alarms.hottubSensorFault;
         bool levelOk    = !io.diHottubLevelHigh;
         bool permOk     = io.inMasterPermissionHottub && io.inMasterCommValid;
-        bool heatRequestAllowed = settings.enableHottub || io.inMasterPermissionHottub;
+        // settings.enableHottub = "Verwarming Aan" handmatig knop:
+        //   bypasses surplus/permissie – altijd aan tot setpoint
+        // permOk = surplus automaat: Opta1 geeft toestemming op basis van surplus
+        bool heatAllowed = settings.enableHottub || permOk;
 
         if (!io.doHottubHeater) {
             // Start condition (with hysteresis on cold side)
             bool startOk =
-                heatRequestAllowed &&
-                permOk &&
+                heatAllowed &&
                 !localFault &&
                 levelOk &&
                 !alarms.hottubOvertemp &&
@@ -41,12 +43,11 @@ void HottubLogic::update(const Settings& settings, IOState& io,
         } else {
             // Stop conditions (direct, no delay)
             bool stopNow =
-                !permOk ||
+                !heatAllowed ||
                 localFault ||
                 !levelOk ||
                 alarms.hottubOvertemp ||
-                temp >= settings.spHottubTargetC ||
-                !heatRequestAllowed;
+                temp >= settings.spHottubTargetC;
 
             if (stopNow) {
                 io.doHottubHeater = false;
