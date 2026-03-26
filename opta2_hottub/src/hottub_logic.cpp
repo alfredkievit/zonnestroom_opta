@@ -54,8 +54,8 @@ void HottubLogic::update(const Settings& settings, IOState& io,
             }
         }
 
-        int run1Minute = (settings.spPumpRun1Hour * 60) + settings.spPumpRun1Minute;
-        int run2Minute = (settings.spPumpRun2Hour * 60) + settings.spPumpRun2Minute;
+        int run1Minute = settings.spPumpRun1Hour * 60;
+        int run2Minute = settings.spPumpRun2Hour * 60;
 
         if (io.clockMinuteValid) {
             if (io.clockMinuteOfDay == run1Minute && _lastRun1Day != _clockDayCounter) {

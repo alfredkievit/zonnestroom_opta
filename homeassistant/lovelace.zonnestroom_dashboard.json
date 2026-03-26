@@ -262,16 +262,8 @@
                   "name": "Start 1 Uur"
                 },
                 {
-                  "entity": "number.opta2_hottub_controller_circulatiepomp_start_1_minuut",
-                  "name": "Start 1 Minuut"
-                },
-                {
                   "entity": "number.opta2_hottub_controller_circulatiepomp_start_2_uur",
                   "name": "Start 2 Uur"
-                },
-                {
-                  "entity": "number.opta2_hottub_controller_circulatiepomp_start_2_minuut",
-                  "name": "Start 2 Minuut"
                 }
               ]
             },

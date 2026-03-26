@@ -330,7 +330,7 @@ mqtt:
       device:
         identifiers: [opta2_hottub]
 
-    - name: "Circulatiepomp Automatisch"
+    - name: "Circulatiepomp Filteren Automatisch"
       unique_id: opta2_enable_auto_pump
       command_topic: "opta2/cmd/enable_auto_pump"
       state_topic: "opta2/cmd/enable_auto_pump"
@@ -534,36 +534,12 @@ mqtt:
       device:
         identifiers: [opta2_hottub]
 
-    - name: "Circulatiepomp Start 1 Minuut"
-      unique_id: opta2_sp_pump_1_minute
-      command_topic: "opta2/cmd/sp_pump_run1_minute"
-      state_topic: "opta2/cmd/sp_pump_run1_minute"
-      min: 0
-      max: 59
-      step: 1
-      retain: true
-      icon: "mdi:clock-start"
-      device:
-        identifiers: [opta2_hottub]
-
     - name: "Circulatiepomp Start 2 Uur"
       unique_id: opta2_sp_pump_2_hour
       command_topic: "opta2/cmd/sp_pump_run2_hour"
       state_topic: "opta2/cmd/sp_pump_run2_hour"
       min: 0
       max: 23
-      step: 1
-      retain: true
-      icon: "mdi:clock-start"
-      device:
-        identifiers: [opta2_hottub]
-
-    - name: "Circulatiepomp Start 2 Minuut"
-      unique_id: opta2_sp_pump_2_minute
-      command_topic: "opta2/cmd/sp_pump_run2_minute"
-      state_topic: "opta2/cmd/sp_pump_run2_minute"
-      min: 0
-      max: 59
       step: 1
       retain: true
       icon: "mdi:clock-start"

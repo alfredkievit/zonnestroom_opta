@@ -8,11 +8,9 @@ struct Settings {
     float spHottubHystC;
     float spHottubMaxC;
 
-    // Circulatiepomp schema [uur/min]
+    // Circulatiepomp schema [uur] – läuft immer zur vollen Stunde
     int   spPumpRun1Hour;
-    int   spPumpRun1Minute;
     int   spPumpRun2Hour;
-    int   spPumpRun2Minute;
     int   spPumpRunDurationMin;
 
     // Timers [s]
@@ -31,9 +29,7 @@ inline Settings defaultSettings() {
     s.spHottubHystC        = 0.5f;
     s.spHottubMaxC         = 42.0f;
     s.spPumpRun1Hour       = 8;
-    s.spPumpRun1Minute     = 0;
     s.spPumpRun2Hour       = 20;
-    s.spPumpRun2Minute     = 0;
     s.spPumpRunDurationMin = 5;
     s.tLevelPumpMaxRunSec  = 300;    // 5 min max level pump run
     s.tCommWatchdogSec     = 30;
