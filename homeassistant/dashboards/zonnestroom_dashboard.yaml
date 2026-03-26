@@ -91,7 +91,7 @@ views:
             name: Hottub Perm.
             tap_action:
               action: none
-          - entity: binary_sensor.opta1_energie_master_handmalige_modus_actief
+          - entity: binary_sensor.opta1_energie_master_handmatige_modus_actief
             name: Handmatig
             state_color: true
             tap_action:
@@ -353,7 +353,7 @@ views:
             name: Prioriteit (tekst)
           - entity: binary_sensor.opta1_energie_master_mqtt_geldig
             name: MQTT Valid
-          - entity: binary_sensor.opta1_energie_master_handmalige_modus_actief
+          - entity: binary_sensor.opta1_energie_master_handmatige_modus_actief
             name: Manual Mode Status
           - entity: sensor.opta1_energie_master_opta1_alarms
             name: Opta1 Alarms (raw)
