@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <ArduinoMqttClient.h>
-#include <EthernetClient.h>
+#include <WiFiClient.h>
 #include "types.h"
 #include "config.h"
 #include "settings_storage.h"
@@ -31,7 +31,7 @@ public:
                        Settings& settings);
 
 private:
-    EthernetClient _ethClient;
+    WiFiClient _wifiClient;
     MqttClient     _mqtt;
 
     Settings&     _settings;

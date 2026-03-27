@@ -4,8 +4,9 @@
 #include <Arduino.h>
 
 // ─── Network ───────────────────────────────────────────────────────────────
-static const uint8_t  OPTA2_MAC[]  = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02 };
-static const uint8_t  OPTA2_IP[]   = { 192, 168, 0, 51 };
+// Opta2 WiFi – uses DHCP in same subnet as broker
+static const char* OPTA2_WIFI_SSID = "optimusnexus";
+static const char* OPTA2_WIFI_PASS = "kinderpindakaas";
 static const uint8_t  BROKER_IP[]  = { 192, 168, 0, 10 };
 static const uint16_t BROKER_PORT  = 1883;
 

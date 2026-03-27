@@ -1,6 +1,6 @@
 #include "comm_manager.h"
 #include "settings_storage.h"
-#include <Ethernet.h>
+#include <WiFi.h>
 
 CommManager* CommManager::_instance = nullptr;
 
@@ -10,16 +10,19 @@ void CommManager::_onMessageCb(int size) {
 
 CommManager::CommManager(Settings& settings, SettingsStorage& storage,
                                                  SystemStatus& status, AlarmState& alarms, IOState& io)
-        : _mqtt(_ethClient), _settings(settings), _storage(storage),
+    : _mqtt(_wifiClient), _settings(settings), _storage(storage),
             _status(status), _alarms(alarms), _io(io)
 {}
 
 // ---------------------------------------------------------------------------
 void CommManager::begin() {
-    byte mac[] = { OPTA2_MAC[0], OPTA2_MAC[1], OPTA2_MAC[2],
-                   OPTA2_MAC[3], OPTA2_MAC[4], OPTA2_MAC[5] };
-    IPAddress ip(OPTA2_IP[0], OPTA2_IP[1], OPTA2_IP[2], OPTA2_IP[3]);
-    Ethernet.begin(mac, ip);
+    WiFi.begin(OPTA2_WIFI_SSID, OPTA2_WIFI_PASS);
+
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+        delay(500);
+        attempts++;
+    }
     delay(500);
 
     _mqtt.setId("opta2_hottub");
