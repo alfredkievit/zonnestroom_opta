@@ -266,6 +266,7 @@ views:
 
       - type: entities
         title: Boiler Element
+        show_header_toggle: false
         entities:
           - entity: switch.opta1_energie_master_boiler_element_inschakelen
             name: Element Inschakelen (automatisch)
