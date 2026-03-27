@@ -23,6 +23,7 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_COMM_OK          "opta2/status/comm_ok"
 #define TOPIC_HA_ALARM_JSON       "opta2/status/alarms"
 #define TOPIC_HA_CLOCK_OK         "opta2/status/clock_ok"
+#define TOPIC_HA_HEARTBEAT        "opta2/device/heartbeat"
 
 // ─── MQTT – Home Assistant → Opta2 commands ────────────────────────────────
 #define TOPIC_CMD_SP_HOTTUB_TARGET  "opta2/cmd/sp_hottub_target_c"

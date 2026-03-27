@@ -33,6 +33,28 @@ static PriorityManager gPriorityMgr;
 static Interlocks      gInterlocks;
 static HaInterface     gHa(gMqtt, gSettings, gStatus, gAlarms, gIo, gStorage);
 
+static void updateStatusLed(bool online) {
+#if defined(LEDR) && defined(LEDG)
+    static unsigned long lastToggleMs = 0;
+    static bool blinkOn = false;
+    const unsigned long now = millis();
+    if ((now - lastToggleMs) >= 600UL) {
+        lastToggleMs = now;
+        blinkOn = !blinkOn;
+    }
+
+    // Opta RGB status LED is active-high on this setup.
+    const int onState  = HIGH;
+    const int offState = LOW;
+
+    digitalWrite(LEDG, (online && blinkOn) ? onState : offState);
+    digitalWrite(LEDR, (!online && blinkOn) ? onState : offState);
+#if defined(LEDB)
+    digitalWrite(LEDB, offState);
+#endif
+#endif
+}
+
 static void writeOutputWithLed(uint8_t outputPin, int outputState) {
     digitalWrite(outputPin, outputState);
     if (outputPin == PIN_DO_WP_EXTRA_WW) {
@@ -86,6 +108,13 @@ void setup() {
     pinMode(LED_D1, OUTPUT);
     pinMode(LED_D2, OUTPUT);
     pinMode(LED_D3, OUTPUT);
+#if defined(LEDR) && defined(LEDG)
+    pinMode(LEDR, OUTPUT);
+    pinMode(LEDG, OUTPUT);
+#if defined(LEDB)
+    pinMode(LEDB, OUTPUT);
+#endif
+#endif
 
     // Safe state on boot
     writeOutputWithLed(PIN_DO_WP_EXTRA_WW,      LOW);
@@ -106,6 +135,12 @@ void setup() {
         gSettings = defaultSettings();
     } else if (gSettings.mqttTimeoutSec == 5 || gSettings.mqttTimeoutSec == 10 || gSettings.mqttTimeoutSec == 15) {
         gSettings.mqttTimeoutSec = 30;
+        gStorage.save(gSettings);
+    }
+
+    // Migration: old default hottub delay was 30s; update it to 180s.
+    if (gSettings.tHottubStartDelaySec == 30) {
+        gSettings.tHottubStartDelaySec = 180;
         gStorage.save(gSettings);
     }
 
@@ -131,6 +166,9 @@ void setup() {
 void loop() {
     // 1. MQTT: receive messages, update surplus values, check timeout
     gMqtt.update(gSettings);
+
+    // Status LED above reset: green blink online, red blink offline
+    updateStatusLed(gMqtt.connected());
 
     // 2. Read physical sensors
     readInputs();

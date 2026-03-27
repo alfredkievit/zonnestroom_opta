@@ -57,6 +57,10 @@ void HaInterface::_publishAll() {
     _comm.publish(TOPIC_HA_LEVEL_PUMP_ACT,_status.levelPumpActive    ? "1" : "0");
     _comm.publish(TOPIC_HA_COMM_OK,       _status.commOk             ? "1" : "0");
     _comm.publish(TOPIC_HA_CLOCK_OK,      _status.clockOk            ? "1" : "0");
+
+    // Publish a toggling heartbeat so HA can detect Opta2 liveness.
+    _heartbeatBit = !_heartbeatBit;
+    _comm.publish(TOPIC_HA_HEARTBEAT, _heartbeatBit ? "1" : "0");
 }
 
 void HaInterface::_publishAlarms() {

@@ -66,7 +66,7 @@ inline Settings defaultSettings() {
 
     s.tWpStartDelaySec       = 20;
     s.tElementStartDelaySec  = 20;
-    s.tHottubStartDelaySec   = 30;
+    s.tHottubStartDelaySec   = 180;
     s.tWpMinOnSec            = 0;
     s.tElementMinOnSec       = 0;
     s.tHottubMinOnSec        = 0;

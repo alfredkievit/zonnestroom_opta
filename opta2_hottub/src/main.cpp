@@ -26,6 +26,28 @@ static CommManager     gComm(gSettings, gStorage, gStatus, gAlarms, gIo);
 static HottubLogic     gHottubLogic;
 static HaInterface     gHa(gComm, gSettings, gStatus, gAlarms, gIo, gStorage);
 
+static void updateStatusLed(bool online) {
+#if defined(LEDR) && defined(LEDG)
+    static unsigned long lastToggleMs = 0;
+    static bool blinkOn = false;
+    const unsigned long now = millis();
+    if ((now - lastToggleMs) >= 600UL) {
+        lastToggleMs = now;
+        blinkOn = !blinkOn;
+    }
+
+    // Opta2 RGB status LED is active-high on this setup.
+    const int onState  = HIGH;
+    const int offState = LOW;
+
+    digitalWrite(LEDG, (online && blinkOn) ? onState : offState);
+    digitalWrite(LEDR, (!online && blinkOn) ? onState : offState);
+#if defined(LEDB)
+    digitalWrite(LEDB, offState);
+#endif
+#endif
+}
+
 static void writeOutputWithLed(uint8_t outputPin, int outputState) {
     digitalWrite(outputPin, outputState);
     if (outputPin == PIN_DO_HOTTUB_HEATER) {
@@ -73,6 +95,13 @@ void setup() {
     pinMode(LED_D1, OUTPUT);
     pinMode(LED_D2, OUTPUT);
     pinMode(LED_D3, OUTPUT);
+#if defined(LEDR) && defined(LEDG)
+    pinMode(LEDR, OUTPUT);
+    pinMode(LEDG, OUTPUT);
+#if defined(LEDB)
+    pinMode(LEDB, OUTPUT);
+#endif
+#endif
 
     writeOutputWithLed(PIN_DO_HOTTUB_HEATER,    LOW);
     writeOutputWithLed(PIN_DO_HOTTUB_PUMP,      LOW);
@@ -102,6 +131,9 @@ void setup() {
 void loop() {
     // 1. Receive MQTT: permission, heartbeat, HA commands
     gComm.update(gSettings);
+
+    // Status LED above reset: green blink online, red blink offline
+    updateStatusLed(gComm.connected());
 
     // 2. Read physical sensors and digital inputs
     readInputs();

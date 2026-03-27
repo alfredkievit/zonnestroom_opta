@@ -321,18 +321,10 @@ views:
       - type: entities
         title: Debug / Diagnostiek
         entities:
-          - entity: sensor.opta1_energie_master_opta1_actieve_prioriteit
-            name: Prioriteit (raw)
           - entity: sensor.systeem_prioriteit_tekst
             name: Prioriteit (tekst)
           - entity: binary_sensor.opta1_energie_master_mqtt_geldig
             name: MQTT Valid
-          - entity: binary_sensor.opta1_energie_master_handmatige_modus_actief
-            name: Manual Mode Status
-          - entity: sensor.opta1_energie_master_opta1_alarms
-            name: Opta1 Alarms (raw)
-          - entity: sensor.opta2_hottub_controller_opta2_alarms
-            name: Opta2 Alarms (raw)
           - entity: sensor.opta1_energie_master_opta1_heartbeat
             name: Opta1 Heartbeat
           - entity: sensor.opta2_hottub_controller_opta2_heartbeat

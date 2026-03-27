@@ -26,6 +26,7 @@ private:
     bool  _prevLevelPumpAct = false;
     bool  _prevCommOk       = false;
     bool  _prevClockOk      = false;
+    bool  _heartbeatBit     = false;
 
     void _publishAll();
     void _publishAlarms();
