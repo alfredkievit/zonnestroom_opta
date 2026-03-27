@@ -116,8 +116,7 @@ void HaInterface::handleCommand(const String& topic, const char* payload, int le
 
     bool changed = false;
 
-    if      (topic == TOPIC_CMD_ENABLE_SYSTEM)      { _settings.enableSystem        = bval; changed = true; }
-    else if (topic == TOPIC_CMD_ENABLE_ELEMENT)      { _settings.enableBoilerElement = bval; changed = true; }
+    if      (topic == TOPIC_CMD_ENABLE_ELEMENT)      { _settings.enableBoilerElement = bval; changed = true; }
     else if (topic == TOPIC_CMD_ENABLE_HOTTUB)       { _settings.enableHottub        = bval; changed = true; }
     else if (topic == TOPIC_CMD_SP_WP_TARGET)        { _settings.spBoilerWpTargetC      = val;  changed = true; }
     else if (topic == TOPIC_CMD_SP_WP_HYST)          { _settings.spBoilerWpHystC        = val;  changed = true; }

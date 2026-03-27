@@ -109,6 +109,12 @@ void setup() {
         gStorage.save(gSettings);
     }
 
+    // System is intentionally always enabled; do not allow persisted OFF state.
+    if (!gSettings.enableSystem) {
+        gSettings.enableSystem = true;
+        gStorage.save(gSettings);
+    }
+
     // Initialise status to safe/unknown state
     gStatus = {};
     gAlarms = {};

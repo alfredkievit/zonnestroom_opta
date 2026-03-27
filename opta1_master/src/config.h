@@ -43,7 +43,6 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_MANUAL_MODE      "opta1/status/manual_mode"
 
 // ─── MQTT – Home Assistant → Opta1 command topics (retained) ──────────────
-#define TOPIC_CMD_ENABLE_SYSTEM       "opta1/cmd/enable_system"
 #define TOPIC_CMD_ENABLE_ELEMENT      "opta1/cmd/enable_boiler_element"
 #define TOPIC_CMD_ENABLE_HOTTUB       "opta1/cmd/enable_hottub"
 #define TOPIC_CMD_SP_WP_TARGET        "opta1/cmd/sp_boiler_wp_target_c"

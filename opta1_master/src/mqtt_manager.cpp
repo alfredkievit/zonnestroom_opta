@@ -82,7 +82,6 @@ void MqttManager::_reconnect() {
     _mqtt.subscribe(TOPIC_METER_ROOT);
 
     // Subscribe to HA command topics (retained settings arrive immediately)
-    _mqtt.subscribe(TOPIC_CMD_ENABLE_SYSTEM);
     _mqtt.subscribe(TOPIC_CMD_ENABLE_ELEMENT);
     _mqtt.subscribe(TOPIC_CMD_ENABLE_HOTTUB);
     _mqtt.subscribe(TOPIC_CMD_SP_WP_TARGET);

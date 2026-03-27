@@ -489,32 +489,6 @@
           "cards": [
             {
               "type": "entities",
-              "title": "Systeem Inschakelen",
-              "entities": [
-                {
-                  "entity": "switch.opta1_energie_master_systeem_inschakelen",
-                  "name": "Algeheel Systeem"
-                },
-                {
-                  "entity": "switch.opta1_energie_master_boiler_element_inschakelen",
-                  "name": "Boiler Element"
-                },
-                {
-                  "entity": "switch.opta1_energie_master_hottub_inschakelen_opta1",
-                  "name": "Hottub (via Opta1)"
-                },
-                {
-                  "entity": "switch.opta2_hottub_controller_hottub_verwarming_inschakelen",
-                  "name": "Hottub Verwarming (Opta2)"
-                },
-                {
-                  "entity": "switch.opta2_hottub_controller_niveau_pomp_inschakelen",
-                  "name": "Niveau Pomp (Opta2)"
-                }
-              ]
-            },
-            {
-              "type": "entities",
               "title": "Surplus Drempelwaarden",
               "entities": [
                 {
