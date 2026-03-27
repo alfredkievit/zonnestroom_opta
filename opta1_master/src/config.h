@@ -3,9 +3,11 @@
 #include <stdint.h>
 
 // ─── Network ───────────────────────────────────────────────────────────────
-// Opta1 Ethernet – set a fixed IP in the same subnet as the MQTT broker
+// Opta1 WiFi – will use DHCP to get IP in 192.168.0.x subnet
+static const char* OPTA1_WIFI_SSID = "optimusnexus";
+static const char* OPTA1_WIFI_PASS = "kinderpindakaas";
 static const uint8_t  OPTA1_MAC[]  = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01 };
-static const uint8_t  OPTA1_IP[]   = { 192, 168, 0, 50 };
+// Note: With DHCP, IP will be auto-assigned; MQTT broker should be on same subnet
 static const uint8_t  BROKER_IP[]  = { 192, 168, 0, 10 };
 static const uint16_t BROKER_PORT  = 1883;
 

@@ -527,7 +527,7 @@ mqtt:
       command_topic: "opta2/cmd/sp_pump_run1_hour"
       state_topic: "opta2/cmd/sp_pump_run1_hour"
       min: 0
-      max: 23
+      max: 24
       step: 1
       retain: true
       icon: "mdi:clock-start"
@@ -539,7 +539,7 @@ mqtt:
       command_topic: "opta2/cmd/sp_pump_run2_hour"
       state_topic: "opta2/cmd/sp_pump_run2_hour"
       min: 0
-      max: 23
+      max: 24
       step: 1
       retain: true
       icon: "mdi:clock-start"

@@ -1,6 +1,6 @@
 #include "mqtt_manager.h"
 #include "ha_interface.h"
-#include <Ethernet.h>
+#include <WiFi.h>
 #include <ArduinoJson.h>
 
 // Static instance pointer required for ArduinoMqttClient plain-function callback
@@ -12,15 +12,12 @@ void MqttManager::_onMessageCb(int size) {
 
 // ---------------------------------------------------------------------------
 MqttManager::MqttManager(SystemStatus& status, AlarmState& alarms, IOState& io)
-    : _mqtt(_ethClient), _status(status), _alarms(alarms), _io(io)
+    : _mqtt(_wifiClient), _status(status), _alarms(alarms), _io(io)
 {}
 
 // ---------------------------------------------------------------------------
 void MqttManager::begin() {
-    byte mac[] = { OPTA1_MAC[0], OPTA1_MAC[1], OPTA1_MAC[2],
-                   OPTA1_MAC[3], OPTA1_MAC[4], OPTA1_MAC[5] };
-    IPAddress ip(OPTA1_IP[0], OPTA1_IP[1], OPTA1_IP[2], OPTA1_IP[3]);
-    Ethernet.begin(mac, ip);
+    WiFi.begin(OPTA1_WIFI_SSID, OPTA1_WIFI_PASS);
     delay(500);
 
     IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);

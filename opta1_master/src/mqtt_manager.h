@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <ArduinoMqttClient.h>
-#include <EthernetClient.h>
+#include <WiFiClient.h>
 #include "types.h"
 #include "config.h"
 
@@ -31,8 +31,8 @@ public:
 private:
     HaInterface* _ha = nullptr;  // To forward command topics
     static MqttManager* _instance;
-    EthernetClient  _ethClient;
-    MqttClient      _mqtt;
+    WiFiClient  _wifiClient;
+    MqttClient  _mqtt;
 
     SystemStatus& _status;
     AlarmState&   _alarms;

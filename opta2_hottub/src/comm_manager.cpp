@@ -158,8 +158,8 @@ void CommManager::handleCommand(const String& topic, const char* payload, int le
     if      (topic == TOPIC_CMD_SP_HOTTUB_TARGET) { settings.spHottubTargetC     = val;  }
     else if (topic == TOPIC_CMD_SP_HOTTUB_HYST)   { settings.spHottubHystC       = val;  }
     else if (topic == TOPIC_CMD_SP_HOTTUB_MAX)    { settings.spHottubMaxC        = val;  }
-    else if (topic == TOPIC_CMD_SP_PUMP_1_HOUR)   { settings.spPumpRun1Hour      = constrain((int)val, 0, 23); }
-    else if (topic == TOPIC_CMD_SP_PUMP_2_HOUR)   { settings.spPumpRun2Hour      = constrain((int)val, 0, 23); }
+    else if (topic == TOPIC_CMD_SP_PUMP_1_HOUR)   { settings.spPumpRun1Hour      = constrain((int)val, 0, 24); }
+    else if (topic == TOPIC_CMD_SP_PUMP_2_HOUR)   { settings.spPumpRun2Hour      = constrain((int)val, 0, 24); }
     else if (topic == TOPIC_CMD_SP_PUMP_DURATION) { settings.spPumpRunDurationMin = constrain((int)val, 1, 120); }
     else if (topic == TOPIC_CMD_ENABLE_HOTTUB)    { settings.enableHottub        = bval; }
     else if (topic == TOPIC_CMD_ENABLE_AUTO_PUMP) { settings.enableAutoPump      = bval; }
