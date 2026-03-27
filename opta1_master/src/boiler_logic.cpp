@@ -53,23 +53,20 @@ void BoilerLogic::evaluate(const Settings& settings, const IOState& io, SystemSt
     }
 
     // ── Priority 3: Hottub request ─────────────────────────────────────────
-    // Hottub may only be requested when boiler is fully satisfied AND total surplus remains.
-    // "Boiler fully satisfied" means element target reached OR element not needed.
-    bool boilerDone = (temp >= settings.spBoilerElementTargetC) ||
-                      (!status.boilerWpRequest && !status.boilerElementRequest);
+    // Hottub request is now based on available total surplus and no longer
+    // blocked by "boiler done". This allows parallel operation when
+    // element is active and there is still enough surplus.
 
     if (!status.hottubRequest) {
         status.hottubRequest =
             settings.enableSystem &&
             settings.enableHottub &&
             status.mqttValid &&
-            io.inSurplusTotaalW > settings.spSurplusHottubStartW &&
-            boilerDone;
+            io.inSurplusTotaalW > settings.spSurplusHottubStartW;
     } else {
         bool stopCondition =
             !status.mqttValid ||
             io.inSurplusTotaalW <= settings.spSurplusStopW ||
-            !boilerDone ||
             !settings.enableSystem ||
             !settings.enableHottub;
         if (stopCondition) status.hottubRequest = false;

@@ -109,7 +109,7 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
             io.doWpExtraWW        = io.manualForceWp;       // always freely switchable
             io.doWpComfortExtra   = io.manualForceComfort;
             io.doBoilerElement    = true;
-            io.doMasterPermHottub = io.manualForceHottub;   // manual always wins
+            io.doMasterPermHottub = io.manualForceHottub || htReady;
 
             if (!status.boilerElementRequest) {
                 io.doBoilerElement = false;
@@ -128,7 +128,7 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
             io.doWpExtraWW        = io.manualForceWp;
             io.doWpComfortExtra   = io.manualForceComfort;
             io.doBoilerElement    = false;
-            io.doMasterPermHottub = true;  // auto: surplus + boiler done
+            io.doMasterPermHottub = true;  // auto: surplus-based request
 
             if (!status.hottubRequest) {
                 io.doMasterPermHottub = io.manualForceHottub;  // auto off → keep if manual
