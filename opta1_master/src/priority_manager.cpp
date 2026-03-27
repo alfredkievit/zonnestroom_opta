@@ -35,16 +35,6 @@ void PriorityManager::_setAllOff(IOState& io) {
 // ---------------------------------------------------------------------------
 void PriorityManager::update(const Settings& settings, const SystemStatus& status,
                               const AlarmState& alarms, IOState& io) {
-    // ── Manual mode bypass ─────────────────────────────────────────────────
-    if (io.inManualMode) {
-        io.doWpExtraWW        = io.manualForceWp;
-        io.doWpComfortExtra   = io.manualForceComfort;  // independent manual-only contact
-        io.doBoilerElement    = false;                  // element is auto-only by surplus logic
-        io.doMasterPermHottub = io.manualForceHottub;
-        _state = SystemState::IDLE;
-        return;
-    }
-
     // ── Fault state ────────────────────────────────────────────────────────
     if (_state == SystemState::FAULT) {
         _setAllOff(io);

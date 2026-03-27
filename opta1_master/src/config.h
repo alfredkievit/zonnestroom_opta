@@ -44,7 +44,6 @@ static const uint16_t BROKER_PORT  = 1883;
 
 // ─── MQTT – Home Assistant → Opta1 command topics (retained) ──────────────
 #define TOPIC_CMD_ENABLE_SYSTEM       "opta1/cmd/enable_system"
-#define TOPIC_CMD_ENABLE_WP           "opta1/cmd/enable_wp_boiler"
 #define TOPIC_CMD_ENABLE_ELEMENT      "opta1/cmd/enable_boiler_element"
 #define TOPIC_CMD_ENABLE_HOTTUB       "opta1/cmd/enable_hottub"
 #define TOPIC_CMD_SP_WP_TARGET        "opta1/cmd/sp_boiler_wp_target_c"
@@ -55,7 +54,6 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_CMD_SP_SURPLUS_ELEMENT  "opta1/cmd/sp_surplus_element_start_w"
 #define TOPIC_CMD_SP_SURPLUS_HOTTUB   "opta1/cmd/sp_surplus_hottub_start_w"
 #define TOPIC_CMD_SP_SURPLUS_STOP     "opta1/cmd/sp_surplus_stop_w"
-#define TOPIC_CMD_MANUAL_MODE         "opta1/cmd/manual_mode"
 #define TOPIC_CMD_MANUAL_FORCE_WP     "opta1/cmd/manual_force_wp"
 #define TOPIC_CMD_MANUAL_FORCE_HOTTUB "opta1/cmd/manual_force_hottub"
 #define TOPIC_CMD_MANUAL_FORCE_COMFORT "opta1/cmd/manual_force_comfort"

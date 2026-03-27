@@ -117,7 +117,6 @@ void HaInterface::handleCommand(const String& topic, const char* payload, int le
     bool changed = false;
 
     if      (topic == TOPIC_CMD_ENABLE_SYSTEM)      { _settings.enableSystem        = bval; changed = true; }
-    else if (topic == TOPIC_CMD_ENABLE_WP)           { _settings.enableWpBoiler      = bval; changed = true; }
     else if (topic == TOPIC_CMD_ENABLE_ELEMENT)      { _settings.enableBoilerElement = bval; changed = true; }
     else if (topic == TOPIC_CMD_ENABLE_HOTTUB)       { _settings.enableHottub        = bval; changed = true; }
     else if (topic == TOPIC_CMD_SP_WP_TARGET)        { _settings.spBoilerWpTargetC      = val;  changed = true; }
@@ -131,7 +130,6 @@ void HaInterface::handleCommand(const String& topic, const char* payload, int le
     else if (topic == TOPIC_CMD_MANUAL_FORCE_WP)      { _io.manualForceWp      = bval; }
     else if (topic == TOPIC_CMD_MANUAL_FORCE_HOTTUB)  { _io.manualForceHottub  = bval; }
     else if (topic == TOPIC_CMD_MANUAL_FORCE_COMFORT) { _io.manualForceComfort = bval; }
-    else if (topic == TOPIC_CMD_MANUAL_MODE)          { _io.inManualMode       = bval; }
     else if (topic == TOPIC_CMD_FAULT_RESET)          { _io.inFaultReset       = bval; }
 
     if (changed) {

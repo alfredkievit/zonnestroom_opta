@@ -399,14 +399,8 @@
             {
               "type": "entities",
               "title": "Warmtepomp",
+              "show_header_toggle": false,
               "entities": [
-                {
-                  "entity": "switch.opta1_energie_master_warmtepomp_inschakelen",
-                  "name": "WP Inschakelen (automatisch)"
-                },
-                {
-                  "type": "divider"
-                },
                 {
                   "entity": "binary_sensor.opta1_energie_master_warmtepomp_actief",
                   "name": "WP Status – Extra Warm Water (D0)"
@@ -417,11 +411,6 @@
                 },
                 {
                   "type": "divider"
-                },
-                {
-                  "entity": "switch.opta1_energie_master_handmatige_modus",
-                  "name": "Handmatige Modus",
-                  "secondary_info": "Zet aan voor handmatige bediening"
                 },
                 {
                   "entity": "switch.opta1_energie_master_handmatig_wp_extra_warm_water",
@@ -505,10 +494,6 @@
                 {
                   "entity": "switch.opta1_energie_master_systeem_inschakelen",
                   "name": "Algeheel Systeem"
-                },
-                {
-                  "entity": "switch.opta1_energie_master_warmtepomp_inschakelen",
-                  "name": "Warmtepomp"
                 },
                 {
                   "entity": "switch.opta1_energie_master_boiler_element_inschakelen",

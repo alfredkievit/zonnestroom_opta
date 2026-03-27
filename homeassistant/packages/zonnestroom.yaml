@@ -221,17 +221,6 @@ mqtt:
       device:
         identifiers: [opta1_master]
 
-    - name: "Warmtepomp Inschakelen"
-      unique_id: opta1_enable_wp
-      command_topic: "opta1/cmd/enable_wp_boiler"
-      state_topic: "opta1/cmd/enable_wp_boiler"
-      payload_on: "1"
-      payload_off: "0"
-      retain: true
-      optimistic: false
-      device:
-        identifiers: [opta1_master]
-
     - name: "Boiler Element Inschakelen"
       unique_id: opta1_enable_element
       command_topic: "opta1/cmd/enable_boiler_element"
@@ -251,17 +240,6 @@ mqtt:
       payload_off: "0"
       retain: true
       optimistic: false
-      device:
-        identifiers: [opta1_master]
-
-    - name: "Handmatige Modus"
-      unique_id: opta1_manual_mode_sw
-      command_topic: "opta1/cmd/manual_mode"
-      state_topic: "opta1/status/manual_mode"
-      payload_on: "1"
-      payload_off: "0"
-      retain: true
-      icon: "mdi:hand-back-right"
       device:
         identifiers: [opta1_master]
 
@@ -634,23 +612,6 @@ automation:
           message: >
             {{ trigger.entity_id | replace('sensor.', '') }}: {{ trigger.to_state.state }}
           notification_id: "zonnestroom_alarm"
-
-  # Zet handmatige modus automatisch uit na 2 uur
-  - id: zonnestroom_manual_mode_timeout
-    alias: "Zonnestroom – Handmatige modus timeout (2u)"
-    trigger:
-      - platform: state
-        entity_id: switch.opta1_energie_master_handmatige_modus
-        to: "on"
-        for: "02:00:00"
-    action:
-      - service: switch.turn_off
-        entity_id: switch.opta1_energie_master_handmatige_modus
-      - service: persistent_notification.create
-        data:
-          title: "Zonnestroom"
-          message: "Handmatige modus automatisch uitgeschakeld na 2 uur."
-          notification_id: "zonnestroom_manual_timeout"
 
   - id: zonnestroom_hottub_clock_publish
     alias: "Zonnestroom – Publiceer hottub klok"

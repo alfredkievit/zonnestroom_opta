@@ -12,7 +12,6 @@ void BoilerLogic::evaluate(const Settings& settings, const IOState& io, SystemSt
         // Not currently requesting → check start condition (with hysteresis)
         status.boilerWpRequest =
             settings.enableSystem &&
-            settings.enableWpBoiler &&
             status.mqttValid &&
             io.inSurplusFase1W > settings.spSurplusWpStartW &&
             temp < (settings.spBoilerWpTargetC - settings.spBoilerWpHystC);
@@ -22,8 +21,7 @@ void BoilerLogic::evaluate(const Settings& settings, const IOState& io, SystemSt
             !status.mqttValid ||
             io.inSurplusFase1W <= settings.spSurplusStopW ||
             temp >= settings.spBoilerWpTargetC ||
-            !settings.enableSystem ||
-            !settings.enableWpBoiler;
+            !settings.enableSystem;
         if (stopCondition) status.boilerWpRequest = false;
     }
 

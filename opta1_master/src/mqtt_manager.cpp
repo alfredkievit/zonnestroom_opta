@@ -83,7 +83,6 @@ void MqttManager::_reconnect() {
 
     // Subscribe to HA command topics (retained settings arrive immediately)
     _mqtt.subscribe(TOPIC_CMD_ENABLE_SYSTEM);
-    _mqtt.subscribe(TOPIC_CMD_ENABLE_WP);
     _mqtt.subscribe(TOPIC_CMD_ENABLE_ELEMENT);
     _mqtt.subscribe(TOPIC_CMD_ENABLE_HOTTUB);
     _mqtt.subscribe(TOPIC_CMD_SP_WP_TARGET);
@@ -96,7 +95,6 @@ void MqttManager::_reconnect() {
     _mqtt.subscribe(TOPIC_CMD_SP_SURPLUS_STOP);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_WP);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_HOTTUB);
-    _mqtt.subscribe(TOPIC_CMD_MANUAL_MODE);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_COMFORT);
     _mqtt.subscribe(TOPIC_CMD_FAULT_RESET);
 }
