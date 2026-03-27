@@ -287,17 +287,6 @@ mqtt:
       device:
         identifiers: [opta1_master]
 
-    - name: "Handmatig Boiler Element"
-      unique_id: opta1_manual_force_element
-      command_topic: "opta1/cmd/manual_force_element"
-      state_topic: "opta1/cmd/manual_force_element"
-      payload_on: "1"
-      payload_off: "0"
-      retain: true
-      icon: "mdi:lightning-bolt"
-      device:
-        identifiers: [opta1_master]
-
     - name: "Handmatig Hottub Permissie"
       unique_id: opta1_manual_force_hottub
       command_topic: "opta1/cmd/manual_force_hottub"

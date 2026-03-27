@@ -20,7 +20,7 @@ void Interlocks::apply(const Settings& settings, const IOState& io,
     // Manual force flags bypass the surplus interlock for direct switching.
     if (out.inSurplusFase1W <= settings.spSurplusStopW) {
         if (!out.manualForceWp)      out.doWpExtraWW     = false;
-        if (!out.manualForceElement) out.doBoilerElement = false;
+        out.doBoilerElement = false;
     }
     if (out.inSurplusTotaalW <= settings.spSurplusStopW) {
         if (!out.manualForceHottub)  out.doMasterPermHottub = false;
@@ -30,7 +30,7 @@ void Interlocks::apply(const Settings& settings, const IOState& io,
     // Manual force flags still permitted without MQTT (local override).
     if (!status.mqttValid) {
         if (!out.manualForceWp)      out.doWpExtraWW        = false;
-        if (!out.manualForceElement) out.doBoilerElement     = false;
+        out.doBoilerElement = false;
         if (!out.manualForceHottub)  out.doMasterPermHottub = false;
     }
 

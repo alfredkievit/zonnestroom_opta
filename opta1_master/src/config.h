@@ -57,7 +57,6 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_CMD_SP_SURPLUS_STOP     "opta1/cmd/sp_surplus_stop_w"
 #define TOPIC_CMD_MANUAL_MODE         "opta1/cmd/manual_mode"
 #define TOPIC_CMD_MANUAL_FORCE_WP     "opta1/cmd/manual_force_wp"
-#define TOPIC_CMD_MANUAL_FORCE_ELEM   "opta1/cmd/manual_force_element"
 #define TOPIC_CMD_MANUAL_FORCE_HOTTUB "opta1/cmd/manual_force_hottub"
 #define TOPIC_CMD_MANUAL_FORCE_COMFORT "opta1/cmd/manual_force_comfort"
 #define TOPIC_CMD_FAULT_RESET          "opta1/cmd/fault_reset"

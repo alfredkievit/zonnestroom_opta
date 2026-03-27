@@ -95,7 +95,6 @@ void MqttManager::_reconnect() {
     _mqtt.subscribe(TOPIC_CMD_SP_SURPLUS_HOTTUB);
     _mqtt.subscribe(TOPIC_CMD_SP_SURPLUS_STOP);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_WP);
-    _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_ELEM);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_HOTTUB);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_MODE);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_COMFORT);

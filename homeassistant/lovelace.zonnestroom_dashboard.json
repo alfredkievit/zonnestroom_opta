@@ -446,14 +446,6 @@
                 {
                   "entity": "binary_sensor.opta1_energie_master_boiler_element_actief",
                   "name": "Element Status"
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "entity": "switch.opta1_energie_master_handmatig_boiler_element",
-                  "name": "Handmatig Element",
-                  "icon": "mdi:lightning-bolt"
                 }
               ]
             },

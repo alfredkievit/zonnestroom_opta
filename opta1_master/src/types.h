@@ -129,7 +129,6 @@ struct IOState {
 
     // Manual force overrides
     bool  manualForceWp;
-    bool  manualForceElement;
     bool  manualForceHottub;
     bool  manualForceComfort;  // D1 – comfortverwarming WP
 };

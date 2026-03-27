@@ -129,7 +129,6 @@ void HaInterface::handleCommand(const String& topic, const char* payload, int le
     else if (topic == TOPIC_CMD_SP_SURPLUS_HOTTUB)   { _settings.spSurplusHottubStartW  = (int)val; changed = true; }
     else if (topic == TOPIC_CMD_SP_SURPLUS_STOP)     { _settings.spSurplusStopW         = (int)val; changed = true; }
     else if (topic == TOPIC_CMD_MANUAL_FORCE_WP)      { _io.manualForceWp      = bval; }
-    else if (topic == TOPIC_CMD_MANUAL_FORCE_ELEM)    { _io.manualForceElement = bval; }
     else if (topic == TOPIC_CMD_MANUAL_FORCE_HOTTUB)  { _io.manualForceHottub  = bval; }
     else if (topic == TOPIC_CMD_MANUAL_FORCE_COMFORT) { _io.manualForceComfort = bval; }
     else if (topic == TOPIC_CMD_MANUAL_MODE)          { _io.inManualMode       = bval; }
