@@ -36,6 +36,11 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_WP_ACTIVE        "opta1/status/wp_active"
 #define TOPIC_HA_ELEMENT_ACTIVE   "opta1/status/element_active"
 #define TOPIC_HA_HOTTUB_PERM      "opta1/status/hottub_permission"
+#define TOPIC_HA_AUTO_WP_REQ      "opta1/status/auto_wp_request"
+#define TOPIC_HA_AUTO_ELEMENT_REQ "opta1/status/auto_element_request"
+#define TOPIC_HA_AUTO_HOTTUB_REQ  "opta1/status/auto_hottub_request"
+#define TOPIC_HA_WP_BLOCK_REASON  "opta1/status/wp_block_reason"
+#define TOPIC_HA_ELEMENT_THERM_OK "opta1/status/element_thermostat_ok"
 #define TOPIC_HA_ALARM_JSON       "opta1/status/alarms"
 
 // ─── MQTT – Opta1 → Home Assistant extra status ───────────────────────────
@@ -70,7 +75,7 @@ static const uint16_t BROKER_PORT  = 1883;
 #define PIN_DO_SPARE            D3    // reserverelais
 
 // Analog inputs (0–10 V → PT1000 sensor)
-#define PIN_AI_BOILER_LOW      A0    // boiler onderste sensor
+#define PIN_AI_BOILER_LOW      A0    // boiler sensor op PLC I1 (regelwaarheid)
 #define PIN_AI_BOILER_HIGH     A1    // boiler bovenste sensor (optioneel)
 
 // Digital inputs
@@ -92,3 +97,4 @@ static const uint16_t BROKER_PORT  = 1883;
 
 // ─── HA publish interval ──────────────────────────────────────────────────
 #define HA_PUBLISH_INTERVAL_MS 5000UL
+#define HA_BOILER_HIGH_PUBLISH_INTERVAL_MS 60000UL

@@ -90,7 +90,7 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
             io.doWpExtraWW        = true;                   // auto: WP running
             io.doWpComfortExtra   = io.manualForceComfort;
             io.doBoilerElement    = false;
-            io.doMasterPermHottub = io.manualForceHottub;   // manual always wins
+            io.doMasterPermHottub = io.manualForceHottub || htReady;
 
             if (!status.boilerWpRequest) {
                 // Stop immediately – no stop delay
@@ -142,10 +142,10 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
             } else {
                 // Higher-priority load reclaims → leave HOTTUB immediately
                 if (wpReady) {
-                    io.doMasterPermHottub = io.manualForceHottub;
+                    io.doMasterPermHottub = io.manualForceHottub || htReady;
                     _state = SystemState::WP_BOILER;
                 } else if (elReady) {
-                    io.doMasterPermHottub = io.manualForceHottub;
+                    io.doMasterPermHottub = io.manualForceHottub || htReady;
                     _state = SystemState::BOILER_ELEMENT;
                 }
             }

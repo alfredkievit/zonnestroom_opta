@@ -78,15 +78,17 @@ static void writeOutputs() {
 
 // ── Helper: read physical inputs ─────────────────────────────────────────────
 static void readInputs() {
-    bool lowFault  = false;
     bool highFault = false;
 
-    gIo.aiBoilerTempLowC  = readPT1000(PIN_AI_BOILER_LOW,  lowFault);
-    gIo.aiBoilerTempHighC = readPT1000(PIN_AI_BOILER_HIGH, highFault);
+    // Boiler control truth uses only I1 on the PLC (mapped to A0 in this setup).
+    gIo.aiBoilerTempHighC = readPT1000(PIN_AI_BOILER_LOW, highFault);
+    gIo.aiBoilerTempLowC  = gIo.aiBoilerTempHighC;  // compatibility mirror
 
-    gAlarms.boilerSensorFault = lowFault || highFault;
+    gAlarms.boilerSensorFault = highFault;
 
-    gIo.inElementThermostatOk = (digitalRead(PIN_DI_ELEMENT_THERM) == HIGH);
+    // I2/A2 is not used in this installation; do not block element control on it.
+    gIo.inElementThermostatOk = true;
+    gAlarms.boilerThermostatFault = false;
     gIo.inFaultReset          = (digitalRead(PIN_DI_FAULT_RESET)   == HIGH);
 
     // Mirror measured temps into status for HA publishing

@@ -1,7 +1,8 @@
 #include "boiler_logic.h"
 
 void BoilerLogic::evaluate(const Settings& settings, const IOState& io, SystemStatus& status) {
-    const float temp = io.aiBoilerTempLowC;
+    // Control truth comes from PLC top boiler sensor (PT1000 + 0-10V converter).
+    const float temp = io.aiBoilerTempHighC;
 
     // ── Priority 1: WP boiler request ──────────────────────────────────────
     // Request is set when boiler needs heating via WP.
@@ -64,6 +65,16 @@ void BoilerLogic::evaluate(const Settings& settings, const IOState& io, SystemSt
             status.mqttValid &&
             io.inSurplusTotaalW > settings.spSurplusHottubStartW;
     } else {
+        // Before the hottub is actually permitted, require the higher
+        // start threshold to remain present so the 180 s delay resets on
+        // fast cloud dips. Once permitted, fall back to the lower stop
+        // threshold for normal running hysteresis.
+        if (!status.hottubPermitted &&
+            io.inSurplusTotaalW <= settings.spSurplusHottubStartW) {
+            status.hottubRequest = false;
+            return;
+        }
+
         bool stopCondition =
             !status.mqttValid ||
             io.inSurplusTotaalW <= settings.spSurplusStopW ||

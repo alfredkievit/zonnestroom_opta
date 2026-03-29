@@ -1,5 +1,6 @@
 #pragma once
 #include <ArduinoMqttClient.h>
+#include <WString.h>
 #include "types.h"
 #include "mqtt_manager.h"
 #include "settings_storage.h"
@@ -29,7 +30,10 @@ private:
 
     unsigned long _lastPublishMs   = 0;
     unsigned long _lastHeartbeatMs = 0;
+    unsigned long _lastBoilerHighPublishMs = 0;
     bool          _heartbeatBit    = false;
+    float         _boilerHighAvgC  = 0.0f;
+    bool          _boilerHighAvgInit = false;
 
     // Previous values for change detection
     int   _prevSurplusF1    = INT16_MIN;
@@ -39,6 +43,11 @@ private:
     bool  _prevWpActive     = false;
     bool  _prevElemActive   = false;
     bool  _prevHottubPerm   = false;
+    bool  _prevAutoWpReq    = false;
+    bool  _prevAutoElemReq  = false;
+    bool  _prevAutoHtReq    = false;
+    bool  _prevElementThermOk = false;
+    String _prevWpBlockReason = "";
     uint8_t _prevPriority   = 255;
 
     void _publishAll();

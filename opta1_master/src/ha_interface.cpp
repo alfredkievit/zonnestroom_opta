@@ -18,6 +18,36 @@ void HaInterface::setMqttManager(MqttManager* mqtt) {
 void HaInterface::update() {
     unsigned long now = millis();
 
+    if (!_boilerHighAvgInit) {
+        _boilerHighAvgC = _status.boilerTempHighC;
+        _boilerHighAvgInit = true;
+    } else {
+        // Slow EWMA for 1000L boiler visualization; control logic remains unfiltered.
+        _boilerHighAvgC += 0.02f * (_status.boilerTempHighC - _boilerHighAvgC);
+    }
+
+    String wpBlockReason = "ready_to_request";
+    if (_status.wpActive) {
+        wpBlockReason = "wp_active";
+    } else if (_alarms.mqttTimeout || _alarms.invalidPowerData || _alarms.boilerSensorFault ||
+               _alarms.boilerThermostatFault || _alarms.interlockConflict || _alarms.masterGeneral) {
+        wpBlockReason = "alarm_or_fault";
+    } else if (!_settings.enableSystem) {
+        wpBlockReason = "system_disabled";
+    } else if (!_status.mqttValid) {
+        wpBlockReason = "mqtt_invalid";
+    } else if (_io.inSurplusFase1W <= _settings.spSurplusWpStartW) {
+        wpBlockReason = "surplus_too_low";
+    } else if (_status.boilerTempHighC >= (_settings.spBoilerWpTargetC - _settings.spBoilerWpHystC)) {
+        wpBlockReason = "boiler_temp_high_enough";
+    } else if (_status.boilerWpRequest) {
+        wpBlockReason = "start_delay_or_priority_wait";
+    }
+
+    if (_prevWpBlockReason.length() == 0) {
+        _prevWpBlockReason = wpBlockReason;
+    }
+
     // ── Periodic publish ───────────────────────────────────────────────────
     bool doPublish = (now - _lastPublishMs) >= HA_PUBLISH_INTERVAL_MS;
     if (doPublish) {
@@ -43,6 +73,10 @@ void HaInterface::update() {
         _mqtt.publish(TOPIC_HA_MQTT_VALID, _status.mqttValid ? "1" : "0");
         _prevMqttValid = _status.mqttValid;
     }
+    if (_io.inElementThermostatOk != _prevElementThermOk) {
+        _mqtt.publish(TOPIC_HA_ELEMENT_THERM_OK, _io.inElementThermostatOk ? "1" : "0");
+        _prevElementThermOk = _io.inElementThermostatOk;
+    }
     if (_status.wpActive != _prevWpActive) {
         _mqtt.publish(TOPIC_HA_WP_ACTIVE, _status.wpActive ? "1" : "0");
         _prevWpActive = _status.wpActive;
@@ -55,10 +89,31 @@ void HaInterface::update() {
         _mqtt.publish(TOPIC_HA_HOTTUB_PERM, _status.hottubPermitted ? "1" : "0");
         _prevHottubPerm = _status.hottubPermitted;
     }
+    if (wpBlockReason != _prevWpBlockReason) {
+        _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, wpBlockReason.c_str());
+        _prevWpBlockReason = wpBlockReason;
+    }
+    if (_status.boilerWpRequest != _prevAutoWpReq) {
+        _mqtt.publish(TOPIC_HA_AUTO_WP_REQ, _status.boilerWpRequest ? "1" : "0");
+        _prevAutoWpReq = _status.boilerWpRequest;
+    }
+    if (_status.boilerElementRequest != _prevAutoElemReq) {
+        _mqtt.publish(TOPIC_HA_AUTO_ELEMENT_REQ, _status.boilerElementRequest ? "1" : "0");
+        _prevAutoElemReq = _status.boilerElementRequest;
+    }
+    if (_status.hottubRequest != _prevAutoHtReq) {
+        _mqtt.publish(TOPIC_HA_AUTO_HOTTUB_REQ, _status.hottubRequest ? "1" : "0");
+        _prevAutoHtReq = _status.hottubRequest;
+    }
     uint8_t prio = static_cast<uint8_t>(_status.priorityActive);
     if (prio != _prevPriority) {
         _mqtt.publish(TOPIC_HA_ACTIVE_PRIORITY, (int)prio);
         _prevPriority = prio;
+    }
+
+    if ((now - _lastBoilerHighPublishMs) >= HA_BOILER_HIGH_PUBLISH_INTERVAL_MS) {
+        _lastBoilerHighPublishMs = now;
+        _mqtt.publish(TOPIC_HA_BOILER_TEMP_HIGH, _boilerHighAvgC);
     }
 
     // ── Heartbeat to Opta2 ─────────────────────────────────────────────────
@@ -73,12 +128,16 @@ void HaInterface::_publishAll() {
     _mqtt.publish(TOPIC_HA_SURPLUS_F1,      _status.surplusFase1W);
     _mqtt.publish(TOPIC_HA_SURPLUS_TOTAAL,  _status.surplusTotaalW);
     _mqtt.publish(TOPIC_HA_BOILER_TEMP_LOW, _status.boilerTempLowC);
-    _mqtt.publish(TOPIC_HA_BOILER_TEMP_HIGH,_status.boilerTempHighC);
     _mqtt.publish(TOPIC_HA_ACTIVE_PRIORITY, (int)_status.priorityActive);
     _mqtt.publish(TOPIC_HA_MQTT_VALID,      _status.mqttValid    ? "1" : "0");
     _mqtt.publish(TOPIC_HA_WP_ACTIVE,       _status.wpActive     ? "1" : "0");
     _mqtt.publish(TOPIC_HA_ELEMENT_ACTIVE,  _status.elementActive? "1" : "0");
     _mqtt.publish(TOPIC_HA_HOTTUB_PERM,     _status.hottubPermitted ? "1" : "0");
+    _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, _prevWpBlockReason.c_str());
+    _mqtt.publish(TOPIC_HA_ELEMENT_THERM_OK, _io.inElementThermostatOk ? "1" : "0");
+    _mqtt.publish(TOPIC_HA_AUTO_WP_REQ,     _status.boilerWpRequest ? "1" : "0");
+    _mqtt.publish(TOPIC_HA_AUTO_ELEMENT_REQ, _status.boilerElementRequest ? "1" : "0");
+    _mqtt.publish(TOPIC_HA_AUTO_HOTTUB_REQ, _status.hottubRequest ? "1" : "0");
     _mqtt.publish(TOPIC_HA_COMFORT_ACTIVE,  _io.doWpComfortExtra ? "1" : "0");
     _mqtt.publish(TOPIC_HA_MANUAL_MODE,     _io.inManualMode     ? "1" : "0");
 }
@@ -92,7 +151,7 @@ void HaInterface::_publishAlarms() {
     doc["boiler_thermostat"]    = _alarms.boilerThermostatFault;
     doc["interlock_conflict"]   = _alarms.interlockConflict;
     doc["master_general"]       = _alarms.masterGeneral;
-    char buf[128];
+    char buf[256];
     serializeJson(doc, buf, sizeof(buf));
     _mqtt.publish(TOPIC_HA_ALARM_JSON, buf);
 }

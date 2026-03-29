@@ -81,6 +81,13 @@ void MqttManager::_reconnect() {
     // Subscribe to all meter publishes; keepalive is based on any meter topic
     _mqtt.subscribe(TOPIC_METER_ROOT);
 
+    // Subscribe explicitly to the four channels used for surplus calculation.
+    // This makes retained and live values for the calculation channels reliable.
+    _mqtt.subscribe(TOPIC_METER_CH1);
+    _mqtt.subscribe(TOPIC_METER_CH10);
+    _mqtt.subscribe(TOPIC_METER_CH13);
+    _mqtt.subscribe(TOPIC_METER_CH14);
+
     // Subscribe to HA command topics (retained settings arrive immediately)
     _mqtt.subscribe(TOPIC_CMD_ENABLE_ELEMENT);
     _mqtt.subscribe(TOPIC_CMD_ENABLE_HOTTUB);
@@ -102,7 +109,7 @@ void MqttManager::_reconnect() {
 // Called by the ArduinoMqttClient onMessage callback
 void MqttManager::_handleMessage(int messageSize) {
     String topic   = _mqtt.messageTopic();
-    char   buf[64] = {};
+    char   buf[256] = {};
     int    len     = min(messageSize, (int)sizeof(buf) - 1);
     for (int i = 0; i < len; i++) buf[i] = (char)_mqtt.read();
     // Drain any remaining bytes
@@ -134,13 +141,21 @@ void MqttManager::_handleMessage(int messageSize) {
         return;  // keepalive-only meter topic, no power field needed
     }
 
-    // If all four channels received at least once → data is valid
-    if (_ch1Rx && _ch10Rx && _ch13Rx && _ch14Rx) {
-        _status.surplusFase1W   = _ch1W  - _ch10W;
-        _status.surplusTotaalW  = _ch13W - _ch14W;
+    // Calculate phase-1 and total surplus independently.
+    // WP logic should not wait for total channels, and hottub logic should not
+    // block phase-1 surplus publication.
+    if (_ch1Rx && _ch10Rx) {
+        _status.surplusFase1W = _ch1W - _ch10W;
+        _io.inSurplusFase1W   = _status.surplusFase1W;
+    }
+
+    if (_ch13Rx && _ch14Rx) {
+        _status.surplusTotaalW = _ch13W - _ch14W;
+        _io.inSurplusTotaalW   = _status.surplusTotaalW;
+    }
+
+    if ((_ch1Rx && _ch10Rx) || (_ch13Rx && _ch14Rx)) {
         _alarms.invalidPowerData = false;
-        _io.inSurplusFase1W      = _status.surplusFase1W;
-        _io.inSurplusTotaalW     = _status.surplusTotaalW;
     }
 }
 

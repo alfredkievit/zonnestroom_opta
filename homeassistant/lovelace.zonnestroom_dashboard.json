@@ -175,6 +175,25 @@
             },
             {
               "type": "history-graph",
+              "title": "Automatische Starts Historiek",
+              "hours_to_show": 2,
+              "entities": [
+                {
+                  "entity": "binary_sensor.opta1_energie_master_automatisch_wp_gestart",
+                  "name": "Auto WP"
+                },
+                {
+                  "entity": "binary_sensor.opta1_energie_master_automatisch_element_gestart",
+                  "name": "Auto Element"
+                },
+                {
+                  "entity": "binary_sensor.opta1_energie_master_automatisch_hottub_gestart",
+                  "name": "Auto Hottub"
+                }
+              ]
+            },
+            {
+              "type": "history-graph",
               "title": "Import / Export Historiek",
               "hours_to_show": 4,
               "entities": [
@@ -364,43 +383,35 @@
           "badges": [],
           "cards": [
             {
-              "type": "horizontal-stack",
-              "cards": [
-                {
-                  "type": "gauge",
-                  "entity": "sensor.smo_40_hot_water_top_bt7",
-                  "name": "Warmwater Boven",
-                  "min": 10,
-                  "max": 80,
-                  "unit": "°C",
-                  "needle": true,
-                  "severity": {
-                    "green": 30,
-                    "yellow": 42,
-                    "red": 52
-                  }
-                },
-                {
-                  "type": "gauge",
-                  "entity": "sensor.smo_40_hot_water_charging_bt6",
-                  "name": "Warmwater Laden",
-                  "min": 10,
-                  "max": 80,
-                  "unit": "°C",
-                  "needle": true,
-                  "severity": {
-                    "green": 32,
-                    "yellow": 42,
-                    "red": 52
-                  }
-                }
-              ]
+              "type": "gauge",
+              "entity": "sensor.opta1_energie_master_boiler_temperatuur_hoog",
+              "name": "Boiler Boven (PLC I1)",
+              "min": 10,
+              "max": 80,
+              "unit": "°C",
+              "needle": true,
+              "severity": {
+                "green": 30,
+                "yellow": 42,
+                "red": 52
+              }
             },
             {
               "type": "entities",
               "title": "Warmtepomp",
               "show_header_toggle": false,
               "entities": [
+                {
+                  "entity": "sensor.smo_40_hot_water_top_bt7",
+                  "name": "Warmwater Boven"
+                },
+                {
+                  "entity": "sensor.smo_40_hot_water_charging_bt6",
+                  "name": "Warmwater Laden"
+                },
+                {
+                  "type": "divider"
+                },
                 {
                   "entity": "binary_sensor.opta1_energie_master_warmtepomp_actief",
                   "name": "WP Status – Extra Warm Water (D0)"
@@ -444,6 +455,10 @@
               "title": "Boiler Temperatuur Historiek",
               "hours_to_show": 8,
               "entities": [
+                {
+                  "entity": "sensor.opta1_energie_master_boiler_temperatuur_hoog",
+                  "name": "Boiler Boven (PLC I1)"
+                },
                 {
                   "entity": "sensor.smo_40_hot_water_top_bt7",
                   "name": "Warmwater Boven"
@@ -526,6 +541,14 @@
                 {
                   "entity": "sensor.systeem_prioriteit_tekst",
                   "name": "Prioriteit (tekst)"
+                },
+                {
+                  "entity": "sensor.opta1_energie_master_wp_start_blokkade_reden",
+                  "name": "WP Start Blokkade Reden"
+                },
+                {
+                  "entity": "binary_sensor.opta1_energie_master_boiler_element_thermostaat_ok",
+                  "name": "Element Thermostaat OK"
                 },
                 {
                   "entity": "binary_sensor.opta1_energie_master_mqtt_geldig",

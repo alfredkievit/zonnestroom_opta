@@ -71,7 +71,7 @@ void HaInterface::_publishAlarms() {
     doc["comm_timeout"]    = _alarms.hottubCommTimeout;
     doc["level_pump_tout"] = _alarms.levelPumpTimeout;
     doc["general"]         = _alarms.hottubGeneral;
-    char buf[128];
+    char buf[256];
     serializeJson(doc, buf, sizeof(buf));
     _comm.publish(TOPIC_HA_ALARM_JSON, buf);
 }

@@ -56,6 +56,12 @@ mqtt:
       device:
         identifiers: [opta1_master]
 
+    - name: "WP Start Blokkade Reden"
+      unique_id: opta1_wp_block_reason
+      state_topic: "opta1/status/wp_block_reason"
+      device:
+        identifiers: [opta1_master]
+
     - name: "Opta1 Alarms"
       unique_id: opta1_alarms
       state_topic: "opta1/status/alarms"
@@ -126,6 +132,14 @@ mqtt:
       device:
         identifiers: [opta1_master]
 
+    - name: "Boiler Element Thermostaat OK"
+      unique_id: opta1_element_thermostat_ok
+      state_topic: "opta1/status/element_thermostat_ok"
+      payload_on: "1"
+      payload_off: "0"
+      device:
+        identifiers: [opta1_master]
+
     - name: "Hottub Permissie"
       unique_id: opta1_hottub_permission
       state_topic: "opta1/status/hottub_permission"
@@ -148,6 +162,33 @@ mqtt:
       state_topic: "opta1/status/manual_mode"
       payload_on: "1"
       payload_off: "0"
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Automatisch WP Gestart"
+      unique_id: opta1_auto_wp_request
+      state_topic: "opta1/status/auto_wp_request"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Automatisch Element Gestart"
+      unique_id: opta1_auto_element_request
+      state_topic: "opta1/status/auto_element_request"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta1_master]
+
+    - name: "Automatisch Hottub Gestart"
+      unique_id: opta1_auto_hottub_request
+      state_topic: "opta1/status/auto_hottub_request"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
       device:
         identifiers: [opta1_master]
 
@@ -593,7 +634,10 @@ automation:
     condition:
       - condition: template
         value_template: >
-          {{ trigger.to_state.state not in ['{}', 'unavailable', 'unknown', ''] }}
+          {{
+            trigger.to_state.state not in ['{}', 'unavailable', 'unknown', '']
+            and (trigger.to_state.state | regex_search('":true'))
+          }}
     action:
       - service: persistent_notification.create
         data:
