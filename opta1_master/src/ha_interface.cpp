@@ -189,6 +189,7 @@ void HaInterface::handleCommand(const String& topic, const char* payload, int le
     else if (topic == TOPIC_CMD_MANUAL_FORCE_HOTTUB)  { _io.manualForceHottub  = bval; }
     else if (topic == TOPIC_CMD_MANUAL_FORCE_COMFORT) { _io.manualForceComfort = bval; }
     else if (topic == TOPIC_CMD_FAULT_RESET)          { _io.inFaultReset       = bval; }
+    else if (topic == TOPIC_EXTERN_COMPRESSOR_FREQ)   { _io.inCompressorFreqHz = (val >= 0.0f) ? val : 0.0f; }
 
     if (changed) {
         _storage.save(_settings);

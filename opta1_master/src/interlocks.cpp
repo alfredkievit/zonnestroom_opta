@@ -40,6 +40,14 @@ void Interlocks::apply(const Settings& settings, const IOState& io,
         out.doBoilerElement = false;
     }
 
+    // ── Interlock 5: WP compressor draait → element geblokkeerd ─────────────
+    // Blokkeer element zolang de SMO40 compressor draait (freq > 0 Hz),
+    // ook als het WP-relais al uit is (compressor loopt nog uit).
+    // Bij geen MQTT-update blijft waarde 0 (permissief).
+    if (io.inCompressorFreqHz > 0.0f) {
+        out.doBoilerElement = false;
+    }
+
     // ── Update status mirror fields from final output ──────────────────────
     status.wpActive        = out.doWpExtraWW;
     status.elementActive   = out.doBoilerElement;

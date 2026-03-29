@@ -659,3 +659,21 @@ automation:
           topic: "opta2/device/current_minute_of_day"
           payload: "{{ now().hour * 60 + now().minute }}"
           retain: true
+
+  - id: zonnestroom_smo40_compressor_freq_mqtt
+    alias: "Zonnestroom – SMO40 compressorfrequentie naar Opta1"
+    description: >
+      Publiceert de actuele compressorfrequentie van de Nibe SMO40 naar Opta1 via MQTT.
+      Opta1 gebruikt deze waarde als extra veiligheidsinterlock: zolang de compressor
+      draait (freq > 0 Hz) mag het elektrisch element niet inschakelen.
+    trigger:
+      - platform: state
+        entity_id: sensor.smo_40_current_compressor_frequency_eb101
+      - platform: homeassistant
+        event: start
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "opta1/extern/compressor_freq_hz"
+          payload: "{{ states('sensor.smo_40_current_compressor_frequency_eb101') | float(default=0) }}"
+          retain: true

@@ -103,6 +103,9 @@ void MqttManager::_reconnect() {
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_HOTTUB);
     _mqtt.subscribe(TOPIC_CMD_MANUAL_FORCE_COMFORT);
     _mqtt.subscribe(TOPIC_CMD_FAULT_RESET);
+
+    // External sensor data from HA
+    _mqtt.subscribe(TOPIC_EXTERN_COMPRESSOR_FREQ);
 }
 
 // ---------------------------------------------------------------------------

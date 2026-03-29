@@ -126,6 +126,7 @@ struct IOState {
     bool  inElementThermostatOk;
     bool  inManualMode;
     bool  inFaultReset;
+    float inCompressorFreqHz;   // SMO40 compressorfrequentie [Hz]; 0 = stilstand
 
     // Manual force overrides
     bool  manualForceWp;

@@ -47,6 +47,9 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_COMFORT_ACTIVE   "opta1/status/comfort_active"
 #define TOPIC_HA_MANUAL_MODE      "opta1/status/manual_mode"
 
+// ─── MQTT – External sensor data → Opta1 (live, not retained) ──────────────
+#define TOPIC_EXTERN_COMPRESSOR_FREQ  "opta1/extern/compressor_freq_hz"
+
 // ─── MQTT – Home Assistant → Opta1 command topics (retained) ──────────────
 #define TOPIC_CMD_ENABLE_ELEMENT      "opta1/cmd/enable_boiler_element"
 #define TOPIC_CMD_ENABLE_HOTTUB       "opta1/cmd/enable_hottub"
