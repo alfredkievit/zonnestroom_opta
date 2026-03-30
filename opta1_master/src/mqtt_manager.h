@@ -49,8 +49,14 @@ private:
     bool _ch10Rx = false;
     bool _ch13Rx = false;
     bool _ch14Rx = false;
+    unsigned long _lastWifiBeginMs      = 0;
+    unsigned long _lastReconnectTryMs   = 0;
+    unsigned long _lastConnectLogMs     = 0;
+    bool          _wifiWasConnected     = false;
+    bool          _mqttWasConnected     = false;
 
     void _reconnect();
+    void _ensureWifiConnected();
     void _handleMessage(int messageSize);
     void _checkTimeout(const Settings& settings);
     int  _parseP(const char* payload, int payloadLen);

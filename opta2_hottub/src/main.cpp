@@ -25,6 +25,7 @@ static SettingsStorage gStorage;
 static CommManager     gComm(gSettings, gStorage, gStatus, gAlarms, gIo);
 static HottubLogic     gHottubLogic;
 static HaInterface     gHa(gComm, gSettings, gStatus, gAlarms, gIo, gStorage);
+static unsigned long   gLastLoopHeartbeatMs = 0;
 
 static void updateStatusLed(bool online) {
 #if defined(LEDR) && defined(LEDG)
@@ -129,6 +130,8 @@ void setup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 void loop() {
+    const unsigned long loopStartMs = millis();
+
     // 1. Receive MQTT: permission, heartbeat, HA commands
     gComm.update(gSettings);
 
@@ -146,4 +149,29 @@ void loop() {
 
     // 5. Publish status + alarms to HA
     gHa.update();
+
+    const unsigned long loopDurationMs = millis() - loopStartMs;
+#if DEBUG_DIAG
+    if (loopDurationMs > LOOP_WARN_MS) {
+        Serial.print("[Opta2] slow loop ms=");
+        Serial.println(loopDurationMs);
+    }
+    if ((millis() - gLastLoopHeartbeatMs) >= LOOP_HEARTBEAT_INTERVAL_MS) {
+        gLastLoopHeartbeatMs = millis();
+        Serial.print("[Opta2] loop heartbeat mqttConnected=");
+        Serial.print(gComm.connected() ? "1" : "0");
+        Serial.print(" commOk=");
+        Serial.print(gStatus.commOk ? "1" : "0");
+        Serial.print(" clockOk=");
+        Serial.println(gStatus.clockOk ? "1" : "0");
+    }
+#endif
+
+    if (loopDurationMs > LOOP_RESET_MS) {
+#if DEBUG_DIAG
+        Serial.println("[Opta2] loop stall detected -> software reset");
+        delay(20);
+#endif
+        NVIC_SystemReset();
+    }
 }

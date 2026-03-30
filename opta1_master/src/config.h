@@ -101,3 +101,10 @@ static const uint16_t BROKER_PORT  = 1883;
 // ─── HA publish interval ──────────────────────────────────────────────────
 #define HA_PUBLISH_INTERVAL_MS 5000UL
 #define HA_BOILER_HIGH_PUBLISH_INTERVAL_MS 60000UL
+
+// ─── Diagnostics / hardening ──────────────────────────────────────────────
+#define DEBUG_DIAG 1
+#define SETTINGS_SAVE_DEBOUNCE_MS 3000UL
+#define LOOP_HEARTBEAT_INTERVAL_MS 5000UL
+#define LOOP_WARN_MS 250UL
+#define LOOP_RESET_MS 3000UL

@@ -64,3 +64,13 @@ static const uint16_t BROKER_PORT  = 1883;
 // ─── Timing constants ──────────────────────────────────────────────────────
 #define HA_PUBLISH_INTERVAL_MS  5000UL
 #define FILTER_PUMP_RUN_DURATION_MS  (5UL  * 60UL * 1000UL)
+
+// ─── Diagnostics / hardening ──────────────────────────────────────────────
+#define DEBUG_DIAG 1
+#define SETTINGS_SAVE_DEBOUNCE_MS 3000UL
+#define WIFI_RETRY_INTERVAL_MS 15000UL
+#define MQTT_RETRY_INTERVAL_MS 5000UL
+#define CONNECT_LOG_INTERVAL_MS 10000UL
+#define LOOP_HEARTBEAT_INTERVAL_MS 5000UL
+#define LOOP_WARN_MS 250UL
+#define LOOP_RESET_MS 3000UL

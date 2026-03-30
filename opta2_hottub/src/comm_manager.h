@@ -27,7 +27,7 @@ public:
     static void _onMessageCb(int size);
 
     // Called externally when a HA command topic arrives
-    void handleCommand(const String& topic, const char* payload, int len,
+    void handleCommand(const char* topic, const char* payload, int len,
                        Settings& settings);
 
 private:
@@ -46,8 +46,18 @@ private:
     bool          _heartbeatEverRx     = false;
     unsigned long _lastHeartbeatRxMs   = 0;
     unsigned long _lastClockRxMs       = 0;
+    unsigned long _lastWifiBeginMs     = 0;
+    unsigned long _lastReconnectTryMs  = 0;
+    unsigned long _lastConnectLogMs    = 0;
+    bool          _wifiWasConnected    = false;
+    bool          _mqttWasConnected    = false;
+    bool          _settingsDirty       = false;
+    unsigned long _settingsDirtySinceMs = 0;
 
     void _reconnect(const Settings& settings);
+    void _ensureWifiConnected();
     void _handleMessage(int messageSize);
     void _checkCommTimeout(const Settings& settings);
+    void _flushPendingSave();
+    void _markSettingsDirty();
 };

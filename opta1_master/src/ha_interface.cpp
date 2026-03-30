@@ -2,6 +2,7 @@
 #include "config.h"
 #include <ArduinoJson.h>
 #include <math.h>
+#include <string.h>
 
 HaInterface::HaInterface(MqttManager& mqtt, Settings& settings, SystemStatus& status,
                          AlarmState& alarms, IOState& io, SettingsStorage& storage)
@@ -26,25 +27,9 @@ void HaInterface::update() {
         _boilerHighAvgC += 0.02f * (_status.boilerTempHighC - _boilerHighAvgC);
     }
 
-    String wpBlockReason = "ready_to_request";
-    if (_status.wpActive) {
-        wpBlockReason = "wp_active";
-    } else if (_alarms.mqttTimeout || _alarms.invalidPowerData || _alarms.boilerSensorFault ||
-               _alarms.boilerThermostatFault || _alarms.interlockConflict || _alarms.masterGeneral) {
-        wpBlockReason = "alarm_or_fault";
-    } else if (!_settings.enableSystem) {
-        wpBlockReason = "system_disabled";
-    } else if (!_status.mqttValid) {
-        wpBlockReason = "mqtt_invalid";
-    } else if (_io.inSurplusFase1W <= _settings.spSurplusWpStartW) {
-        wpBlockReason = "surplus_too_low";
-    } else if (_status.boilerTempHighC >= (_settings.spBoilerWpTargetC - _settings.spBoilerWpHystC)) {
-        wpBlockReason = "boiler_temp_high_enough";
-    } else if (_status.boilerWpRequest) {
-        wpBlockReason = "start_delay_or_priority_wait";
-    }
+    const char* wpBlockReason = _getWpBlockReason();
 
-    if (_prevWpBlockReason.length() == 0) {
+    if (_prevWpBlockReason == nullptr) {
         _prevWpBlockReason = wpBlockReason;
     }
 
@@ -89,8 +74,8 @@ void HaInterface::update() {
         _mqtt.publish(TOPIC_HA_HOTTUB_PERM, _status.hottubPermitted ? "1" : "0");
         _prevHottubPerm = _status.hottubPermitted;
     }
-    if (wpBlockReason != _prevWpBlockReason) {
-        _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, wpBlockReason.c_str());
+    if (strcmp(wpBlockReason, _prevWpBlockReason) != 0) {
+        _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, wpBlockReason);
         _prevWpBlockReason = wpBlockReason;
     }
     if (_status.boilerWpRequest != _prevAutoWpReq) {
@@ -121,6 +106,8 @@ void HaInterface::update() {
         _lastHeartbeatMs = now;
         _publishHeartbeat();
     }
+
+    _flushPendingSave();
 }
 
 // ---------------------------------------------------------------------------
@@ -133,13 +120,40 @@ void HaInterface::_publishAll() {
     _mqtt.publish(TOPIC_HA_WP_ACTIVE,       _status.wpActive     ? "1" : "0");
     _mqtt.publish(TOPIC_HA_ELEMENT_ACTIVE,  _status.elementActive? "1" : "0");
     _mqtt.publish(TOPIC_HA_HOTTUB_PERM,     _status.hottubPermitted ? "1" : "0");
-    _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, _prevWpBlockReason.c_str());
+    _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, _prevWpBlockReason ? _prevWpBlockReason : "unknown");
     _mqtt.publish(TOPIC_HA_ELEMENT_THERM_OK, _io.inElementThermostatOk ? "1" : "0");
     _mqtt.publish(TOPIC_HA_AUTO_WP_REQ,     _status.boilerWpRequest ? "1" : "0");
     _mqtt.publish(TOPIC_HA_AUTO_ELEMENT_REQ, _status.boilerElementRequest ? "1" : "0");
     _mqtt.publish(TOPIC_HA_AUTO_HOTTUB_REQ, _status.hottubRequest ? "1" : "0");
     _mqtt.publish(TOPIC_HA_COMFORT_ACTIVE,  _io.doWpComfortExtra ? "1" : "0");
     _mqtt.publish(TOPIC_HA_MANUAL_MODE,     _io.inManualMode     ? "1" : "0");
+}
+
+// ---------------------------------------------------------------------------
+const char* HaInterface::_getWpBlockReason() const {
+    if (_status.wpActive) {
+        return "wp_active";
+    }
+    if (_alarms.mqttTimeout || _alarms.invalidPowerData || _alarms.boilerSensorFault ||
+        _alarms.boilerThermostatFault || _alarms.interlockConflict || _alarms.masterGeneral) {
+        return "alarm_or_fault";
+    }
+    if (!_settings.enableSystem) {
+        return "system_disabled";
+    }
+    if (!_status.mqttValid) {
+        return "mqtt_invalid";
+    }
+    if (_io.inSurplusFase1W <= _settings.spSurplusWpStartW) {
+        return "surplus_too_low";
+    }
+    if (_status.boilerTempHighC >= (_settings.spBoilerWpTargetC - _settings.spBoilerWpHystC)) {
+        return "boiler_temp_high_enough";
+    }
+    if (_status.boilerWpRequest) {
+        return "start_delay_or_priority_wait";
+    }
+    return "ready_to_request";
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +180,7 @@ void HaInterface::_publishHeartbeat() {
 
 // ---------------------------------------------------------------------------
 // Called from MqttManager when a subscribed HA command topic arrives
-void HaInterface::handleCommand(const String& topic, const char* payload, int len) {
+void HaInterface::handleCommand(const char* topic, const char* payload, int len) {
     char buf[32] = {};
     int  copyLen = min(len, (int)sizeof(buf) - 1);
     memcpy(buf, payload, copyLen);
@@ -175,23 +189,50 @@ void HaInterface::handleCommand(const String& topic, const char* payload, int le
 
     bool changed = false;
 
-    if      (topic == TOPIC_CMD_ENABLE_ELEMENT)      { _settings.enableBoilerElement = bval; changed = true; }
-    else if (topic == TOPIC_CMD_ENABLE_HOTTUB)       { _settings.enableHottub        = bval; changed = true; }
-    else if (topic == TOPIC_CMD_SP_WP_TARGET)        { _settings.spBoilerWpTargetC      = val;  changed = true; }
-    else if (topic == TOPIC_CMD_SP_WP_HYST)          { _settings.spBoilerWpHystC        = val;  changed = true; }
-    else if (topic == TOPIC_CMD_SP_ELEMENT_TARGET)   { _settings.spBoilerElementTargetC = val;  changed = true; }
-    else if (topic == TOPIC_CMD_SP_ELEMENT_HYST)     { _settings.spBoilerElementHystC   = val;  changed = true; }
-    else if (topic == TOPIC_CMD_SP_SURPLUS_WP)       { _settings.spSurplusWpStartW      = (int)val; changed = true; }
-    else if (topic == TOPIC_CMD_SP_SURPLUS_ELEMENT)  { _settings.spSurplusElementStartW = (int)val; changed = true; }
-    else if (topic == TOPIC_CMD_SP_SURPLUS_HOTTUB)   { _settings.spSurplusHottubStartW  = (int)val; changed = true; }
-    else if (topic == TOPIC_CMD_SP_SURPLUS_STOP)     { _settings.spSurplusStopW         = (int)val; changed = true; }
-    else if (topic == TOPIC_CMD_MANUAL_FORCE_WP)      { _io.manualForceWp      = bval; }
-    else if (topic == TOPIC_CMD_MANUAL_FORCE_HOTTUB)  { _io.manualForceHottub  = bval; }
-    else if (topic == TOPIC_CMD_MANUAL_FORCE_COMFORT) { _io.manualForceComfort = bval; }
-    else if (topic == TOPIC_CMD_FAULT_RESET)          { _io.inFaultReset       = bval; }
-    else if (topic == TOPIC_EXTERN_COMPRESSOR_FREQ)   { _io.inCompressorFreqHz = (val >= 0.0f) ? val : 0.0f; }
+    if      (strcmp(topic, TOPIC_CMD_ENABLE_ELEMENT) == 0)     { if (_settings.enableBoilerElement != bval) { _settings.enableBoilerElement = bval; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_ENABLE_HOTTUB) == 0)      { if (_settings.enableHottub != bval) { _settings.enableHottub = bval; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_WP_TARGET) == 0)       { if (fabsf(_settings.spBoilerWpTargetC - val) > 0.001f) { _settings.spBoilerWpTargetC = val; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_WP_HYST) == 0)         { if (fabsf(_settings.spBoilerWpHystC - val) > 0.001f) { _settings.spBoilerWpHystC = val; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_ELEMENT_TARGET) == 0)  { if (fabsf(_settings.spBoilerElementTargetC - val) > 0.001f) { _settings.spBoilerElementTargetC = val; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_ELEMENT_HYST) == 0)    { if (fabsf(_settings.spBoilerElementHystC - val) > 0.001f) { _settings.spBoilerElementHystC = val; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_SURPLUS_WP) == 0)      { int v = (int)val; if (_settings.spSurplusWpStartW != v) { _settings.spSurplusWpStartW = v; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_SURPLUS_ELEMENT) == 0) { int v = (int)val; if (_settings.spSurplusElementStartW != v) { _settings.spSurplusElementStartW = v; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_SURPLUS_HOTTUB) == 0)  { int v = (int)val; if (_settings.spSurplusHottubStartW != v) { _settings.spSurplusHottubStartW = v; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_SP_SURPLUS_STOP) == 0)    { int v = (int)val; if (_settings.spSurplusStopW != v) { _settings.spSurplusStopW = v; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_MANUAL_FORCE_WP) == 0)      { _io.manualForceWp      = bval; }
+    else if (strcmp(topic, TOPIC_CMD_MANUAL_FORCE_HOTTUB) == 0)  { _io.manualForceHottub  = bval; }
+    else if (strcmp(topic, TOPIC_CMD_MANUAL_FORCE_COMFORT) == 0) { _io.manualForceComfort = bval; }
+    else if (strcmp(topic, TOPIC_CMD_FAULT_RESET) == 0)          { _io.inFaultReset       = bval; }
+    else if (strcmp(topic, TOPIC_EXTERN_COMPRESSOR_FREQ) == 0) {
+        _io.inCompressorFreqHz = (val >= 0.0f) ? val : 0.0f;
+#if DEBUG_DIAG
+        Serial.print("[Opta1] compressor_freq_hz=");
+        Serial.println(_io.inCompressorFreqHz, 2);
+#endif
+    }
 
     if (changed) {
-        _storage.save(_settings);
+        _markSettingsDirty();
     }
+}
+
+// ---------------------------------------------------------------------------
+void HaInterface::_markSettingsDirty() {
+    _settingsDirty = true;
+    _settingsDirtySinceMs = millis();
+}
+
+// ---------------------------------------------------------------------------
+void HaInterface::_flushPendingSave() {
+    if (!_settingsDirty) {
+        return;
+    }
+    if ((millis() - _settingsDirtySinceMs) < SETTINGS_SAVE_DEBOUNCE_MS) {
+        return;
+    }
+    _storage.save(_settings);
+    _settingsDirty = false;
+#if DEBUG_DIAG
+    Serial.println("[Opta1] settings persisted");
+#endif
 }

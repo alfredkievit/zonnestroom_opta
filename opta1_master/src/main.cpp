@@ -32,6 +32,7 @@ static BoilerLogic     gBoilerLogic;
 static PriorityManager gPriorityMgr;
 static Interlocks      gInterlocks;
 static HaInterface     gHa(gMqtt, gSettings, gStatus, gAlarms, gIo, gStorage);
+static unsigned long   gLastLoopHeartbeatMs = 0;
 
 static void updateStatusLed(bool online) {
 #if defined(LEDR) && defined(LEDG)
@@ -166,6 +167,8 @@ void setup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 void loop() {
+    const unsigned long loopStartMs = millis();
+
     // 1. MQTT: receive messages, update surplus values, check timeout
     gMqtt.update(gSettings);
 
@@ -191,4 +194,29 @@ void loop() {
 
     // 7. Home Assistant: publish status, receive commands, send heartbeat
     gHa.update();
+
+    const unsigned long loopDurationMs = millis() - loopStartMs;
+#if DEBUG_DIAG
+    if (loopDurationMs > LOOP_WARN_MS) {
+        Serial.print("[Opta1] slow loop ms=");
+        Serial.println(loopDurationMs);
+    }
+    if ((millis() - gLastLoopHeartbeatMs) >= LOOP_HEARTBEAT_INTERVAL_MS) {
+        gLastLoopHeartbeatMs = millis();
+        Serial.print("[Opta1] loop heartbeat mqttConnected=");
+        Serial.print(gMqtt.connected() ? "1" : "0");
+        Serial.print(" mqttValid=");
+        Serial.print(gStatus.mqttValid ? "1" : "0");
+        Serial.print(" compressorHz=");
+        Serial.println(gIo.inCompressorFreqHz, 2);
+    }
+#endif
+
+    if (loopDurationMs > LOOP_RESET_MS) {
+#if DEBUG_DIAG
+        Serial.println("[Opta1] loop stall detected -> software reset");
+        delay(20);
+#endif
+        NVIC_SystemReset();
+    }
 }

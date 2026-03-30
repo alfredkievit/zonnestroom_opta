@@ -607,13 +607,13 @@ template:
       - name: "Opta2 Verbinding"
         unique_id: opta2_verbinding
         state: >
-          {% if states('binary_sensor.opta2_hottub_controller_opta2_communicatie_ok') == 'on' %}
+          {% if now().timestamp() - as_timestamp(states.sensor.opta2_hottub_controller_opta2_heartbeat.last_changed, 0) < 30 %}
             Online
           {% else %}
             Offline
           {% endif %}
         icon: >
-          {% if states('binary_sensor.opta2_hottub_controller_opta2_communicatie_ok') == 'on' %}
+          {% if now().timestamp() - as_timestamp(states.sensor.opta2_hottub_controller_opta2_heartbeat.last_changed, 0) < 30 %}
             mdi:lan-check
           {% else %}
             mdi:lan-disconnect
