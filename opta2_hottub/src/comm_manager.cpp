@@ -1,5 +1,8 @@
 #include "comm_manager.h"
 #include "settings_storage.h"
+#include <PortentaEthernet.h>
+#include <Ethernet.h>
+#include <SPI.h>
 #include <WiFi.h>
 #include <math.h>
 #include <string.h>
@@ -12,29 +15,44 @@ void CommManager::_onMessageCb(int size) {
 
 CommManager::CommManager(Settings& settings, SettingsStorage& storage,
                                                  SystemStatus& status, AlarmState& alarms, IOState& io)
-    : _mqtt(_wifiClient), _settings(settings), _storage(storage),
+    : _mqttLan(_ethernetClient), _mqttWifi(_wifiClient),
+      _settings(settings), _storage(storage),
             _status(status), _alarms(alarms), _io(io)
 {}
 
+void CommManager::_configureMqttClient(MqttClient& client) {
+    client.setId("opta2_hottub");
+    client.setKeepAliveInterval(15 * 1000L);
+    client.setConnectionTimeout(5 * 1000L);
+    client.onMessage(_onMessageCb);
+}
+
 // ---------------------------------------------------------------------------
 void CommManager::begin() {
-    _lastWifiBeginMs = millis();
-    WiFi.begin(OPTA2_WIFI_SSID, OPTA2_WIFI_PASS);
-
-    _mqtt.setId("opta2_hottub");
-    _mqtt.setKeepAliveInterval(15 * 1000L);
-    _mqtt.setConnectionTimeout(5 * 1000L);
-
-    // Register static callback — ArduinoMqttClient does not support lambdas
     _instance = this;
-    _mqtt.onMessage(_onMessageCb);
+    _configureMqttClient(_mqttLan);
+    _configureMqttClient(_mqttWifi);
+    _ensureLanConnected();
 }
 
 // ---------------------------------------------------------------------------
 void CommManager::update(const Settings& settings) {
-    _ensureWifiConnected();
+    _ensureLanConnected();
+    const bool lanConnected = _isLanAvailable();
 
-    const bool wifiConnected = (WiFi.status() == WL_CONNECTED);
+    _ensureWifiConnected(lanConnected);
+    const bool wifiConnected = _isWifiAvailable();
+
+    _status.lanConnected = lanConnected;
+    _status.wifiConnected = wifiConnected;
+
+    if (_lanWasConnected != lanConnected) {
+        _lanWasConnected = lanConnected;
+#if DEBUG_DIAG
+        Serial.println(lanConnected ? "[Opta2] LAN connected" : "[Opta2] LAN disconnected");
+#endif
+    }
+
     if (_wifiWasConnected != wifiConnected) {
         _wifiWasConnected = wifiConnected;
 #if DEBUG_DIAG
@@ -42,11 +60,21 @@ void CommManager::update(const Settings& settings) {
 #endif
     }
 
-    if (!wifiConnected) {
+    NetworkTransport desiredTransport = NetworkTransport::NONE;
+    if (lanConnected) {
+        desiredTransport = NetworkTransport::LAN;
+    } else if (wifiConnected) {
+        desiredTransport = NetworkTransport::WIFI;
+    }
+
+    _switchTransport(desiredTransport);
+    _status.activeNetworkTransport = _activeTransport;
+
+    if (_activeMqtt == nullptr) {
         if (_mqttWasConnected) {
             _mqttWasConnected = false;
 #if DEBUG_DIAG
-            Serial.println("[Opta2] MQTT unavailable: WiFi down");
+            Serial.println("[Opta2] MQTT unavailable: no active network transport");
 #endif
         }
         _checkCommTimeout(settings);
@@ -54,17 +82,17 @@ void CommManager::update(const Settings& settings) {
         return;
     }
 
-    if (!_mqtt.connected()) {
+    if (!_activeMqtt->connected()) {
         _reconnect(settings);
     }
-    if (_mqtt.connected()) {
+    if (_activeMqtt->connected()) {
         if (!_mqttWasConnected) {
             _mqttWasConnected = true;
 #if DEBUG_DIAG
             Serial.println("[Opta2] MQTT connected");
 #endif
         }
-        _mqtt.poll();
+        _activeMqtt->poll();
     } else if (_mqttWasConnected) {
         _mqttWasConnected = false;
 #if DEBUG_DIAG
@@ -77,14 +105,14 @@ void CommManager::update(const Settings& settings) {
 }
 
 // ---------------------------------------------------------------------------
-bool CommManager::connected() { return _mqtt.connected(); }
+bool CommManager::connected() { return (_activeMqtt != nullptr) && _activeMqtt->connected(); }
 
 // ---------------------------------------------------------------------------
 void CommManager::publish(const char* topic, const char* payload, bool retain) {
-    if (!_mqtt.connected()) return;
-    _mqtt.beginMessage(topic, retain);
-    _mqtt.print(payload);
-    if (!_mqtt.endMessage()) {
+    if (_activeMqtt == nullptr || !_activeMqtt->connected()) return;
+    _activeMqtt->beginMessage(topic, retain);
+    _activeMqtt->print(payload);
+    if (!_activeMqtt->endMessage()) {
 #if DEBUG_DIAG
         Serial.print("[Opta2] MQTT publish failed: ");
         Serial.println(topic);
@@ -103,6 +131,10 @@ void CommManager::publish(const char* topic, float value, uint8_t decimals, bool
 
 // ---------------------------------------------------------------------------
 void CommManager::_reconnect(const Settings& settings) {
+    if (_activeMqtt == nullptr) {
+        return;
+    }
+
     const unsigned long now = millis();
     if ((now - _lastReconnectTryMs) < MQTT_RETRY_INTERVAL_MS) {
         return;
@@ -110,7 +142,7 @@ void CommManager::_reconnect(const Settings& settings) {
     _lastReconnectTryMs = now;
 
     IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);
-    if (!_mqtt.connect(broker, BROKER_PORT)) {
+    if (!_activeMqtt->connect(broker, BROKER_PORT)) {
 #if DEBUG_DIAG
         if ((now - _lastConnectLogMs) >= CONNECT_LOG_INTERVAL_MS) {
             _lastConnectLogMs = now;
@@ -124,27 +156,112 @@ void CommManager::_reconnect(const Settings& settings) {
     Serial.println("[Opta2] MQTT subscribe setup");
 #endif
 
+    _subscribeTopics(*_activeMqtt);
+}
+
+void CommManager::_subscribeTopics(MqttClient& client) {
     // Opta1 device topics
-    _mqtt.subscribe(TOPIC_MASTER_PERM_HOTTUB);
-    _mqtt.subscribe(TOPIC_MASTER_HEARTBEAT);
+    client.subscribe(TOPIC_MASTER_PERM_HOTTUB);
+    client.subscribe(TOPIC_MASTER_HEARTBEAT);
 
     // HA command topics
-    _mqtt.subscribe(TOPIC_CMD_SP_HOTTUB_TARGET);
-    _mqtt.subscribe(TOPIC_CMD_SP_HOTTUB_HYST);
-    _mqtt.subscribe(TOPIC_CMD_SP_HOTTUB_MAX);
-    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_1_HOUR);
-    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_2_HOUR);
-    _mqtt.subscribe(TOPIC_CMD_SP_PUMP_DURATION);
-    _mqtt.subscribe(TOPIC_CMD_ENABLE_HOTTUB);
-    _mqtt.subscribe(TOPIC_CMD_ENABLE_AUTO_PUMP);
-    _mqtt.subscribe(TOPIC_CMD_MANUAL_PUMP);
-    _mqtt.subscribe(TOPIC_CMD_MANUAL_LEVEL_PUMP);
-    _mqtt.subscribe(TOPIC_CMD_ENABLE_LEVELPUMP);
-    _mqtt.subscribe(TOPIC_CMD_CLOCK_MINUTE);
+    client.subscribe(TOPIC_CMD_SP_HOTTUB_TARGET);
+    client.subscribe(TOPIC_CMD_SP_HOTTUB_HYST);
+    client.subscribe(TOPIC_CMD_SP_HOTTUB_MAX);
+    client.subscribe(TOPIC_CMD_SP_PUMP_1_HOUR);
+    client.subscribe(TOPIC_CMD_SP_PUMP_2_HOUR);
+    client.subscribe(TOPIC_CMD_SP_PUMP_DURATION);
+    client.subscribe(TOPIC_CMD_ENABLE_HOTTUB);
+    client.subscribe(TOPIC_CMD_ENABLE_AUTO_PUMP);
+    client.subscribe(TOPIC_CMD_MANUAL_PUMP);
+    client.subscribe(TOPIC_CMD_MANUAL_LEVEL_PUMP);
+    client.subscribe(TOPIC_CMD_ENABLE_LEVELPUMP);
+    client.subscribe(TOPIC_CMD_CLOCK_MINUTE);
+    client.subscribe(TOPIC_CMD_ENABLE_IRRIGATION);
+    client.subscribe(TOPIC_CMD_MANUAL_IRRIGATION_PUMP);
+    for (size_t idx = 0; idx < IRRIGATION_ZONE_COUNT; ++idx) {
+        client.subscribe(TOPIC_CMD_IRRIGATION_ZONE_REQUEST[idx]);
+    }
 }
 
 // ---------------------------------------------------------------------------
-void CommManager::_ensureWifiConnected() {
+bool CommManager::_isLanAvailable() const {
+    if (Ethernet.linkStatus() == LinkOFF) {
+        return false;
+    }
+    IPAddress ip = Ethernet.localIP();
+    return ip[0] != 0;
+}
+
+bool CommManager::_isWifiAvailable() const {
+    return WiFi.status() == WL_CONNECTED;
+}
+
+MqttClient* CommManager::_mqttForTransport(NetworkTransport transport) {
+    if (transport == NetworkTransport::LAN) {
+        return &_mqttLan;
+    }
+    if (transport == NetworkTransport::WIFI) {
+        return &_mqttWifi;
+    }
+    return nullptr;
+}
+
+void CommManager::_switchTransport(NetworkTransport transport) {
+    if (_activeTransport == transport) {
+        return;
+    }
+
+#if DEBUG_DIAG
+    Serial.print("[Opta2] switching transport to ");
+    if (transport == NetworkTransport::LAN) {
+        Serial.println("LAN");
+    } else if (transport == NetworkTransport::WIFI) {
+        Serial.println("WiFi");
+    } else {
+        Serial.println("NONE");
+    }
+#endif
+
+    _ethernetClient.stop();
+    _wifiClient.stop();
+    _activeTransport = transport;
+    _activeMqtt = _mqttForTransport(transport);
+    _mqttWasConnected = false;
+
+    if (transport == NetworkTransport::LAN && WiFi.status() == WL_CONNECTED) {
+        WiFi.disconnect();
+    }
+}
+
+void CommManager::_ensureLanConnected() {
+    const unsigned long now = millis();
+    if (Ethernet.linkStatus() == LinkOFF) {
+        _lanConfigured = false;
+        return;
+    }
+
+    if (_isLanAvailable()) {
+        return;
+    }
+
+    if ((now - _lastLanBeginMs) < LAN_RETRY_INTERVAL_MS) {
+        return;
+    }
+
+    _lastLanBeginMs = now;
+    Ethernet.begin(OPTA2_LAN_IP);
+    _lanConfigured = true;
+}
+
+void CommManager::_ensureWifiConnected(bool lanAvailable) {
+    if (lanAvailable) {
+        if (WiFi.status() == WL_CONNECTED) {
+            WiFi.disconnect();
+        }
+        return;
+    }
+
     if (WiFi.status() == WL_CONNECTED) {
         return;
     }
@@ -167,13 +284,19 @@ void CommManager::_ensureWifiConnected() {
 
 // ---------------------------------------------------------------------------
 void CommManager::_handleMessage(int messageSize) {
-    String topicStr = _mqtt.messageTopic();
+    if (_activeMqtt == nullptr) {
+        return;
+    }
+
+    String topicStr = _activeMqtt->messageTopic();
     char topic[96] = {};
     topicStr.toCharArray(topic, sizeof(topic));
     char   buf[32] = {};
     int    len = min(messageSize, (int)sizeof(buf) - 1);
-    for (int i = 0; i < len; i++) buf[i] = (char)_mqtt.read();
-    while (_mqtt.available()) _mqtt.read();
+    for (int i = 0; i < len; i++) buf[i] = (char)_activeMqtt->read();
+    while (_activeMqtt->available()) _activeMqtt->read();
+
+    bool bval = (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T');
 
     if (strcmp(topic, TOPIC_MASTER_PERM_HOTTUB) == 0) {
         _io.inMasterPermissionHottub = (buf[0] == '1');
@@ -207,9 +330,25 @@ void CommManager::_handleMessage(int messageSize) {
         _io.manualForcePump = (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T');
     }
     else if (strcmp(topic, TOPIC_CMD_MANUAL_LEVEL_PUMP) == 0) {
-        _io.manualForceLevelPump = (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T');
+        _io.manualForceLevelPump = bval;
+    }
+    else if (strcmp(topic, TOPIC_CMD_MANUAL_IRRIGATION_PUMP) == 0) {
+        _io.manualForceIrrigationPump = bval;
     }
     else {
+        for (size_t idx = 0; idx < IRRIGATION_ZONE_COUNT; ++idx) {
+            if (strcmp(topic, TOPIC_CMD_IRRIGATION_ZONE_REQUEST[idx]) == 0) {
+                bool previous = _io.irrigationZoneRequest[idx];
+                _io.irrigationZoneRequest[idx] = bval;
+                if (bval && !previous) {
+                    _io.irrigationZoneRequestSequence[idx] = ++_zoneRequestSequenceCounter;
+                } else if (!bval) {
+                    _io.irrigationZoneRequestSequence[idx] = 0;
+                }
+                return;
+            }
+        }
+
         handleCommand(topic, buf, len, _settings);
     }
 }
@@ -252,6 +391,18 @@ void CommManager::handleCommand(const char* topic, const char* payload, int len,
     else if (strcmp(topic, TOPIC_CMD_ENABLE_HOTTUB) == 0)    { if (settings.enableHottub != bval) { settings.enableHottub = bval; changed = true; } }
     else if (strcmp(topic, TOPIC_CMD_ENABLE_AUTO_PUMP) == 0) { if (settings.enableAutoPump != bval) { settings.enableAutoPump = bval; changed = true; } }
     else if (strcmp(topic, TOPIC_CMD_ENABLE_LEVELPUMP) == 0) { if (settings.enableLevelPump != bval) { settings.enableLevelPump = bval; changed = true; } }
+    else if (strcmp(topic, TOPIC_CMD_ENABLE_IRRIGATION) == 0) {
+        if (settings.enableIrrigation != bval) {
+            settings.enableIrrigation = bval;
+            changed = true;
+        }
+        if (!bval) {
+            for (size_t idx = 0; idx < IRRIGATION_ZONE_COUNT; ++idx) {
+                _io.irrigationZoneRequest[idx] = false;
+                _io.irrigationZoneRequestSequence[idx] = 0;
+            }
+        }
+    }
 
     if (changed) {
         _markSettingsDirty();

@@ -1,55 +1,63 @@
 # Opta1 Master
 
-Beschrijving van de fysieke in- en uitgangen van de Opta1 energie-master.
+Beschrijving van de fysieke I/O en de huidige taakverdeling van de Opta1 energie-master.
 
 ## Functie
 
 Opta1 verzorgt:
 
 - surplusberekening uit de energiemeter via MQTT
-- boilerregeling voor warmtepomp en element
-- permissie voor de hottub naar Opta2
+- boilerregeling voor warmtepomp en elektrisch element
+- permissie en heartbeat voor de hottub-controller op Opta2
 - status- en alarmpublicatie naar Home Assistant
 
 ## Uitgangen
 
-| PLC uitgang | Code pin | Functie | Opmerking |
+| Fysieke uitgang | Code pin | Huidige functie | Status |
 |---|---|---|---|
-| O1 | D0 | Warmtepomp extra warm water | Actieve WP-uitgang voor boilerlading |
-| O2 | D1 | WP comfort / extra verwarming | Gereserveerd / optioneel |
-| O3 | D2 | Boiler-element | Relais voor elektrisch element |
-| O4 | D3 | Reserve | Momenteel niet gebruikt |
+| O1 | D0 | Warmtepomp extra warm water | Actief gebruikt |
+| O2 | D1 | WP comfort / extra verwarming | Gereserveerd voor toekomstige uitbreiding |
+| O3 | D2 | Boiler-element | Actief gebruikt |
+| O4 | D3 | Reserve relais | Momenteel niet aangestuurd |
 
-## Analoge ingangen
+## Basis-ingangen op de Opta
 
-| PLC ingang | Code pin | Functie | Opmerking |
-|---|---|---|---|
-| I1 | A0 | Boiler boven sensor PLC | Huidige regelwaarheid, PT1000 met 0-10V omvormer |
-| I2 | A1 | Boiler boven sensor extra | Optioneel, momenteel niet gebruikt in de regeling |
+De standaard Opta heeft 8 ingangskanalen I1 t/m I8. In deze applicatie worden ze als volgt gebruikt of gereserveerd.
 
-## Digitale ingangen
-
-| PLC ingang | Code pin | Functie | Opmerking |
-|---|---|---|---|
-| I3 | A2 | Boilerthermostaat / beveiliging | Moet OK zijn om element toe te laten |
-| I4 | A3 | Fault reset knop | Handmatige reset-ingang |
+| Fysieke ingang | Code pin | Type in huidige code | Huidige functie | Status |
+|---|---|---|---|---|
+| I1 | A0 | Analoog 0-10V | Boiler temperatuur sensor PLC | Actief gebruikt als regelwaarheid |
+| I2 | A1 | Analoog 0-10V | Extra boiler temperatuur sensor | Aangesloten / optioneel, niet bepalend voor de regeling |
+| I3 | A2 | Digitaal | Boilerthermostaat / beveiliging | In config benoemd, in huidige installatie niet blokkerend gebruikt |
+| I4 | A3 | Digitaal | Fault reset knop | Actief gebruikt |
+| I5 | A4 | Vrij | Niet toegewezen | Reserve |
+| I6 | A5 | Vrij | Niet toegewezen | Reserve |
+| I7 | A6 | Vrij | Niet toegewezen | Reserve |
+| I8 | A7 | Vrij | Niet toegewezen | Reserve |
 
 ## Regelwaarheid
 
-De boilerregeling gebruikt momenteel alleen:
-
-- I1 / A0 als Boiler Boven (PLC)
-
-Deze temperatuur wordt gebruikt voor:
+De boilerregeling gebruikt momenteel alleen I1 / A0 als primaire temperatuurwaarde. Deze temperatuur stuurt:
 
 - start/stop warmtepomp boilerlading
 - start/stop boiler-element
-- gauge in Home Assistant
-- boiler temperatuurhistoriek
+- publicatie naar Home Assistant
+- historische boilergrafieken
 
-## Monitoring in Home Assistant
+I2 / A1 blijft beschikbaar als extra meetpunt, maar is in de huidige firmware niet de regelwaarheid.
 
-Naast de PLC-regeltemperatuur blijven deze warmtepomp-sensoren zichtbaar voor monitoring:
+## Logische I/O via MQTT
 
-- Warmwater Boven
-- Warmwater Laden
+Naast de fysieke klemmen gebruikt Opta1 ook logische I/O via MQTT:
+
+| Logische I/O | Topic / bron | Functie |
+|---|---|---|
+| Surplus fase 1 | `b0b21c913c34/PUB/CH1` en `CH10` | Beslissing warmtepomp en element |
+| Surplus totaal | `b0b21c913c34/PUB/CH13` en `CH14` | Beslissing hottub-permissie |
+| Compressor frequentie | `opta1/extern/compressor_freq_hz` | Veiligheidsinterlock voor element |
+| Hottub permissie | `opta1/device/permission_hottub` | Logische uitgang naar Opta2 |
+| Heartbeat | `opta1/device/heartbeat` | Bewaking communicatie met Opta2 |
+
+## Home Assistant
+
+Opta1 publiceert boilerstatus, prioriteit, permissies, alarmen en surpluswaarden naar Home Assistant. Deze README benoemt hiermee alle huidige fysieke en logische I/O die in de firmware zijn vastgelegd.

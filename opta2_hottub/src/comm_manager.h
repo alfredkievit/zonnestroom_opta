@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <ArduinoMqttClient.h>
+#include <Ethernet.h>
 #include <WiFiClient.h>
 #include "types.h"
 #include "config.h"
@@ -31,8 +32,11 @@ public:
                        Settings& settings);
 
 private:
+    EthernetClient _ethernetClient;
     WiFiClient _wifiClient;
-    MqttClient     _mqtt;
+    MqttClient     _mqttLan;
+    MqttClient     _mqttWifi;
+    MqttClient*    _activeMqtt = nullptr;
 
     Settings&     _settings;
     SettingsStorage& _storage;
@@ -46,18 +50,30 @@ private:
     bool          _heartbeatEverRx     = false;
     unsigned long _lastHeartbeatRxMs   = 0;
     unsigned long _lastClockRxMs       = 0;
+    unsigned long _lastLanBeginMs      = 0;
     unsigned long _lastWifiBeginMs     = 0;
     unsigned long _lastReconnectTryMs  = 0;
     unsigned long _lastConnectLogMs    = 0;
+    unsigned long _zoneRequestSequenceCounter = 0;
+    NetworkTransport _activeTransport  = NetworkTransport::NONE;
+    bool          _lanConfigured       = false;
     bool          _wifiWasConnected    = false;
+    bool          _lanWasConnected     = false;
     bool          _mqttWasConnected    = false;
     bool          _settingsDirty       = false;
     unsigned long _settingsDirtySinceMs = 0;
 
     void _reconnect(const Settings& settings);
-    void _ensureWifiConnected();
+    void _ensureLanConnected();
+    void _ensureWifiConnected(bool lanAvailable);
     void _handleMessage(int messageSize);
     void _checkCommTimeout(const Settings& settings);
     void _flushPendingSave();
     void _markSettingsDirty();
+    void _subscribeTopics(MqttClient& client);
+    void _switchTransport(NetworkTransport transport);
+    void _configureMqttClient(MqttClient& client);
+    bool _isLanAvailable() const;
+    bool _isWifiAvailable() const;
+    MqttClient* _mqttForTransport(NetworkTransport transport);
 };

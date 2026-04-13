@@ -26,6 +26,14 @@ private:
     bool  _prevLevelPumpAct = false;
     bool  _prevCommOk       = false;
     bool  _prevClockOk      = false;
+    bool  _prevIrrigationEnabled = false;
+    bool  _prevIrrigationPump = false;
+    bool  _prevIrrigationPumpManualReq = false;
+    bool  _prevIrrigationExpansionPresent = false;
+    uint8_t _prevIrrigationActiveZoneCount = 0;
+    NetworkTransport _prevTransport = NetworkTransport::NONE;
+    bool _prevIrrigationZoneRequested[IRRIGATION_ZONE_COUNT] = {};
+    bool _prevIrrigationZoneActive[IRRIGATION_ZONE_COUNT] = {};
     bool  _heartbeatBit     = false;
 
     void _publishAll();

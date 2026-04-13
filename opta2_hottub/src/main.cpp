@@ -12,7 +12,11 @@
 #include "settings_storage.h"
 #include "comm_manager.h"
 #include "hottub_logic.h"
+#include "irrigation_logic.h"
 #include "ha_interface.h"
+#include "OptaBlue.h"
+
+using namespace Opta;
 
 // ── Global state ──────────────────────────────────────────────────────────────
 static Settings     gSettings;
@@ -24,8 +28,17 @@ static IOState      gIo;
 static SettingsStorage gStorage;
 static CommManager     gComm(gSettings, gStorage, gStatus, gAlarms, gIo);
 static HottubLogic     gHottubLogic;
+static IrrigationLogic gIrrigationLogic;
 static HaInterface     gHa(gComm, gSettings, gStatus, gAlarms, gIo, gStorage);
+static DigitalExpansion gIrrigationExpansion;
 static unsigned long   gLastLoopHeartbeatMs = 0;
+
+static void refreshIrrigationExpansion() {
+    OptaController.update();
+    DigitalExpansion expansion = OptaController.getExpansion(0);
+    gIrrigationExpansion = expansion;
+    gStatus.irrigationExpansionPresent = static_cast<bool>(expansion);
+}
 
 static void updateStatusLed(bool online) {
 #if defined(LEDR) && defined(LEDG)
@@ -68,6 +81,20 @@ static void writeOutputs() {
     writeOutputWithLed(PIN_DO_HOTTUB_PUMP,      gIo.doHottubPump      ? HIGH : LOW);
     writeOutputWithLed(PIN_DO_HOTTUB_LEVELPUMP, gIo.doHottubLevelPump ? HIGH : LOW);
     writeOutputWithLed(PIN_DO_HOTTUB_ALARM,     gIo.doHottubAlarm     ? HIGH : LOW);
+
+    if (!gIrrigationExpansion) {
+        return;
+    }
+
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_1, gIo.doIrrigationZones[0] ? HIGH : LOW);
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_2, gIo.doIrrigationZones[1] ? HIGH : LOW);
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_3, gIo.doIrrigationZones[2] ? HIGH : LOW);
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_4, gIo.doIrrigationZones[3] ? HIGH : LOW);
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_5, gIo.doIrrigationZones[4] ? HIGH : LOW);
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_6, gIo.doIrrigationZones[5] ? HIGH : LOW);
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_PUMP,   gIo.doIrrigationPump ? HIGH : LOW);
+    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_SPARE,  LOW);
+    gIrrigationExpansion.updateDigitalOutputs();
 }
 
 // ── Helper: read physical inputs ─────────────────────────────────────────────
@@ -125,12 +152,15 @@ void setup() {
     gAlarms = {};
     gIo     = {};
 
+    OptaController.begin();
     gComm.begin();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 void loop() {
     const unsigned long loopStartMs = millis();
+
+    refreshIrrigationExpansion();
 
     // 1. Receive MQTT: permission, heartbeat, HA commands
     gComm.update(gSettings);
@@ -144,10 +174,13 @@ void loop() {
     // 3. Hottub temp control + level pump logic
     gHottubLogic.update(gSettings, gIo, gStatus, gAlarms);
 
-    // 4. Write relay outputs
+    // 4. Irrigation control on the expansion module
+    gIrrigationLogic.update(gSettings, gIo, gStatus, gAlarms);
+
+    // 5. Write relay outputs
     writeOutputs();
 
-    // 5. Publish status + alarms to HA
+    // 6. Publish status + alarms to HA
     gHa.update();
 
     const unsigned long loopDurationMs = millis() - loopStartMs;

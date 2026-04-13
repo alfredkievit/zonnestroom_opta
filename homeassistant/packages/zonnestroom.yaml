@@ -101,6 +101,20 @@ mqtt:
       device:
         identifiers: [opta2_hottub]
 
+    - name: "Beregening Actieve Zones"
+      unique_id: opta2_irrigation_active_zone_count
+      state_topic: "opta2/status/irrigation_active_zone_count"
+      icon: "mdi:sprinkler-variant"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Opta2 Netwerk Transport"
+      unique_id: opta2_network_transport
+      state_topic: "opta2/status/network_transport"
+      icon: "mdi:lan"
+      device:
+        identifiers: [opta2_hottub]
+
   # ──────────────────────────────────────────────────────────
   #  OPTA1 – BINAIRE SENSOREN
   # ──────────────────────────────────────────────────────────
@@ -247,6 +261,87 @@ mqtt:
       device:
         identifiers: [opta2_hottub]
 
+    - name: "Beregening Ingeschakeld"
+      unique_id: opta2_irrigation_enabled
+      state_topic: "opta2/status/irrigation_enabled"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Expansie Aanwezig"
+      unique_id: opta2_irrigation_expansion_present
+      state_topic: "opta2/status/irrigation_expansion_present"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: connectivity
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Pomp Actief"
+      unique_id: opta2_irrigation_pump_active
+      state_topic: "opta2/status/irrigation_pump_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 1 Actief"
+      unique_id: opta2_irrigation_zone_1_active
+      state_topic: "opta2/status/irrigation_zone_1_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 2 Actief"
+      unique_id: opta2_irrigation_zone_2_active
+      state_topic: "opta2/status/irrigation_zone_2_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 3 Actief"
+      unique_id: opta2_irrigation_zone_3_active
+      state_topic: "opta2/status/irrigation_zone_3_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 4 Actief"
+      unique_id: opta2_irrigation_zone_4_active
+      state_topic: "opta2/status/irrigation_zone_4_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 5 Actief"
+      unique_id: opta2_irrigation_zone_5_active
+      state_topic: "opta2/status/irrigation_zone_5_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 6 Actief"
+      unique_id: opta2_irrigation_zone_6_active
+      state_topic: "opta2/status/irrigation_zone_6_active"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
+      device:
+        identifiers: [opta2_hottub]
+
   # ──────────────────────────────────────────────────────────
   #  OPTA1 – SCHAKELAARS (enable flags)
   # ──────────────────────────────────────────────────────────
@@ -368,6 +463,118 @@ mqtt:
       payload_off: "0"
       retain: true
       icon: "mdi:water-pump"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Inschakelen"
+      unique_id: opta2_enable_irrigation
+      command_topic: "opta2/cmd/enable_irrigation"
+      state_topic: "opta2/status/irrigation_enabled"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: true
+      optimistic: false
+      icon: "mdi:sprinkler"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Pomp Handmatig"
+      unique_id: opta2_manual_force_irrigation_pump
+      command_topic: "opta2/cmd/manual_force_irrigation_pump"
+      state_topic: "opta2/status/irrigation_pump_manual_request"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: false
+      optimistic: false
+      icon: "mdi:pump"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 1"
+      unique_id: opta2_irrigation_zone_1_request
+      command_topic: "opta2/cmd/irrigation_zone_1_request"
+      state_topic: "opta2/status/irrigation_zone_1_requested"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: false
+      optimistic: false
+      icon: "mdi:valve"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 2"
+      unique_id: opta2_irrigation_zone_2_request
+      command_topic: "opta2/cmd/irrigation_zone_2_request"
+      state_topic: "opta2/status/irrigation_zone_2_requested"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: false
+      optimistic: false
+      icon: "mdi:valve"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 3"
+      unique_id: opta2_irrigation_zone_3_request
+      command_topic: "opta2/cmd/irrigation_zone_3_request"
+      state_topic: "opta2/status/irrigation_zone_3_requested"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: false
+      optimistic: false
+      icon: "mdi:valve"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 4"
+      unique_id: opta2_irrigation_zone_4_request
+      command_topic: "opta2/cmd/irrigation_zone_4_request"
+      state_topic: "opta2/status/irrigation_zone_4_requested"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: false
+      optimistic: false
+      icon: "mdi:valve"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 5"
+      unique_id: opta2_irrigation_zone_5_request
+      command_topic: "opta2/cmd/irrigation_zone_5_request"
+      state_topic: "opta2/status/irrigation_zone_5_requested"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: false
+      optimistic: false
+      icon: "mdi:valve"
+      device:
+        identifiers: [opta2_hottub]
+
+    - name: "Beregening Zone 6"
+      unique_id: opta2_irrigation_zone_6_request
+      command_topic: "opta2/cmd/irrigation_zone_6_request"
+      state_topic: "opta2/status/irrigation_zone_6_requested"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"
+      retain: false
+      optimistic: false
+      icon: "mdi:valve"
       device:
         identifiers: [opta2_hottub]
 

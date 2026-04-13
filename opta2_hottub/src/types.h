@@ -1,6 +1,14 @@
 #pragma once
 #include <Arduino.h>
 
+static constexpr size_t IRRIGATION_ZONE_COUNT = 6;
+
+enum class NetworkTransport : uint8_t {
+    NONE = 0,
+    LAN  = 1,
+    WIFI = 2
+};
+
 // ─── Settings ──────────────────────────────────────────────────────────────
 struct Settings {
     // Hottub temperatures [°C]
@@ -21,6 +29,10 @@ struct Settings {
     bool  enableHottub;
     bool  enableAutoPump;
     bool  enableLevelPump;
+
+    // Irrigation
+    bool  enableIrrigation;
+    bool  enableIrrigationSchedules;
 };
 
 inline Settings defaultSettings() {
@@ -36,6 +48,8 @@ inline Settings defaultSettings() {
     s.enableHottub         = true;
     s.enableAutoPump       = true;
     s.enableLevelPump      = true;
+    s.enableIrrigation     = true;
+    s.enableIrrigationSchedules = false;
     return s;
 }
 
@@ -50,6 +64,17 @@ struct SystemStatus {
     bool  commOk;
     bool  clockOk;
     bool  hottubReady;
+
+    bool  irrigationEnabled;
+    bool  irrigationPumpActive;
+    bool  irrigationAnyZoneActive;
+    bool  irrigationExpansionPresent;
+    bool  irrigationZoneActive[IRRIGATION_ZONE_COUNT];
+    uint8_t irrigationActiveZoneCount;
+
+    bool  lanConnected;
+    bool  wifiConnected;
+    NetworkTransport activeNetworkTransport;
 };
 
 // ─── Alarms ────────────────────────────────────────────────────────────────
@@ -60,6 +85,7 @@ struct AlarmState {
     bool hottubCommTimeout;
     bool levelPumpTimeout;
     bool hottubGeneral;
+    bool irrigationExpansionMissing;
 };
 
 // ─── I/O ────────────────────────────────────────────────────────────────────
@@ -70,8 +96,11 @@ struct IOState {
     bool doHottubLevelPump;
     bool doHottubStatusRun;
     bool doHottubAlarm;
+    bool doIrrigationPump;
+    bool doIrrigationZones[IRRIGATION_ZONE_COUNT];
     bool manualForcePump;
     bool manualForceLevelPump;
+    bool manualForceIrrigationPump;
 
     // Inputs – physical
     float aiHottubTempC;
@@ -85,4 +114,7 @@ struct IOState {
     bool  inMasterCommValid;
     int   clockMinuteOfDay;
     bool  clockMinuteValid;
+
+    bool  irrigationZoneRequest[IRRIGATION_ZONE_COUNT];
+    unsigned long irrigationZoneRequestSequence[IRRIGATION_ZONE_COUNT];
 };

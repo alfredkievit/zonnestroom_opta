@@ -8,11 +8,8 @@
 #   - homeassistant/packages/zonnestroom.yaml  →  /config/packages/
 #   - homeassistant/dashboards/zonnestroom_dashboard.yaml
 #                                              →  /config/dashboards/
-#   - homeassistant/lovelace.zonnestroom_dashboard.json
-#                                              →  /config/.storage/lovelace.zonnestroom_dashboard
 #
-#  Let op: dashboard kan in YAML-modus of storage-modus staan.
-#  Daarom deployen we zowel YAML als de storage JSON.
+#  Het live dashboard draait in YAML-modus.
 #  Na deploy is een HA HERSTART VERPLICHT – browser refresh is niet genoeg.
 # ============================================================
 
@@ -49,16 +46,6 @@ $HA_SCP homeassistant/dashboards/zonnestroom_dashboard.yaml \
         HAS:$HA_CONFIG/dashboards/zonnestroom_dashboard.yaml
 
 echo "==> Dashboard YAML gekopieerd."
-
-# Kopieer dashboard storage JSON naar actieve storage-file (zonder .json extensie)
-$HA_SCP homeassistant/lovelace.zonnestroom_dashboard.json \
-  HAS:$HA_CONFIG/.storage/lovelace.zonnestroom_dashboard
-
-# Optioneel ook een .json kopie bewaren voor inspectie/backup
-$HA_SCP homeassistant/lovelace.zonnestroom_dashboard.json \
-  HAS:$HA_CONFIG/.storage/lovelace.zonnestroom_dashboard.json
-
-echo "==> Dashboard storage JSON gekopieerd."
 
 # Controleer of packages al in configuration.yaml staan
 if ! $HA_SSH "grep -q 'packages' $HA_CONFIG/configuration.yaml"; then
