@@ -44,7 +44,7 @@ static void updateStatusLed(bool online) {
         blinkOn = !blinkOn;
     }
 
-    // Opta2 RGB status LED is active-high on this setup.
+    // Drive status LED as active-high: online = blinking green, offline = blinking red.
     const int onState  = HIGH;
     const int offState = LOW;
 
