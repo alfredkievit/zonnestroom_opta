@@ -31,14 +31,8 @@ static HottubLogic     gHottubLogic;
 static IrrigationLogic gIrrigationLogic;
 static HaInterface     gHa(gComm, gSettings, gStatus, gAlarms, gIo, gStorage);
 static DigitalExpansion gIrrigationExpansion;
-static unsigned long   gLastLoopHeartbeatMs = 0;
-
-static void refreshIrrigationExpansion() {
-    OptaController.update();
-    DigitalExpansion expansion = OptaController.getExpansion(0);
-    gIrrigationExpansion = expansion;
-    gStatus.irrigationExpansionPresent = static_cast<bool>(expansion);
-}
+static unsigned long   gLastLoopHeartbeatMs       = 0;
+static unsigned long   gLastExpansionOutputWriteMs = 0;
 
 static void updateStatusLed(bool online) {
 #if defined(LEDR) && defined(LEDG)
@@ -86,15 +80,19 @@ static void writeOutputs() {
         return;
     }
 
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_1, gIo.doIrrigationZones[0] ? HIGH : LOW);
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_2, gIo.doIrrigationZones[1] ? HIGH : LOW);
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_3, gIo.doIrrigationZones[2] ? HIGH : LOW);
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_4, gIo.doIrrigationZones[3] ? HIGH : LOW);
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_5, gIo.doIrrigationZones[4] ? HIGH : LOW);
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_6, gIo.doIrrigationZones[5] ? HIGH : LOW);
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_PUMP,   gIo.doIrrigationPump ? HIGH : LOW);
-    gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_SPARE,  LOW);
-    gIrrigationExpansion.updateDigitalOutputs();
+    const unsigned long now = millis();
+    if ((now - gLastExpansionOutputWriteMs) >= 100UL) {
+        gLastExpansionOutputWriteMs = now;
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_1, gIo.doIrrigationZones[0] ? HIGH : LOW);
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_2, gIo.doIrrigationZones[1] ? HIGH : LOW);
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_3, gIo.doIrrigationZones[2] ? HIGH : LOW);
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_4, gIo.doIrrigationZones[3] ? HIGH : LOW);
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_5, gIo.doIrrigationZones[4] ? HIGH : LOW);
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_ZONE_6, gIo.doIrrigationZones[5] ? HIGH : LOW);
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_PUMP,   gIo.doIrrigationPump ? HIGH : LOW);
+        gIrrigationExpansion.digitalWrite(PIN_EXP_IRRIGATION_SPARE,  LOW);
+        gIrrigationExpansion.updateDigitalOutputs();
+    }
 }
 
 // ── Helper: read physical inputs ─────────────────────────────────────────────
@@ -153,6 +151,18 @@ void setup() {
     gIo     = {};
 
     OptaController.begin();
+    // Run expansion scan in setup() to completion so loop() stays fast.
+    // The Opta Blueprint RS485 scan can take several seconds on first call.
+    {
+        const unsigned long scanStart = millis();
+        while ((millis() - scanStart) < 10000UL) {
+            OptaController.update();
+        }
+        DigitalExpansion exp = OptaController.getExpansion(0);
+        gIrrigationExpansion = exp;
+        gStatus.irrigationExpansionPresent = static_cast<bool>(exp);
+    }
+
     gComm.begin();
 }
 
@@ -160,7 +170,9 @@ void setup() {
 void loop() {
     const unsigned long loopStartMs = millis();
 
-    refreshIrrigationExpansion();
+    // Service the Opta Blueprint RS485 protocol every tick.
+    // Must be called frequently to keep expansion module in sync.
+    OptaController.update();
 
     // 1. Receive MQTT: permission, heartbeat, HA commands
     gComm.update(gSettings);
