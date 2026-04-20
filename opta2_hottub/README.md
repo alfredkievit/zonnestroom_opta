@@ -20,9 +20,45 @@ Opta2 gebruikt twee netwerkpaden:
 
 - LAN is primair en gebruikt een vast IP-adres: `192.168.0.51`
 - WiFi blijft beschikbaar als fallback
-- zodra LAN terug beschikbaar is, schakelt Opta2 automatisch terug naar LAN
+- bij verlies van de LAN-link valt Opta2 na korte debounce direct terug op WiFi
+- zodra LAN fysiek terug beschikbaar is, schakelt Opta2 automatisch terug naar LAN
+- als LAN fysiek aanwezig is maar MQTT over LAN onbruikbaar blijft, houdt Opta2 WiFi maximaal 1 uur actief en opent daarna een LAN-herstelvenster; lukt dat herstel niet binnen 15 seconden, dan volgt een software reset
 
 De MQTT-broker blijft `192.168.0.10:1883`.
+
+## Netwerk failover test (LAN prioriteit)
+
+Deze test verifieert volledig dat Opta2:
+
+- op LAN werkt zolang de kabel aanwezig is
+- naar WiFi terugvalt bij kabelverlies
+- automatisch terug naar LAN schakelt zodra de kabel terug is
+
+### Voorbereiding
+
+1. Flash de laatste firmware op Opta2.
+2. Zorg dat broker `192.168.0.10:1883` bereikbaar is.
+3. Start in de repo-root:
+
+```bash
+node test_opta2_network_failover.js
+```
+
+### Uitvoering
+
+1. Start met netwerkkabel ingeplugd in Opta2.
+2. Wacht op `transport=lan` in de testoutput.
+3. Trek de kabel uit de Opta2 en wacht op `transport=wifi`.
+4. Steek de kabel opnieuw in en controleer dat `transport=lan` terugkomt.
+
+### Verwachte uitkomst
+
+- De test eindigt met `PASS - LAN recovered and regained priority.`
+- Tijdens de test blijft `opta2/device/heartbeat` periodiek binnenkomen.
+
+### Opmerking
+
+De firmware forceert LAN als voorkeursroute. Zodra fysieke link + IP op LAN terug beschikbaar zijn, schakelt MQTT direct terug naar LAN en wordt WiFi losgekoppeld.
 
 ## Basis-uitgangen op de Opta
 

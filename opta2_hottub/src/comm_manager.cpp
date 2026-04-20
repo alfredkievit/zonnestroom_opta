@@ -7,6 +7,8 @@
 #include <math.h>
 #include <string.h>
 
+static constexpr uint8_t LAN_MQTT_FAIL_THRESHOLD = 3;
+
 CommManager* CommManager::_instance = nullptr;
 
 void CommManager::_onMessageCb(int size) {
@@ -32,15 +34,31 @@ void CommManager::begin() {
     _instance = this;
     _configureMqttClient(_mqttLan);
     _configureMqttClient(_mqttWifi);
-    _ensureLanConnected();
+    _lastLanLinkUpMs = millis();
+    _startupLanProbeUntilMs = millis() + LAN_STARTUP_PROBE_MS;
+    _ensureLanConnected(true);
 }
 
 // ---------------------------------------------------------------------------
 void CommManager::update(const Settings& settings) {
-    _ensureLanConnected();
-    const bool lanConnected = _isLanAvailable();
+    const unsigned long now = millis();
+    const bool rawLanLinkPresent = (Ethernet.linkStatus() != LinkOFF);
+    if (rawLanLinkPresent) {
+        _lastLanLinkUpMs = now;
+    }
+    const bool lanLinkPresent = rawLanLinkPresent || ((now - _lastLanLinkUpMs) < LAN_LINK_LOSS_DEBOUNCE_MS);
+    const bool lanHardDown = ((now - _lastLanLinkUpMs) > LAN_LINK_HARD_DOWN_MS);
 
-    _ensureWifiConnected(lanConnected);
+    _ensureLanConnected(lanLinkPresent);
+
+    if (lanHardDown) {
+        _dropLanSession();
+    }
+
+    const bool lanConnected = _isLanAvailable();
+    const bool lanSuppressed = (now < _forceWifiUntilMs);
+
+    _ensureWifiConnected(true);
     const bool wifiConnected = _isWifiAvailable();
 
     _status.lanConnected = lanConnected;
@@ -60,11 +78,21 @@ void CommManager::update(const Settings& settings) {
 #endif
     }
 
+    _handleLanRecovery(lanLinkPresent, wifiConnected);
+
+    if (!lanLinkPresent && _activeTransport == NetworkTransport::LAN && wifiConnected && !_mqttLan.connected()) {
+        _dropLanSession();
+    }
+
+    const bool forceWifiOnLinkLoss = !lanLinkPresent && wifiConnected;
+
     NetworkTransport desiredTransport = NetworkTransport::NONE;
-    if (lanConnected) {
+    if (lanConnected && !lanSuppressed && !forceWifiOnLinkLoss) {
         desiredTransport = NetworkTransport::LAN;
     } else if (wifiConnected) {
         desiredTransport = NetworkTransport::WIFI;
+    } else if (lanConnected) {
+        desiredTransport = NetworkTransport::LAN;
     }
 
     _switchTransport(desiredTransport);
@@ -107,8 +135,15 @@ void CommManager::update(const Settings& settings) {
 // ---------------------------------------------------------------------------
 bool CommManager::connected() { return (_activeMqtt != nullptr) && _activeMqtt->connected(); }
 
+bool CommManager::controlLinkReady() const {
+    return (_activeMqtt != nullptr) && _activeMqtt->connected() && _status.commOk && (millis() >= _publishHoldUntilMs);
+}
+
 // ---------------------------------------------------------------------------
 void CommManager::publish(const char* topic, const char* payload, bool retain) {
+    if (millis() < _publishHoldUntilMs) {
+        return;
+    }
     if (_activeMqtt == nullptr || !_activeMqtt->connected()) return;
     _activeMqtt->beginMessage(topic, retain);
     _activeMqtt->print(payload);
@@ -143,6 +178,18 @@ void CommManager::_reconnect(const Settings& settings) {
 
     IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);
     if (!_activeMqtt->connect(broker, BROKER_PORT)) {
+        if (_activeTransport == NetworkTransport::LAN) {
+            if (_lanMqttFailureCount < 255) {
+                _lanMqttFailureCount++;
+            }
+            if (_lanMqttFailureCount >= LAN_MQTT_FAIL_THRESHOLD && _isWifiAvailable()) {
+                _forceWifiUntilMs = now + LAN_WIFI_FALLBACK_HOLD_MS;
+                _lanRecoveryDeadlineMs = 0;
+#if DEBUG_DIAG
+                Serial.println("[Opta2] LAN MQTT unstable -> WiFi fallback until next LAN recovery window");
+#endif
+            }
+        }
 #if DEBUG_DIAG
         if ((now - _lastConnectLogMs) >= CONNECT_LOG_INTERVAL_MS) {
             _lastConnectLogMs = now;
@@ -157,6 +204,11 @@ void CommManager::_reconnect(const Settings& settings) {
 #endif
 
     _subscribeTopics(*_activeMqtt);
+
+    if (_activeTransport == NetworkTransport::LAN) {
+        _lanMqttFailureCount = 0;
+        _forceWifiUntilMs = 0;
+    }
 }
 
 void CommManager::_subscribeTopics(MqttClient& client) {
@@ -185,12 +237,20 @@ void CommManager::_subscribeTopics(MqttClient& client) {
 }
 
 // ---------------------------------------------------------------------------
-bool CommManager::_isLanAvailable() const {
-    if (Ethernet.linkStatus() == LinkOFF) {
+bool CommManager::_isLanAvailable() {
+    const bool lanHardDown = ((millis() - _lastLanLinkUpMs) > LAN_LINK_HARD_DOWN_MS);
+    if (_mqttLan.connected() && !lanHardDown) {
+        return true;
+    }
+
+    IPAddress ip = Ethernet.localIP();
+    if (ip[0] == 0) {
         return false;
     }
-    IPAddress ip = Ethernet.localIP();
-    return ip[0] != 0;
+
+    const bool lanLinkPresent = ((millis() - _lastLanLinkUpMs) < LAN_LINK_LOSS_DEBOUNCE_MS);
+    const bool lanStartupGrace = ((millis() - _lastLanBeginMs) < LAN_RECOVERY_GRACE_MS);
+    return lanLinkPresent || lanStartupGrace;
 }
 
 bool CommManager::_isWifiAvailable() const {
@@ -228,16 +288,72 @@ void CommManager::_switchTransport(NetworkTransport transport) {
     _activeTransport = transport;
     _activeMqtt = _mqttForTransport(transport);
     _mqttWasConnected = false;
+    _lastReconnectTryMs = 0;
+    _commGraceUntilMs = millis() + NETWORK_TRANSITION_GRACE_MS;
+    _publishHoldUntilMs = millis() + MQTT_PUBLISH_HOLD_AFTER_SWITCH_MS;
 
-    if (transport == NetworkTransport::LAN && WiFi.status() == WL_CONNECTED) {
-        WiFi.disconnect();
+}
+
+void CommManager::_handleLanRecovery(bool lanLinkPresent, bool wifiConnected) {
+    const unsigned long now = millis();
+
+    if (_activeTransport != NetworkTransport::WIFI) {
+        _lanRecoveryDeadlineMs = 0;
+        return;
+    }
+
+    if (_forceWifiUntilMs != 0 && now >= _forceWifiUntilMs) {
+        _forceWifiUntilMs = 0;
+        _lanMqttFailureCount = 0;
+        _lastLanBeginMs = 0;
+        _dropLanSession();
+        if (lanLinkPresent) {
+            _lanRecoveryDeadlineMs = now + LAN_RECOVERY_GRACE_MS;
+#if DEBUG_DIAG
+            Serial.println("[Opta2] LAN recovery window opened");
+#endif
+        }
+    }
+
+    if (_lanRecoveryDeadlineMs == 0) {
+        return;
+    }
+
+    if (_mqttLan.connected()) {
+        _lanRecoveryDeadlineMs = 0;
+        return;
+    }
+
+    if (now < _lanRecoveryDeadlineMs) {
+        return;
+    }
+
+    _lanRecoveryDeadlineMs = 0;
+    if (lanLinkPresent && wifiConnected) {
+#if DEBUG_DIAG
+        Serial.println("[Opta2] LAN recovery failed during grace period -> software reset");
+        delay(20);
+#endif
+        NVIC_SystemReset();
     }
 }
 
-void CommManager::_ensureLanConnected() {
+void CommManager::_dropLanSession() {
+    _mqttLan.stop();
+    _ethernetClient.stop();
+    _lanConfigured = false;
+}
+
+void CommManager::_ensureLanConnected(bool lanLinkPresent) {
     const unsigned long now = millis();
-    if (Ethernet.linkStatus() == LinkOFF) {
-        _lanConfigured = false;
+    if (_activeTransport == NetworkTransport::LAN) {
+        return;
+    }
+
+    const bool startupProbeActive = now < _startupLanProbeUntilMs;
+    const bool allowLanProbe = lanLinkPresent || startupProbeActive;
+
+    if (!allowLanProbe) {
         return;
     }
 
@@ -254,11 +370,8 @@ void CommManager::_ensureLanConnected() {
     _lanConfigured = true;
 }
 
-void CommManager::_ensureWifiConnected(bool lanAvailable) {
-    if (lanAvailable) {
-        if (WiFi.status() == WL_CONNECTED) {
-            WiFi.disconnect();
-        }
+void CommManager::_ensureWifiConnected(bool wifiNeeded) {
+    if (!wifiNeeded) {
         return;
     }
 
@@ -308,6 +421,7 @@ void CommManager::_handleMessage(int messageSize) {
             _lastHeartbeatBit  = bit;
             _lastHeartbeatRxMs = millis();
             _heartbeatEverRx   = true;
+            _commGraceUntilMs  = 0;
             _status.commOk     = true;
             _alarms.hottubCommTimeout = false;
 #if DEBUG_DIAG
@@ -356,6 +470,12 @@ void CommManager::_handleMessage(int messageSize) {
 // ---------------------------------------------------------------------------
 void CommManager::_checkCommTimeout(const Settings& settings) {
     if (!_heartbeatEverRx) return;
+    if (_commGraceUntilMs != 0 && millis() < _commGraceUntilMs) {
+        _status.commOk = true;
+        _alarms.hottubCommTimeout = false;
+        _io.inMasterCommValid = true;
+        return;
+    }
     unsigned long elapsed = millis() - _lastHeartbeatRxMs;
     if (elapsed > (unsigned long)settings.tCommWatchdogSec * 1000UL) {
         _status.commOk              = false;

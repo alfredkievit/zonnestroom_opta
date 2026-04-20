@@ -33,8 +33,9 @@ static HaInterface     gHa(gComm, gSettings, gStatus, gAlarms, gIo, gStorage);
 static DigitalExpansion gIrrigationExpansion;
 static unsigned long   gLastLoopHeartbeatMs       = 0;
 static unsigned long   gLastExpansionOutputWriteMs = 0;
+static uint8_t         gConsecutiveLoopStalls      = 0;
 
-static void updateStatusLed(bool online) {
+static void updateStatusLed(NetworkTransport transport) {
 #if defined(LEDR) && defined(LEDG)
     static unsigned long lastToggleMs = 0;
     static bool blinkOn = false;
@@ -44,14 +45,44 @@ static void updateStatusLed(bool online) {
         blinkOn = !blinkOn;
     }
 
-    // Drive status LED as active-high: online = blinking green, offline = blinking red.
-    const int onState  = HIGH;
-    const int offState = LOW;
-
-    digitalWrite(LEDG, (online && blinkOn) ? onState : offState);
-    digitalWrite(LEDR, (!online && blinkOn) ? onState : offState);
+    // Drive the tri-color status LED above reset as a connection heartbeat:
+    // - LAN/WiFi: blinking green
+    // - No transport: blinking red
+    // Use the separate blue LED channel near the user button as an extra
+    // WiFi indicator when that hardware mapping is available.
+    const int redOnState   = STATUS_LED_RED_ACTIVE_LOW ? LOW : HIGH;
+    const int redOffState  = STATUS_LED_RED_ACTIVE_LOW ? HIGH : LOW;
+    const int greenOnState = STATUS_LED_GREEN_ACTIVE_LOW ? LOW : HIGH;
+    const int greenOffState = STATUS_LED_GREEN_ACTIVE_LOW ? HIGH : LOW;
 #if defined(LEDB)
-    digitalWrite(LEDB, offState);
+    const int blueOnState  = STATUS_LED_BLUE_ACTIVE_LOW ? LOW : HIGH;
+    const int blueOffState = STATUS_LED_BLUE_ACTIVE_LOW ? HIGH : LOW;
+#endif
+
+    bool showGreen = false;
+    bool showRed = false;
+#if defined(LEDB)
+    bool showBlue = false;
+#endif
+
+    if (transport == NetworkTransport::LAN || transport == NetworkTransport::WIFI) {
+        showGreen = true;
+    }
+
+    if (transport == NetworkTransport::WIFI) {
+#if defined(LEDB)
+        showBlue = true;
+#endif
+    } else {
+        if (transport == NetworkTransport::NONE) {
+            showRed = true;
+        }
+    }
+
+    digitalWrite(LEDG, (showGreen && blinkOn) ? greenOnState : greenOffState);
+    digitalWrite(LEDR, (showRed && blinkOn) ? redOnState : redOffState);
+#if defined(LEDB)
+    digitalWrite(LEDB, showBlue ? blueOnState : blueOffState);
 #endif
 #endif
 }
@@ -66,6 +97,17 @@ static void writeOutputWithLed(uint8_t outputPin, int outputState) {
         digitalWrite(LED_D2, outputState);
     } else if (outputPin == PIN_DO_HOTTUB_ALARM) {
         digitalWrite(LED_D3, outputState);
+    }
+}
+
+static void forceSafeOutputs() {
+    gIo.doHottubHeater = false;
+    gIo.doHottubPump = false;
+    gIo.doHottubLevelPump = false;
+    gIo.doHottubAlarm = false;
+    gIo.doIrrigationPump = false;
+    for (size_t idx = 0; idx < IRRIGATION_ZONE_COUNT; ++idx) {
+        gIo.doIrrigationZones[idx] = false;
     }
 }
 
@@ -177,8 +219,8 @@ void loop() {
     // 1. Receive MQTT: permission, heartbeat, HA commands
     gComm.update(gSettings);
 
-    // Status LED above reset: green blink online, red blink offline
-    updateStatusLed(gComm.connected());
+    // Status LED above reset: LAN=green, WiFi=blue, no transport=red
+    updateStatusLed(gStatus.activeNetworkTransport);
 
     // 2. Read physical sensors and digital inputs
     readInputs();
@@ -188,6 +230,11 @@ void loop() {
 
     // 4. Irrigation control on the expansion module
     gIrrigationLogic.update(gSettings, gIo, gStatus, gAlarms);
+
+    const bool communicationConfirmed = gComm.controlLinkReady();
+    if (!communicationConfirmed) {
+        forceSafeOutputs();
+    }
 
     // 5. Write relay outputs
     writeOutputs();
@@ -213,10 +260,25 @@ void loop() {
 #endif
 
     if (loopDurationMs > LOOP_RESET_MS) {
+        if (gConsecutiveLoopStalls < 255) {
+            gConsecutiveLoopStalls++;
+        }
 #if DEBUG_DIAG
-        Serial.println("[Opta2] loop stall detected -> software reset");
-        delay(20);
+        Serial.print("[Opta2] loop stall count=");
+        Serial.println(gConsecutiveLoopStalls);
 #endif
-        NVIC_SystemReset();
+        // Log repeated stalls, but do not auto-reset by default. Network
+        // transitions can legitimately block for tens of seconds on Opta.
+    #if ENABLE_LOOP_STALL_RESET
+        if (gConsecutiveLoopStalls >= 3 && millis() > 60000UL) {
+#if DEBUG_DIAG
+            Serial.println("[Opta2] repeated loop stalls -> software reset");
+            delay(20);
+#endif
+            NVIC_SystemReset();
+        }
+    #endif
+    } else {
+        gConsecutiveLoopStalls = 0;
     }
 }

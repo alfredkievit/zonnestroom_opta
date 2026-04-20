@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <ArduinoMqttClient.h>
 #include <Ethernet.h>
-#include <WiFiClient.h>
+#include <WiFi.h>
 #include "types.h"
 #include "config.h"
 #include "settings_storage.h"
@@ -23,6 +23,7 @@ public:
     void publish(const char* topic, float value, uint8_t decimals = 1, bool retain = false);
 
     bool connected();
+    bool controlLinkReady() const;
 
     // Static callback required by ArduinoMqttClient
     static void _onMessageCb(int size);
@@ -54,6 +55,11 @@ private:
     unsigned long _lastWifiBeginMs     = 0;
     unsigned long _lastReconnectTryMs  = 0;
     unsigned long _lastConnectLogMs    = 0;
+    unsigned long _lastLanLinkUpMs     = 0;
+    unsigned long _lanRecoveryDeadlineMs = 0;
+    unsigned long _startupLanProbeUntilMs = 0;
+    unsigned long _commGraceUntilMs    = 0;
+    unsigned long _publishHoldUntilMs  = 0;
     unsigned long _zoneRequestSequenceCounter = 0;
     NetworkTransport _activeTransport  = NetworkTransport::NONE;
     bool          _lanConfigured       = false;
@@ -62,9 +68,11 @@ private:
     bool          _mqttWasConnected    = false;
     bool          _settingsDirty       = false;
     unsigned long _settingsDirtySinceMs = 0;
+    uint8_t       _lanMqttFailureCount = 0;
+    unsigned long _forceWifiUntilMs    = 0;
 
     void _reconnect(const Settings& settings);
-    void _ensureLanConnected();
+    void _ensureLanConnected(bool lanLinkPresent);
     void _ensureWifiConnected(bool lanAvailable);
     void _handleMessage(int messageSize);
     void _checkCommTimeout(const Settings& settings);
@@ -73,7 +81,9 @@ private:
     void _subscribeTopics(MqttClient& client);
     void _switchTransport(NetworkTransport transport);
     void _configureMqttClient(MqttClient& client);
-    bool _isLanAvailable() const;
+    void _handleLanRecovery(bool lanLinkPresent, bool wifiConnected);
+    void _dropLanSession();
+    bool _isLanAvailable();
     bool _isWifiAvailable() const;
     MqttClient* _mqttForTransport(NetworkTransport transport);
 };

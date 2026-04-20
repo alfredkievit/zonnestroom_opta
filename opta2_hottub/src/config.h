@@ -116,9 +116,27 @@ static const char* const TOPIC_CMD_IRRIGATION_ZONE_REQUEST[] = {
 #define DEBUG_DIAG 1
 #define SETTINGS_SAVE_DEBOUNCE_MS 3000UL
 #define LAN_RETRY_INTERVAL_MS 5000UL
-#define WIFI_RETRY_INTERVAL_MS 15000UL
+#define WIFI_RETRY_INTERVAL_MS 7000UL
 #define MQTT_RETRY_INTERVAL_MS 5000UL
+#define LAN_LINK_LOSS_DEBOUNCE_MS 2000UL
+#define LAN_LINK_HARD_DOWN_MS 5000UL
+#define LAN_WIFI_FALLBACK_HOLD_MS (60UL * 60UL * 1000UL)
+#define LAN_RECOVERY_GRACE_MS 15000UL
+#define LAN_STARTUP_PROBE_MS 30000UL
+#define NETWORK_TRANSITION_GRACE_MS 90000UL
+#define MQTT_PUBLISH_HOLD_AFTER_SWITCH_MS 2000UL
 #define CONNECT_LOG_INTERVAL_MS 10000UL
 #define LOOP_HEARTBEAT_INTERVAL_MS 5000UL
 #define LOOP_WARN_MS  500UL
 #define LOOP_RESET_MS 30000UL
+#define ENABLE_LOOP_STALL_RESET 0
+
+// Status LED behavior for the tri-color LED above reset.
+// Polarity can differ per color channel on Opta hardware revisions.
+#define STATUS_LED_RED_ACTIVE_LOW   0
+#define STATUS_LED_GREEN_ACTIVE_LOW 1
+#define STATUS_LED_BLUE_ACTIVE_LOW  0
+
+// Blue channel may overlap with the user-button LED on some boards.
+// Keep disabled by default to avoid confusing always-on blue behavior.
+#define STATUS_LED_USE_BLUE 0
