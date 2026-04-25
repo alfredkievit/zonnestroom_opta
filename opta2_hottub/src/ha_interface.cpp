@@ -1,7 +1,6 @@
 #include "ha_interface.h"
 #include "config.h"
 #include <ArduinoJson.h>
-#include <math.h>
 
 static const char* transportToString(NetworkTransport transport) {
     switch (transport) {
@@ -29,11 +28,12 @@ void HaInterface::update() {
         _publishAlarms();
     }
 
-    // Change-triggered
-    if (fabsf(_status.hottubTempC - _prevTemp) >= 0.5f) {
+    if (_lastTempPublishMs == 0 || (now - _lastTempPublishMs) >= HA_TEMP_PUBLISH_INTERVAL_MS) {
+        _lastTempPublishMs = now;
         _comm.publish(TOPIC_HA_HOTTUB_TEMP, _status.hottubTempC);
-        _prevTemp = _status.hottubTempC;
     }
+
+    // Change-triggered
     if (_status.hottubHeaterActive != _prevHeater) {
         _comm.publish(TOPIC_HA_HEATER_ACTIVE, _status.hottubHeaterActive ? "1" : "0");
         _prevHeater = _status.hottubHeaterActive;
@@ -95,7 +95,6 @@ void HaInterface::update() {
 }
 
 void HaInterface::_publishAll() {
-    _comm.publish(TOPIC_HA_HOTTUB_TEMP,   _status.hottubTempC);
     _comm.publish(TOPIC_HA_HEATER_ACTIVE, _status.hottubHeaterActive ? "1" : "0");
     _comm.publish(TOPIC_HA_PUMP_ACTIVE,   _status.hottubPumpActive   ? "1" : "0");
     _comm.publish(TOPIC_HA_LEVEL_HIGH,    _io.diHottubLevelHigh      ? "1" : "0");

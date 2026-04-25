@@ -110,6 +110,7 @@ static const char* const TOPIC_CMD_IRRIGATION_ZONE_REQUEST[] = {
 
 // ─── Timing constants ──────────────────────────────────────────────────────
 #define HA_PUBLISH_INTERVAL_MS  5000UL
+#define HA_TEMP_PUBLISH_INTERVAL_MS (2UL * 60UL * 1000UL)
 #define FILTER_PUMP_RUN_DURATION_MS  (5UL  * 60UL * 1000UL)
 
 // ─── Diagnostics / hardening ──────────────────────────────────────────────

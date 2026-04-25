@@ -18,8 +18,8 @@ private:
     SettingsStorage& _storage;
 
     unsigned long _lastPublishMs = 0;
+    unsigned long _lastTempPublishMs = 0;
 
-    float _prevTemp         = -999.0f;
     bool  _prevHeater       = false;
     bool  _prevPump         = false;
     bool  _prevLevelHigh    = false;

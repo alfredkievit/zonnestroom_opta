@@ -29,7 +29,9 @@ private:
 
     unsigned long _lastPublishMs   = 0;
     unsigned long _lastHeartbeatMs = 0;
+    unsigned long _lastBoilerLowPublishMs = 0;
     unsigned long _lastBoilerHighPublishMs = 0;
+    unsigned long _lastWpBlockReasonPublishMs = 0;
     bool          _heartbeatBit    = false;
     float         _boilerHighAvgC  = 0.0f;
     bool          _boilerHighAvgInit = false;

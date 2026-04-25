@@ -146,3 +146,30 @@ Opta2 gebruikt naast fysieke I/O ook logische I/O via MQTT:
 | Beregening pomp handmatig | `opta2/cmd/manual_force_irrigation_pump` | Servicebediening voor bronpomp |
 
 Deze README benoemt hiermee alle huidige fysieke en logische I/O die in de firmware van Opta2 zijn vastgelegd.
+
+## Flashen in het veld
+
+Volledige stap-voor-stap instructie staat in:
+
+- ../FLASHEN_OPTA_VELD.md
+
+Snelle commando's vanaf de project-root:
+
+Opta2 flashen:
+
+```bash
+~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload
+```
+
+Opta1 flashen:
+
+```bash
+~/.platformio/penv/Scripts/pio.exe run -d opta1_master -t upload
+```
+
+Bij afwijkende COM-poort:
+
+```bash
+~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload --upload-port COM7
+~/.platformio/penv/Scripts/pio.exe run -d opta1_master -t upload --upload-port COM7
+```

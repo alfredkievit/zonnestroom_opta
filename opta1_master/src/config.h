@@ -100,7 +100,9 @@ static const uint16_t BROKER_PORT  = 1883;
 
 // ─── HA publish interval ──────────────────────────────────────────────────
 #define HA_PUBLISH_INTERVAL_MS 5000UL
-#define HA_BOILER_HIGH_PUBLISH_INTERVAL_MS 60000UL
+#define HA_TEMP_PUBLISH_INTERVAL_MS (2UL * 60UL * 1000UL)
+#define HA_BOILER_HIGH_PUBLISH_INTERVAL_MS HA_TEMP_PUBLISH_INTERVAL_MS
+#define HA_WP_BLOCK_REASON_MIN_INTERVAL_MS 30000UL
 
 // ─── Diagnostics / hardening ──────────────────────────────────────────────
 #define DEBUG_DIAG 1
