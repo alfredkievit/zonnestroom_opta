@@ -33,6 +33,7 @@ static PriorityManager gPriorityMgr;
 static Interlocks      gInterlocks;
 static HaInterface     gHa(gMqtt, gSettings, gStatus, gAlarms, gIo, gStorage);
 static unsigned long   gLastLoopHeartbeatMs = 0;
+static uint8_t         gConsecutiveLoopStalls = 0;
 
 static void updateStatusLed(bool online) {
 #if defined(LEDR) && defined(LEDG)
@@ -213,10 +214,17 @@ void loop() {
 #endif
 
     if (loopDurationMs > LOOP_RESET_MS) {
+        gConsecutiveLoopStalls++;
 #if DEBUG_DIAG
-        Serial.println("[Opta1] loop stall detected -> software reset");
+    Serial.println("[Opta1] loop stall detected");
+        Serial.print("[Opta1] loop stall count=");
+        Serial.println(gConsecutiveLoopStalls);
         delay(20);
 #endif
-        NVIC_SystemReset();
+        if (gConsecutiveLoopStalls >= LOOP_RESET_CONSECUTIVE) {
+            NVIC_SystemReset();
+        }
+    } else {
+        gConsecutiveLoopStalls = 0;
     }
 }
