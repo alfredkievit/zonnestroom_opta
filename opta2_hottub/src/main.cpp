@@ -140,7 +140,7 @@ static void writeOutputs() {
 // ── Helper: read physical inputs ─────────────────────────────────────────────
 static void readInputs() {
     bool fault = false;
-    gIo.aiHottubTempC       = readPT1000(PIN_AI_HOTTUB_TEMP, fault);
+    gIo.aiHottubTempC       = readPT100(PIN_AI_HOTTUB_TEMP, fault);
     gAlarms.hottubSensorFault = fault;
     gStatus.hottubTempC     = gIo.aiHottubTempC;
 

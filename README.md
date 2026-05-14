@@ -87,7 +87,7 @@ Verantwoordelijkheden:
 
 ### Opta2 ingangen
 
-- `A0` / fysieke `I1`: hottub temperatuursensor 0-10V
+- `A0` / fysieke `I1`: hottub temperatuursensor PT100 via 0-10V converter (0-100 C)
 - `A1` / fysieke `I2`: niveau hoog
 - `A2` / fysieke `I3`: externe fout
 - `A3` / fysieke `I4`: flow OK

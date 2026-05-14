@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and this project follows date-based entries until semantic versioning is introduced.
 
+## [2026-05-14]
+
+### Changed
+- Opta2 hottub temperatuurconversie aangepast naar PT100 0-10V converter met 0-100 C schaal.
+- Documentatie bijgewerkt voor de nieuwe hottub temperatuurconverter.
+
 ## [2026-03-26]
 
 ### Added
@@ -55,7 +61,7 @@ The format is inspired by Keep a Changelog and this project follows date-based e
   - Local hottub logic (heater/pump/level pump)
   - Home Assistant MQTT interface
   - Flash settings persistence
-- PT1000 0-10V sensor conversion utilities in both projects.
+- 0-10V sensor conversion utilities in both projects.
 - Initial repository documentation:
   - `README.md`
   - `IMPLEMENTATIEPLAN.md`

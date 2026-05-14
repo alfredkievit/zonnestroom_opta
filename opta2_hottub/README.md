@@ -75,7 +75,7 @@ De standaard Opta heeft 8 ingangskanalen I1 t/m I8. In deze applicatie worden ze
 
 | Fysieke ingang | Code pin | Type in huidige code | Huidige functie | Status |
 |---|---|---|---|---|
-| I1 | A0 | Analoog 0-10V | Hottub temperatuursensor | Actief gebruikt |
+| I1 | A0 | Analoog 0-10V | Hottub temperatuursensor PT100 converter (0-100 C) | Actief gebruikt |
 | I2 | A1 | Digitaal | Hoog niveau schakelaar | Actief gebruikt |
 | I3 | A2 | Digitaal | Externe fout | Actief gebruikt |
 | I4 | A3 | Digitaal | Flow OK | Actief gebruikt |
@@ -83,6 +83,13 @@ De standaard Opta heeft 8 ingangskanalen I1 t/m I8. In deze applicatie worden ze
 | I6 | A5 | Vrij | Niet toegewezen | Reserve |
 | I7 | A6 | Vrij | Niet toegewezen | Reserve |
 | I8 | A7 | Vrij | Niet toegewezen | Reserve |
+
+## Temperatuurconverter
+
+De hottub gebruikt een PT100-converter op A0 / I1. De converteruitgang is 0-10V met een temperatuurschaal van 0-100 C:
+
+- 0 V = 0 C
+- 10 V = 100 C
 
 ## Expansiemodule AFX00005 – gebruikte uitgangen
 

@@ -1,6 +1,6 @@
 #include "analog_input.h"
 
-float readPT1000(uint8_t pin, bool& faultOut) {
+float readPT100(uint8_t pin, bool& faultOut) {
     int raw = analogRead(pin);
     float tempC = SENSOR_TEMP_AT_0V +
                   (static_cast<float>(raw) / ADC_MAX_RAW) *

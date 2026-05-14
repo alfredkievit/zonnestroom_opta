@@ -84,7 +84,7 @@ static const char* const TOPIC_CMD_IRRIGATION_ZONE_REQUEST[] = {
 #define PIN_DO_HOTTUB_ALARM     D3    // alarm uitgang
 
 // Analog inputs
-#define PIN_AI_HOTTUB_TEMP      A0    // PT1000 0-10V
+#define PIN_AI_HOTTUB_TEMP      A0    // PT100 0-10V, 0-100 C
 
 // Digital inputs
 #define PIN_DI_LEVEL_HIGH       A1    // hoog-niveau schakelaar
@@ -101,12 +101,12 @@ static const char* const TOPIC_CMD_IRRIGATION_ZONE_REQUEST[] = {
 #define PIN_EXP_IRRIGATION_PUMP   6
 #define PIN_EXP_IRRIGATION_SPARE  7
 
-// ─── ADC / sensor constants (identical to Opta1) ───────────────────────────
+// ─── ADC / sensor constants (Opta2 PT100 converter) ────────────────────────
 #define ADC_MAX_RAW        65535
 #define SENSOR_TEMP_AT_0V  0.0f
-#define SENSOR_TEMP_AT_10V 160.0f
+#define SENSOR_TEMP_AT_10V 100.0f
 #define SENSOR_TEMP_MIN    (-5.0f)
-#define SENSOR_TEMP_MAX    165.0f
+#define SENSOR_TEMP_MAX    105.0f
 
 // ─── Timing constants ──────────────────────────────────────────────────────
 #define HA_PUBLISH_INTERVAL_MS  5000UL

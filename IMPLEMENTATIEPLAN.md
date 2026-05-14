@@ -64,7 +64,7 @@ State machine:
 
 Geïmplementeerde modules:
 
-- `analog_input`: PT1000 0-10V conversie
+- `analog_input`: PT100 0-10V conversie (0-100 C)
 - `comm_manager`: permissie + heartbeat watchdog
 - `hottub_logic`: heater/pomp en level-pump logica
 - `ha_interface`: status en alarmen
