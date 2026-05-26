@@ -62,6 +62,12 @@ mqtt:
       device:
         identifiers: [opta1_master]
 
+    - name: "Element Start Blokkade Reden"
+      unique_id: opta1_element_block_reason
+      state_topic: "opta1/status/element_block_reason"
+      device:
+        identifiers: [opta1_master]
+
     - name: "Opta1 Alarms"
       unique_id: opta1_alarms
       state_topic: "opta1/status/alarms"

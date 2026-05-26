@@ -21,9 +21,12 @@ private:
     bool          _wpConditionActive       = false;
     bool          _elementConditionActive  = false;
     bool          _hottubConditionActive   = false;
+    // Hard faults stay latched until reset; meter/MQTT faults auto-recover.
+    bool          _faultRequiresReset      = false;
 
     bool _delayElapsed(bool& condActive, unsigned long& sinceMs,
                        bool condition, unsigned long delayMs);
     bool _anyFault(const AlarmState& alarms) const;
+    bool _manualResetRequired(const AlarmState& alarms) const;
     void _setAllOff(IOState& io);
 };

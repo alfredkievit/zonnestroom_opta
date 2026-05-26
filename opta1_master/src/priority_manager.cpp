@@ -25,6 +25,13 @@ bool PriorityManager::_anyFault(const AlarmState& alarms) const {
            alarms.masterGeneral;
 }
 
+bool PriorityManager::_manualResetRequired(const AlarmState& alarms) const {
+    return alarms.boilerSensorFault ||
+           alarms.boilerThermostatFault ||
+           alarms.interlockConflict ||
+           alarms.masterGeneral;
+}
+
 void PriorityManager::_setAllOff(IOState& io) {
     io.doWpExtraWW        = false;
     io.doWpComfortExtra   = false;
@@ -42,8 +49,13 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
         io.doWpExtraWW        = io.manualForceWp;
         io.doWpComfortExtra   = io.manualForceComfort;
         io.doMasterPermHottub = io.manualForceHottub;
-        if (!_anyFault(alarms) && io.inFaultReset) {
-            _state = SystemState::IDLE;
+
+        _faultRequiresReset = _faultRequiresReset || _manualResetRequired(alarms);
+        if (!_anyFault(alarms)) {
+            if (!_faultRequiresReset || io.inFaultReset) {
+                _faultRequiresReset = false;
+                _state = SystemState::IDLE;
+            }
         }
         return;
     }
@@ -54,6 +66,7 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
         io.doWpExtraWW        = io.manualForceWp;
         io.doWpComfortExtra   = io.manualForceComfort;
         io.doMasterPermHottub = io.manualForceHottub;
+        _faultRequiresReset = _manualResetRequired(alarms);
         _state = SystemState::FAULT;
         return;
     }

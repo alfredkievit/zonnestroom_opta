@@ -40,6 +40,7 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_AUTO_ELEMENT_REQ "opta1/status/auto_element_request"
 #define TOPIC_HA_AUTO_HOTTUB_REQ  "opta1/status/auto_hottub_request"
 #define TOPIC_HA_WP_BLOCK_REASON  "opta1/status/wp_block_reason"
+#define TOPIC_HA_ELEMENT_BLOCK_REASON "opta1/status/element_block_reason"
 #define TOPIC_HA_ELEMENT_THERM_OK "opta1/status/element_thermostat_ok"
 #define TOPIC_HA_ALARM_JSON       "opta1/status/alarms"
 

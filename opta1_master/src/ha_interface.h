@@ -32,6 +32,7 @@ private:
     unsigned long _lastBoilerLowPublishMs = 0;
     unsigned long _lastBoilerHighPublishMs = 0;
     unsigned long _lastWpBlockReasonPublishMs = 0;
+    unsigned long _lastElementBlockReasonPublishMs = 0;
     bool          _heartbeatBit    = false;
     float         _boilerHighAvgC  = 0.0f;
     bool          _boilerHighAvgInit = false;
@@ -49,6 +50,7 @@ private:
     bool  _prevAutoHtReq    = false;
     bool  _prevElementThermOk = false;
     const char* _prevWpBlockReason = nullptr;
+    const char* _prevElementBlockReason = nullptr;
     uint8_t _prevPriority   = 255;
     bool _settingsDirty = false;
     unsigned long _settingsDirtySinceMs = 0;
@@ -57,6 +59,7 @@ private:
     void _publishAlarms();
     void _publishHeartbeat();
     const char* _getWpBlockReason() const;
+    const char* _getElementBlockReason() const;
     void _markSettingsDirty();
     void _flushPendingSave();
 };

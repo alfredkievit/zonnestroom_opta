@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and this project follows date-based entries until semantic versioning is introduced.
 
+## [2026-05-26]
+
+### Added
+- Home Assistant diagnose voor de element-startblokkade via `opta1/status/element_block_reason`.
+
+### Fixed
+- Opta1 blijft na een korte MQTT-/meter-timeout niet meer permanent in FAULT hangen; lasten blijven fail-safe uit tijdens de timeout en herstellen automatisch zodra geldige meterdata terug is.
+
 ## [2026-05-14]
 
 ### Changed

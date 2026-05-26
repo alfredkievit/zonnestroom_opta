@@ -280,6 +280,8 @@ views:
             name: Element Inschakelen (automatisch)
           - entity: binary_sensor.opta1_energie_master_boiler_element_actief
             name: Element Status
+          - entity: sensor.opta1_energie_master_element_start_blokkade_reden
+            name: Element Start Blokkade Reden
 
       - type: history-graph
         title: Boiler Temperatuur Historiek
@@ -337,6 +339,8 @@ views:
             name: Prioriteit (tekst)
           - entity: sensor.opta1_energie_master_wp_start_blokkade_reden
             name: WP Start Blokkade Reden
+          - entity: sensor.opta1_energie_master_element_start_blokkade_reden
+            name: Element Start Blokkade Reden
           - entity: binary_sensor.opta1_energie_master_boiler_element_thermostaat_ok
             name: Element Thermostaat OK
           - entity: binary_sensor.opta1_energie_master_mqtt_geldig

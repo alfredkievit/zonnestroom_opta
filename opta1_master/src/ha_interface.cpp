@@ -28,13 +28,21 @@ void HaInterface::update() {
     }
 
     const char* wpBlockReason = _getWpBlockReason();
+    const char* elementBlockReason = _getElementBlockReason();
 
     if (_prevWpBlockReason == nullptr) {
         _prevWpBlockReason = wpBlockReason;
     }
+    if (_prevElementBlockReason == nullptr) {
+        _prevElementBlockReason = elementBlockReason;
+    }
     if (_lastWpBlockReasonPublishMs == 0) {
         _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, wpBlockReason);
         _lastWpBlockReasonPublishMs = now;
+    }
+    if (_lastElementBlockReasonPublishMs == 0) {
+        _mqtt.publish(TOPIC_HA_ELEMENT_BLOCK_REASON, elementBlockReason);
+        _lastElementBlockReasonPublishMs = now;
     }
 
     // ── Periodic publish ───────────────────────────────────────────────────
@@ -87,6 +95,13 @@ void HaInterface::update() {
             _lastWpBlockReasonPublishMs = now;
         }
     }
+    if (strcmp(elementBlockReason, _prevElementBlockReason) != 0) {
+        if (_lastElementBlockReasonPublishMs == 0 || (now - _lastElementBlockReasonPublishMs) >= HA_WP_BLOCK_REASON_MIN_INTERVAL_MS) {
+            _mqtt.publish(TOPIC_HA_ELEMENT_BLOCK_REASON, elementBlockReason);
+            _prevElementBlockReason = elementBlockReason;
+            _lastElementBlockReasonPublishMs = now;
+        }
+    }
     if (_status.boilerWpRequest != _prevAutoWpReq) {
         _mqtt.publish(TOPIC_HA_AUTO_WP_REQ, _status.boilerWpRequest ? "1" : "0");
         _prevAutoWpReq = _status.boilerWpRequest;
@@ -134,6 +149,8 @@ void HaInterface::_publishAll() {
     _mqtt.publish(TOPIC_HA_AUTO_HOTTUB_REQ, _status.hottubRequest ? "1" : "0");
     _mqtt.publish(TOPIC_HA_COMFORT_ACTIVE,  _io.doWpComfortExtra ? "1" : "0");
     _mqtt.publish(TOPIC_HA_MANUAL_MODE,     _io.inManualMode     ? "1" : "0");
+    _mqtt.publish(TOPIC_HA_WP_BLOCK_REASON, _getWpBlockReason());
+    _mqtt.publish(TOPIC_HA_ELEMENT_BLOCK_REASON, _getElementBlockReason());
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +175,52 @@ const char* HaInterface::_getWpBlockReason() const {
         return "boiler_temp_high_enough";
     }
     if (_status.boilerWpRequest) {
+        return "start_delay_or_priority_wait";
+    }
+    return "ready_to_request";
+}
+
+// ---------------------------------------------------------------------------
+const char* HaInterface::_getElementBlockReason() const {
+    if (_status.elementActive) {
+        return "element_active";
+    }
+    if (_alarms.mqttTimeout || _alarms.invalidPowerData || _alarms.boilerSensorFault ||
+        _alarms.boilerThermostatFault || _alarms.interlockConflict || _alarms.masterGeneral) {
+        return "alarm_or_fault";
+    }
+    if (!_settings.enableSystem) {
+        return "system_disabled";
+    }
+    if (!_settings.enableBoilerElement) {
+        return "element_disabled";
+    }
+    if (!_status.mqttValid) {
+        return "mqtt_invalid";
+    }
+    if (_io.inSurplusFase1W <= _settings.spSurplusStopW) {
+        return "surplus_stop";
+    }
+    if (!(_status.boilerElementRequest) &&
+        _io.inSurplusFase1W <= _settings.spSurplusElementStartW) {
+        return "surplus_too_low";
+    }
+    if (_status.boilerTempHighC < _settings.spBoilerWpTargetC) {
+        return "wp_zone_not_reached";
+    }
+    if (_status.boilerTempHighC >= (_settings.spBoilerElementTargetC - _settings.spBoilerElementHystC)) {
+        return "element_temp_reached";
+    }
+    if (!_io.inElementThermostatOk) {
+        return "thermostat_open";
+    }
+    if (_status.wpActive) {
+        return "wp_active";
+    }
+    if (_io.inCompressorFreqHz > 0.0f) {
+        return "compressor_running";
+    }
+    if (_status.boilerElementRequest) {
         return "start_delay_or_priority_wait";
     }
     return "ready_to_request";
