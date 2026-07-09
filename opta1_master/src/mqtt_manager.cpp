@@ -8,6 +8,12 @@ namespace {
 constexpr unsigned long WIFI_RETRY_INTERVAL_MS = 15000UL;
 constexpr unsigned long MQTT_RETRY_INTERVAL_MS = 5000UL;
 constexpr unsigned long CONNECT_LOG_INTERVAL_MS = 10000UL;
+
+// Timeout hysteresis tuning: prevents transient WiFi hiccups from triggering alarms
+// TIMEOUT_MULTIPLIER: alarm only fires if timeout condition persists for 1.5x the configured timeout
+// RECOVERY_DIVISOR: alarm clears once data returns *and* was briefly stale (data within 0.5x timeout)
+constexpr float TIMEOUT_MULTIPLIER = 1.5f;
+constexpr float RECOVERY_DIVISOR = 2.0f;
 }
 
 // Static instance pointer required for ArduinoMqttClient plain-function callback
@@ -234,13 +240,61 @@ void MqttManager::_handleMessage(int messageSize) {
 }
 
 // ---------------------------------------------------------------------------
+// Timeout detection with hysteresis to prevent transient WiFi hiccups from
+// triggering alarms. Rising edge: alarm only fires if timeout persists for
+// 1.5x the configured timeout. Falling edge: alarm clears when data returns
+// within 0.5x timeout (i.e., brief stale window, now recovered).
 void MqttManager::_checkTimeout(const Settings& settings) {
     if (!_status.mqttRxOk) return;  // never received anything yet → already invalid
-    unsigned long elapsed = millis() - _status.mqttLastUpdateMs;
-    if (elapsed > (unsigned long)settings.mqttTimeoutSec * 1000UL) {
-        _status.mqttValid        = false;
-        _alarms.mqttTimeout      = true;
-        _io.inMqttPowerValid     = false;
+
+    unsigned long now = millis();
+    unsigned long elapsed = now - _status.mqttLastUpdateMs;
+    unsigned long timeoutMs = (unsigned long)settings.mqttTimeoutSec * 1000UL;
+    unsigned long alarmThresholdMs = (unsigned long)(timeoutMs * TIMEOUT_MULTIPLIER);
+    unsigned long recoveryThresholdMs = (unsigned long)(timeoutMs / RECOVERY_DIVISOR);
+
+    // Rising edge: timeout condition detected, start tracking
+    if (elapsed > timeoutMs && !_mqttTimeoutTriggered) {
+        _mqttTimeoutTriggered = true;
+        _mqttTimeoutAlarmedAtMs = now;
+#if DEBUG_DIAG
+        Serial.print("[Opta1] MQTT timeout condition detected, will alarm if persists > ");
+        Serial.print(alarmThresholdMs);
+        Serial.println(" ms");
+#endif
+    }
+
+    // Hysteresis: only raise alarm if condition persists long enough
+    if (_mqttTimeoutTriggered && !_alarms.mqttTimeout) {
+        unsigned long alarmElapsed = now - _mqttTimeoutAlarmedAtMs;
+        if (alarmElapsed >= alarmThresholdMs) {
+            _status.mqttValid = false;
+            _alarms.mqttTimeout = true;
+            _io.inMqttPowerValid = false;
+            Serial.println("[Opta1] MQTT timeout alarm TRIGGERED (hysteresis threshold reached)");
+        }
+    }
+
+    // Falling edge: data recovered within recovery window
+    if (_mqttTimeoutTriggered && elapsed <= recoveryThresholdMs) {
+        if (_alarms.mqttTimeout) {
+            _mqttRecoveredAtMs = now;
+            _status.mqttValid = true;
+            _alarms.mqttTimeout = false;
+            _io.inMqttPowerValid = true;
+            _mqttTimeoutTriggered = false;
+#if DEBUG_DIAG
+            Serial.print("[Opta1] MQTT recovered (was briefly stale, elapsed=");
+            Serial.print(elapsed);
+            Serial.println(" ms)");
+#endif
+        } else {
+            // Timeout condition is gone, but alarm never fired → just reset trigger
+            _mqttTimeoutTriggered = false;
+#if DEBUG_DIAG
+            Serial.println("[Opta1] MQTT timeout condition cleared (transient hiccup)");
+#endif
+        }
     }
 }
 

@@ -55,6 +55,11 @@ private:
     bool          _wifiWasConnected     = false;
     bool          _mqttWasConnected     = false;
 
+    // MQTT timeout hysteresis: debounce transient disconnects
+    bool          _mqttTimeoutTriggered = false;
+    unsigned long _mqttTimeoutAlarmedAtMs = 0;
+    unsigned long _mqttRecoveredAtMs = 0;
+
     void _reconnect();
     void _ensureWifiConnected();
     void _handleMessage(int messageSize);

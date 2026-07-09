@@ -51,7 +51,7 @@ inline Settings defaultSettings() {
     s.enableBoilerElement    = true;
     s.enableHottub           = true;
     s.enableLevelPump        = true;
-    s.mqttTimeoutSec         = 30;
+    s.mqttTimeoutSec         = 60;  // Increased from 30 to accommodate WiFi margin + hysteresis
     s.surplusFilterTimeSec   = 0;
 
     s.spSurplusWpStartW      = 1500;   // to be tuned in practice
