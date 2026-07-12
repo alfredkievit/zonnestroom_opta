@@ -135,6 +135,17 @@ De map [homeassistant](homeassistant) bevat:
 - Lovelace dashboard voor Opta1 en Opta2
 - MQTT-klokpublicatie voor de geplande circulatiepompruns
 
+### SSH-toegang tot Home Assistant OS
+
+Home Assistant OS draait op een Raspberry Pi 5 op `192.168.0.60`. SSH-toegang staat al klaar via de `HAS`-alias in `~/.ssh/config` (key-based, wachtwoordloos):
+
+```bash
+ssh HAS "ha core info"     # algemene status/versie
+ssh HAS "ha core restart"  # nodig na een dashboard-YAML wijziging, zie hieronder
+```
+
+Bruikbaar voor dashboard-deploys (zie hieronder), logs/diagnostiek, of andere `ha`-CLI-taken op de Supervisor. Geen extra setup nodig bij een nieuwe sessie op dit project — de alias en key staan al lokaal geconfigureerd.
+
 ### Dashboard beheer
 
 Het live dashboard staat in **YAML-modus** en leest van `/config/dashboards/`.
