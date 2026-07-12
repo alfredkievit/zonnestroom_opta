@@ -96,6 +96,13 @@ static const uint16_t BROKER_PORT  = 1883;
 #define SENSOR_TEMP_MIN    (-5.0f)   // grens onder nul → sensorstoring
 #define SENSOR_TEMP_MAX    165.0f    // grens boven max  → sensorstoring
 
+// Glitch-filter: een 1000L boiler kan niet binnen seconden meerdere °C
+// schommelen. Een sprong groter dan dit wordt gezien als ruis (bv. EMI van
+// het element-relais) en genegeerd, tenzij hij aanhoudt.
+#define SENSOR_MAX_RATE_C_PER_SEC  3.0f     // max plausibele stijging/daling
+#define SENSOR_MIN_DELTA_C         0.3f     // ondergrens voor zeer korte dt
+#define SENSOR_GLITCH_FAULT_MS     5000UL   // pas na zo lang echte storing
+
 // ─── Heartbeat interval ────────────────────────────────────────────────────
 #define HEARTBEAT_INTERVAL_MS  5000UL   // elke 5 s togglet het bit
 

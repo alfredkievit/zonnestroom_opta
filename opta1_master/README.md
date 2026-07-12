@@ -46,6 +46,8 @@ De boilerregeling gebruikt momenteel alleen I1 / A0 als primaire temperatuurwaar
 
 I2 / A1 blijft beschikbaar als extra meetpunt, maar is in de huidige firmware niet de regelwaarheid.
 
+`readPT1000()` (`analog_input.cpp`) filtert sinds 2026-07-12 instantane ADC-sprongen die fysiek niet mogelijk zijn (bv. EMI van het element-relais): een sprong groter dan `SENSOR_MAX_RATE_C_PER_SEC` wordt genegeerd en de laatst geldige waarde blijft aangehouden. Pas als de afwijking `SENSOR_GLITCH_FAULT_MS` aanhoudt, wordt dit als echte `boilerSensorFault` gemeld. Dit voorkomt dat kortstondige sensor-ruis het boiler-element laat pendelen, zonder de reactietijd op een echte sensorstoring te vertragen.
+
 ## Logische I/O via MQTT
 
 Naast de fysieke klemmen gebruikt Opta1 ook logische I/O via MQTT:
