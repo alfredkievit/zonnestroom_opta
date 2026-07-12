@@ -95,7 +95,7 @@ Verantwoordelijkheden:
 ## Mappenstructuur
 
 ```text
-Zonnestroom_Opta/
+zonnestroom_opta/
 ├── opta1_master/
 │   ├── platformio.ini
 │   └── src/
@@ -109,22 +109,27 @@ Zonnestroom_Opta/
 │       ├── interlocks.h/.cpp
 │       ├── ha_interface.h/.cpp
 │       └── settings_storage.h/.cpp
-└── opta2_hottub/
-    ├── platformio.ini
-    └── src/
-        ├── main.cpp
-        ├── types.h
-        ├── config.h
-        ├── analog_input.h/.cpp
-        ├── comm_manager.h/.cpp
-        ├── hottub_logic.h/.cpp
-        ├── ha_interface.h/.cpp
-        └── settings_storage.h/.cpp
+├── opta2_hottub/
+│   ├── platformio.ini
+│   └── src/
+│       ├── main.cpp
+│       ├── types.h
+│       ├── config.h
+│       ├── analog_input.h/.cpp
+│       ├── comm_manager.h/.cpp
+│       ├── hottub_logic.h/.cpp
+│       ├── ha_interface.h/.cpp
+│       └── settings_storage.h/.cpp
+├── homeassistant/          # MQTT package + Lovelace dashboard
+├── scripts/                # MQTT diagnose-/testscripts (Node.js), zie scripts/README.md
+└── docs/
+    ├── FLASHEN_OPTA_VELD.md # actuele veldflash-procedure
+    └── archive/             # afgeronde/gehistoriseerde documentatie
 ```
 
 ## Home Assistant
 
-De map [homeassistant](c:/Users/alfre/VSC%20projects/Zonnestroom_Opta/homeassistant) bevat:
+De map [homeassistant](homeassistant) bevat:
 
 - MQTT package met sensoren, switches, numbers en automations
 - Lovelace dashboard voor Opta1 en Opta2
@@ -207,6 +212,16 @@ Voorbeeld:
 {"ident":"b0b21c913c34","CHname":"fase 1 export","P":"1234"}
 ```
 
+## Scripts
+
+De map [scripts](scripts) bevat Node.js/Python hulpscripts voor MQTT-diagnose (zie [scripts/README.md](scripts/README.md) voor het overzicht en installatie-instructies).
+
+⚠️ Sommige scripts injecteren gesimuleerde meterwaarden op de echte energiemeter-topics. Gebruik tegen een levend systeem alleen `test_safe_connectivity.js` (geen injectie) — zie de veiligheidsnotitie in [scripts/README.md](scripts/README.md).
+
+## Veldflash
+
+Zie [docs/FLASHEN_OPTA_VELD.md](docs/FLASHEN_OPTA_VELD.md) voor de stappen om vanaf een laptop snel te flashen (COM-poorten, upload- en monitorcommando's).
+
 ## Belangrijke MQTT topics
 
 ### Opta1
@@ -259,8 +274,8 @@ Geïmplementeerd als MQTT interface:
 
 ## Changelog
 
-Zie [CHANGELOG.md](c:/Users/alfre/VSC%20projects/Zonnestroom_Opta/CHANGELOG.md) voor de wijzigingshistoriek.
+Zie [CHANGELOG.md](CHANGELOG.md) voor de wijzigingshistoriek.
 
 ## Zie ook
 
-- [IMPLEMENTATIEPLAN.md](IMPLEMENTATIEPLAN.md)
+- [docs/archive](docs/archive) — gehistoriseerde documentatie (oorspronkelijk implementatieplan, afgeronde fixbundels), zie `docs/archive/README.md` voor context per bestand.

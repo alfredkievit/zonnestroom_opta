@@ -5,6 +5,9 @@
 compile_commands.json
 **/compile_commands.json
 
+# Node (scripts/)
+node_modules/
+
 # VS Code
 .vscode/
 
