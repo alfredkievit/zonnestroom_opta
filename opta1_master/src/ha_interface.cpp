@@ -287,6 +287,28 @@ void HaInterface::handleCommand(const char* topic, const char* payload, int len)
 }
 
 // ---------------------------------------------------------------------------
+// Re-publishes the currently loaded settings (retained) onto the same cmd
+// topics HA uses to control them. HA number/switch entities for these
+// settings use command_topic == state_topic with retain, so this both
+// corrects a stale broker-retained value and updates the HA slider display.
+// Must run after every (re)connect, since the broker replays whatever it
+// last had retained the moment we subscribe - without this, that replay can
+// silently overwrite the values just loaded from flash (e.g. after a
+// reflash, or if the broker's retained state ever drifted from flash).
+void HaInterface::publishSettingsSnapshot() {
+    _mqtt.publish(TOPIC_CMD_ENABLE_ELEMENT, _settings.enableBoilerElement ? "1" : "0", true);
+    _mqtt.publish(TOPIC_CMD_ENABLE_HOTTUB,  _settings.enableHottub        ? "1" : "0", true);
+    _mqtt.publish(TOPIC_CMD_SP_WP_TARGET,      _settings.spBoilerWpTargetC,      1, true);
+    _mqtt.publish(TOPIC_CMD_SP_WP_HYST,        _settings.spBoilerWpHystC,        1, true);
+    _mqtt.publish(TOPIC_CMD_SP_ELEMENT_TARGET, _settings.spBoilerElementTargetC, 1, true);
+    _mqtt.publish(TOPIC_CMD_SP_ELEMENT_HYST,   _settings.spBoilerElementHystC,   1, true);
+    _mqtt.publish(TOPIC_CMD_SP_SURPLUS_WP,      _settings.spSurplusWpStartW,      true);
+    _mqtt.publish(TOPIC_CMD_SP_SURPLUS_ELEMENT, _settings.spSurplusElementStartW, true);
+    _mqtt.publish(TOPIC_CMD_SP_SURPLUS_HOTTUB,  _settings.spSurplusHottubStartW,  true);
+    _mqtt.publish(TOPIC_CMD_SP_SURPLUS_STOP,    _settings.spSurplusStopW,         true);
+}
+
+// ---------------------------------------------------------------------------
 void HaInterface::_markSettingsDirty() {
     _settingsDirty = true;
     _settingsDirtySinceMs = millis();

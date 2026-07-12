@@ -17,6 +17,11 @@ public:
     void update();
     // Called by MqttManager when a HA command topic arrives
     void handleCommand(const char* topic, const char* payload, int len);
+    // Called by MqttManager right after (re)connecting: re-asserts the
+    // device's current (flash-authoritative) settings onto the retained
+    // cmd topics, so a stale broker-retained value never silently
+    // overwrites what was just loaded from flash.
+    void publishSettingsSnapshot();
 
 private:
     MqttManager&    _mqtt;

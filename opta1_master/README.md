@@ -63,3 +63,7 @@ Naast de fysieke klemmen gebruikt Opta1 ook logische I/O via MQTT:
 ## Home Assistant
 
 Opta1 publiceert boilerstatus, prioriteit, permissies, alarmen en surpluswaarden naar Home Assistant. Deze README benoemt hiermee alle huidige fysieke en logische I/O die in de firmware zijn vastgelegd.
+
+### Instellingen: flash is autoritatief
+
+De `opta1/cmd/*`-topics (setpoints, hysterese, enable-schakelaars) zijn retained en dienen zowel als commandotopic vanuit HA als statustopic voor de schuiven (`command_topic == state_topic`). Bij elke MQTT-(re)connect speelt de broker automatisch de laatst retained waarde af. Om te voorkomen dat een verouderde retained waarde de zojuist uit flash geladen instellingen overschrijft (bv. na een reflash), publiceert Opta1 direct na elke (re)connect zijn eigen huidige instellingen terug naar diezelfde topics (`HaInterface::publishSettingsSnapshot()`, retained). Flash is dus altijd leidend; de broker en de HA-schuiven volgen automatisch.

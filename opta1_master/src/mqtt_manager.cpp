@@ -181,6 +181,11 @@ void MqttManager::_reconnect() {
 
     // External sensor data from HA
     _mqtt.subscribe(TOPIC_EXTERN_COMPRESSOR_FREQ);
+
+    // Re-assert our own (flash-authoritative) settings onto the retained cmd
+    // topics, so the broker's replay-on-subscribe can never silently leave a
+    // stale value in place (see HaInterface::publishSettingsSnapshot).
+    if (_ha) _ha->publishSettingsSnapshot();
 }
 
 // ---------------------------------------------------------------------------

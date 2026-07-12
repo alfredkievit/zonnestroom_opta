@@ -8,6 +8,7 @@ The format is inspired by Keep a Changelog and this project follows date-based e
 
 ### Fixed
 - Opta1 boiler-element pendelde met een klokvast ritme van ~20s (`tElementStartDelaySec`), losstaand van de surplus die tijdens het pendelen stabiel bleef. Live MQTT-diagnose toonde een momentane, fysiek onmogelijke boiler-temperatuurpiek (`element_temp_reached` gevolgd door herstel binnen 1,5s) terwijl de gepubliceerde boilertemperatuur onveranderd bleef — een ongefilterde ADC-glitch (vermoedelijk EMI van het element-relais) op de PT1000-uitlezing in `analog_input.cpp`. `readPT1000()` filtert nu instantane sprongen groter dan `SENSOR_MAX_RATE_C_PER_SEC` (3 °C/s) en houdt de laatst geldige waarde aan; pas als de afwijking 5 s (`SENSOR_GLITCH_FAULT_MS`) aanhoudt, wordt dit alsnog als echte `boilerSensorFault` gemeld. De surplus-stopconditie voor het element blijft ongewijzigd instant.
+- Na een reflash (of elke MQTT-reconnect) leken instellingen soms terug te springen naar oude waarden totdat de schuiven in Home Assistant handmatig opnieuw werden gezet. Oorzaak: de broker speelt bij elke `subscribe` op de `opta1/cmd/*`-topics automatisch de laatst retained waarde af, en die overschreef zonder onderscheid de zojuist uit flash geladen instellingen. Opta1 publiceert nu direct na elke (re)connect zijn eigen, flash-autoritatieve instellingen terug (retained) naar diezelfde cmd-topics via `HaInterface::publishSettingsSnapshot()`, zodat een verouderde retained waarde nooit meer stilletjes wint en de HA-schuiven automatisch weer kloppen.
 
 ## [2026-05-26]
 

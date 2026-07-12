@@ -159,11 +159,13 @@ void setup() {
     gAlarms = {};
     gIo     = {};
 
-    gMqtt.begin();
-    
-    // Wire up HaInterface so MQTT manager can forward commands
+    // Wire up HaInterface so MQTT manager can forward commands and re-assert
+    // settings snapshots - must happen before gMqtt.begin() so it's already
+    // wired for the very first connect attempt.
     gHa.setMqttManager(&gMqtt);
     gMqtt.setHaInterface(&gHa);
+
+    gMqtt.begin();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
