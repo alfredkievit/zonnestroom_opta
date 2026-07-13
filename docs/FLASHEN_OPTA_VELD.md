@@ -16,6 +16,7 @@ Benamingen in deze handleiding:
 4. Open een terminal in VS Code.
 
 Opmerking:
+
 - In beide PlatformIO configuraties staat nu standaard COM8.
 - Als jouw laptop een andere COM-poort gebruikt, geef die expliciet mee met --upload-port.
 
@@ -62,12 +63,14 @@ Opta1 monitor:
 ## 6) Veelvoorkomende problemen
 
 Upload blijft hangen of kan poort niet openen:
+
 1. Sluit seriële monitor af.
 2. Controleer of geen andere tool de COM-poort bezet houdt.
 3. Trek USB los en sluit opnieuw aan.
 4. Probeer opnieuw met expliciete --upload-port COMx.
 
 Fout dat pio.exe niet gevonden wordt:
+
 1. Controleer of PlatformIO is geïnstalleerd in VS Code.
 2. Gebruik eventueel de PlatformIO terminal of start VS Code opnieuw.
 

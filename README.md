@@ -151,18 +151,22 @@ Bruikbaar voor dashboard-deploys (zie hieronder), logs/diagnostiek, of andere `h
 
 Het live dashboard staat in **YAML-modus** en leest van `/config/dashboards/`.
 
-| Lokale kopie | Server pad |
-|---|---|
-| `homeassistant/dashboards/zonnestroom_dashboard.yaml` | `/config/dashboards/zonnestroom_dashboard.yaml` |
+Lokale kopie: `homeassistant/dashboards/zonnestroom_dashboard.yaml`
+
+Server pad: `/config/dashboards/zonnestroom_dashboard.yaml`
 
 **Wijzigingen aanbrengen:**
+
 1. Bewerk `homeassistant/dashboards/zonnestroom_dashboard.yaml` lokaal
 2. Deploy via SCP:
+
    ```bash
    scp homeassistant/dashboards/zonnestroom_dashboard.yaml \
        HAS:/config/dashboards/zonnestroom_dashboard.yaml
    ```
+
 3. **HA herstarten is verplicht** – browser refresh alleen is niet genoeg:
+
    ```bash
    ssh HAS "ha core restart"
    ```
