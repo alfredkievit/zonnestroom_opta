@@ -11,6 +11,9 @@ node_modules/
 # VS Code
 .vscode/
 
+# Local Copilot/Claude workspace metadata
+.claude/
+
 # macOS
 .DS_Store
 
