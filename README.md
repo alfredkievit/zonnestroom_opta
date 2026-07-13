@@ -2,8 +2,9 @@
 
 Lokale energiegestuurde regeling met 2x Arduino Opta PLC en Home Assistant als bedieningslaag.
 
-- Opta 1 (`opta1_master`): energy master (boiler + prioriteitsregeling + permissie hottub)
-- Opta 2 (`opta2_hottub`): lokale hottubregeling (verwarming, circulatiepomp, niveaupomp)
+- Opta1 (`opta1_master`): energy master voor boiler en prioriteitsregeling
+- Opta2 (`opta2_hottub`): lokale hottub- en beregeningscontroller
+- Opta2 zonder WiFi (`opta2_hottub_nowifi`): LAN-only variant voor gebruik met externe relais en vaste bekabeling
 - Home Assistant: visualisatie, instellingen en handbediening via MQTT
 - Fail-safe: geen cloud-afhankelijkheid voor basiswerking
 

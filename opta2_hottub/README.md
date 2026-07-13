@@ -16,7 +16,12 @@ Opta2 verzorgt:
 
 ## Netwerk
 
-Opta2 gebruikt twee netwerkpaden:
+Opta2 ondersteunt twee firmwarevarianten:
+
+- `opta2_hottub` voor LAN + WiFi fallback
+- `opta2_hottub_nowifi` voor LAN-only gebruik zonder WiFi fallback
+
+In de standaardvariant gebruikt Opta2 twee netwerkpaden:
 
 - LAN is primair en gebruikt een vast IP-adres: `192.168.0.51`
 - WiFi blijft beschikbaar als fallback
@@ -25,6 +30,8 @@ Opta2 gebruikt twee netwerkpaden:
 - als LAN fysiek aanwezig is maar MQTT over LAN onbruikbaar blijft, houdt Opta2 WiFi maximaal 1 uur actief en opent daarna een LAN-herstelvenster; lukt dat herstel niet binnen 15 seconden, dan volgt een software reset
 
 De MQTT-broker blijft `192.168.0.10:1883`.
+
+De `opta2_hottub_nowifi`-variant schakelt WiFi volledig uit en blijft dus alleen op LAN/MQTT draaien.
 
 ## Netwerk failover test (LAN prioriteit)
 
@@ -59,6 +66,8 @@ node test_opta2_network_failover.js
 ### Opmerking
 
 De firmware forceert LAN als voorkeursroute. Zodra fysieke link + IP op LAN terug beschikbaar zijn, schakelt MQTT direct terug naar LAN en wordt WiFi losgekoppeld.
+
+Voor de `opta2_hottub_nowifi`-variant geldt deze failover niet; daar blijft alleen LAN actief.
 
 ## Basis-uitgangen op de Opta
 
@@ -166,6 +175,12 @@ Opta2 flashen:
 
 ```bash
 ~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload
+```
+
+Opta2 flashen zonder WiFi fallback:
+
+```bash
+~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -e opta2_hottub_nowifi -t upload
 ```
 
 Opta1 flashen:

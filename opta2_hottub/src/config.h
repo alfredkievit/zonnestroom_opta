@@ -3,11 +3,17 @@
 #include <cstdint>
 #include <Arduino.h>
 
+#ifndef OPTA2_WIFI_ENABLED
+#define OPTA2_WIFI_ENABLED 1
+#endif
+
 // ─── Network ───────────────────────────────────────────────────────────────
 // Opta2 prefers LAN with a fixed IP and uses WiFi as fallback.
 static const IPAddress OPTA2_LAN_IP(192, 168, 0, 51);
+#if OPTA2_WIFI_ENABLED
 static const char* OPTA2_WIFI_SSID = "optimusnexus";
 static const char* OPTA2_WIFI_PASS = "kinderpindakaas";
+#endif
 static const uint8_t  BROKER_IP[]  = { 192, 168, 0, 10 };
 static const uint16_t BROKER_PORT  = 1883;
 

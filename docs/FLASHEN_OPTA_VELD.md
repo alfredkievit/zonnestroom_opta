@@ -2,6 +2,12 @@
 
 Deze handleiding is bedoeld om snel firmware te flashen vanaf je laptop in het veld.
 
+Benamingen in deze handleiding:
+
+- Opta1 = energy master
+- Opta2 = hottub / beregening controller
+- Opta2 zonder WiFi = LAN-only firmwarevariant voor gebruik met externe relais
+
 ## 1) Voorbereiding
 
 1. Open deze projectmap in VS Code.
@@ -18,6 +24,10 @@ Opmerking:
 Voer uit vanaf de project-root:
 
     ~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload
+
+Voor de LAN-only Opta2-variant zonder WiFi:
+
+    ~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -e opta2_hottub_nowifi -t upload
 
 Als COM-poort afwijkt:
 

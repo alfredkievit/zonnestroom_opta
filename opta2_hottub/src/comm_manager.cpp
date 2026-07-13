@@ -33,7 +33,9 @@ void CommManager::_configureMqttClient(MqttClient& client) {
 void CommManager::begin() {
     _instance = this;
     _configureMqttClient(_mqttLan);
+#if OPTA2_WIFI_ENABLED
     _configureMqttClient(_mqttWifi);
+#endif
     _lastLanLinkUpMs = millis();
     _startupLanProbeUntilMs = millis() + LAN_STARTUP_PROBE_MS;
     _ensureLanConnected(true);
@@ -58,8 +60,12 @@ void CommManager::update(const Settings& settings) {
     const bool lanConnected = _isLanAvailable();
     const bool lanSuppressed = (now < _forceWifiUntilMs);
 
+#if OPTA2_WIFI_ENABLED
     _ensureWifiConnected(true);
     const bool wifiConnected = _isWifiAvailable();
+#else
+    const bool wifiConnected = false;
+#endif
 
     _status.lanConnected = lanConnected;
     _status.wifiConnected = wifiConnected;
@@ -78,6 +84,7 @@ void CommManager::update(const Settings& settings) {
 #endif
     }
 
+#if OPTA2_WIFI_ENABLED
     _handleLanRecovery(lanLinkPresent, wifiConnected);
 
     if (!lanLinkPresent && _activeTransport == NetworkTransport::LAN && wifiConnected && !_mqttLan.connected()) {
@@ -85,6 +92,9 @@ void CommManager::update(const Settings& settings) {
     }
 
     const bool forceWifiOnLinkLoss = !lanLinkPresent && wifiConnected;
+#else
+    const bool forceWifiOnLinkLoss = false;
+#endif
 
     NetworkTransport desiredTransport = NetworkTransport::NONE;
     if (lanConnected && !lanSuppressed && !forceWifiOnLinkLoss) {
@@ -182,6 +192,7 @@ void CommManager::_reconnect(const Settings& settings) {
             if (_lanMqttFailureCount < 255) {
                 _lanMqttFailureCount++;
             }
+#if OPTA2_WIFI_ENABLED
             if (_lanMqttFailureCount >= LAN_MQTT_FAIL_THRESHOLD && _isWifiAvailable()) {
                 _forceWifiUntilMs = now + LAN_WIFI_FALLBACK_HOLD_MS;
                 _lanRecoveryDeadlineMs = 0;
@@ -189,6 +200,7 @@ void CommManager::_reconnect(const Settings& settings) {
                 Serial.println("[Opta2] LAN MQTT unstable -> WiFi fallback until next LAN recovery window");
 #endif
             }
+#endif
         }
 #if DEBUG_DIAG
         if ((now - _lastConnectLogMs) >= CONNECT_LOG_INTERVAL_MS) {
@@ -207,7 +219,9 @@ void CommManager::_reconnect(const Settings& settings) {
 
     if (_activeTransport == NetworkTransport::LAN) {
         _lanMqttFailureCount = 0;
+#if OPTA2_WIFI_ENABLED
         _forceWifiUntilMs = 0;
+#endif
     }
 }
 
@@ -254,7 +268,11 @@ bool CommManager::_isLanAvailable() {
 }
 
 bool CommManager::_isWifiAvailable() const {
+#if OPTA2_WIFI_ENABLED
     return WiFi.status() == WL_CONNECTED;
+#else
+    return false;
+#endif
 }
 
 MqttClient* CommManager::_mqttForTransport(NetworkTransport transport) {
@@ -371,6 +389,9 @@ void CommManager::_ensureLanConnected(bool lanLinkPresent) {
 }
 
 void CommManager::_ensureWifiConnected(bool wifiNeeded) {
+#if !OPTA2_WIFI_ENABLED
+    (void)wifiNeeded;
+#else
     if (!wifiNeeded) {
         return;
     }
@@ -392,6 +413,7 @@ void CommManager::_ensureWifiConnected(bool wifiNeeded) {
         Serial.print("[Opta2] WiFi reconnect pending, status=");
         Serial.println((int)WiFi.status());
     }
+#endif
 #endif
 }
 
