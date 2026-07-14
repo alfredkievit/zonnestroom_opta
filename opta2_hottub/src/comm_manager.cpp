@@ -3,7 +3,6 @@
 #include <PortentaEthernet.h>
 #include <Ethernet.h>
 #include <SPI.h>
-#include <WiFi.h>
 #include <math.h>
 #include <string.h>
 
@@ -17,7 +16,7 @@ void CommManager::_onMessageCb(int size) {
 
 CommManager::CommManager(Settings& settings, SettingsStorage& storage,
                                                  SystemStatus& status, AlarmState& alarms, IOState& io)
-    : _mqttLan(_ethernetClient), _mqttWifi(_wifiClient),
+        : _mqttLan(_ethernetClient),
       _settings(settings), _storage(storage),
             _status(status), _alarms(alarms), _io(io)
 {}
@@ -33,9 +32,6 @@ void CommManager::_configureMqttClient(MqttClient& client) {
 void CommManager::begin() {
     _instance = this;
     _configureMqttClient(_mqttLan);
-#if OPTA2_WIFI_ENABLED
-    _configureMqttClient(_mqttWifi);
-#endif
     _lastLanLinkUpMs = millis();
     _startupLanProbeUntilMs = millis() + LAN_STARTUP_PROBE_MS;
     _ensureLanConnected(true);
@@ -58,17 +54,9 @@ void CommManager::update(const Settings& settings) {
     }
 
     const bool lanConnected = _isLanAvailable();
-    const bool lanSuppressed = (now < _forceWifiUntilMs);
-
-#if OPTA2_WIFI_ENABLED
-    _ensureWifiConnected(true);
-    const bool wifiConnected = _isWifiAvailable();
-#else
-    const bool wifiConnected = false;
-#endif
 
     _status.lanConnected = lanConnected;
-    _status.wifiConnected = wifiConnected;
+    _status.wifiConnected = false;
 
     if (_lanWasConnected != lanConnected) {
         _lanWasConnected = lanConnected;
@@ -77,31 +65,8 @@ void CommManager::update(const Settings& settings) {
 #endif
     }
 
-    if (_wifiWasConnected != wifiConnected) {
-        _wifiWasConnected = wifiConnected;
-#if DEBUG_DIAG
-        Serial.println(wifiConnected ? "[Opta2] WiFi connected" : "[Opta2] WiFi disconnected");
-#endif
-    }
-
-#if OPTA2_WIFI_ENABLED
-    _handleLanRecovery(lanLinkPresent, wifiConnected);
-
-    if (!lanLinkPresent && _activeTransport == NetworkTransport::LAN && wifiConnected && !_mqttLan.connected()) {
-        _dropLanSession();
-    }
-
-    const bool forceWifiOnLinkLoss = !lanLinkPresent && wifiConnected;
-#else
-    const bool forceWifiOnLinkLoss = false;
-#endif
-
     NetworkTransport desiredTransport = NetworkTransport::NONE;
-    if (lanConnected && !lanSuppressed && !forceWifiOnLinkLoss) {
-        desiredTransport = NetworkTransport::LAN;
-    } else if (wifiConnected) {
-        desiredTransport = NetworkTransport::WIFI;
-    } else if (lanConnected) {
+    if (lanConnected) {
         desiredTransport = NetworkTransport::LAN;
     }
 
@@ -188,20 +153,6 @@ void CommManager::_reconnect(const Settings& settings) {
 
     IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);
     if (!_activeMqtt->connect(broker, BROKER_PORT)) {
-        if (_activeTransport == NetworkTransport::LAN) {
-            if (_lanMqttFailureCount < 255) {
-                _lanMqttFailureCount++;
-            }
-#if OPTA2_WIFI_ENABLED
-            if (_lanMqttFailureCount >= LAN_MQTT_FAIL_THRESHOLD && _isWifiAvailable()) {
-                _forceWifiUntilMs = now + LAN_WIFI_FALLBACK_HOLD_MS;
-                _lanRecoveryDeadlineMs = 0;
-#if DEBUG_DIAG
-                Serial.println("[Opta2] LAN MQTT unstable -> WiFi fallback until next LAN recovery window");
-#endif
-            }
-#endif
-        }
 #if DEBUG_DIAG
         if ((now - _lastConnectLogMs) >= CONNECT_LOG_INTERVAL_MS) {
             _lastConnectLogMs = now;
@@ -216,13 +167,6 @@ void CommManager::_reconnect(const Settings& settings) {
 #endif
 
     _subscribeTopics(*_activeMqtt);
-
-    if (_activeTransport == NetworkTransport::LAN) {
-        _lanMqttFailureCount = 0;
-#if OPTA2_WIFI_ENABLED
-        _forceWifiUntilMs = 0;
-#endif
-    }
 }
 
 void CommManager::_subscribeTopics(MqttClient& client) {
@@ -263,24 +207,13 @@ bool CommManager::_isLanAvailable() {
     }
 
     const bool lanLinkPresent = ((millis() - _lastLanLinkUpMs) < LAN_LINK_LOSS_DEBOUNCE_MS);
-    const bool lanStartupGrace = ((millis() - _lastLanBeginMs) < LAN_RECOVERY_GRACE_MS);
+    const bool lanStartupGrace = ((millis() - _lastLanBeginMs) < LAN_STARTUP_PROBE_MS);
     return lanLinkPresent || lanStartupGrace;
-}
-
-bool CommManager::_isWifiAvailable() const {
-#if OPTA2_WIFI_ENABLED
-    return WiFi.status() == WL_CONNECTED;
-#else
-    return false;
-#endif
 }
 
 MqttClient* CommManager::_mqttForTransport(NetworkTransport transport) {
     if (transport == NetworkTransport::LAN) {
         return &_mqttLan;
-    }
-    if (transport == NetworkTransport::WIFI) {
-        return &_mqttWifi;
     }
     return nullptr;
 }
@@ -302,58 +235,13 @@ void CommManager::_switchTransport(NetworkTransport transport) {
 #endif
 
     _ethernetClient.stop();
-    _wifiClient.stop();
     _activeTransport = transport;
     _activeMqtt = _mqttForTransport(transport);
     _mqttWasConnected = false;
     _lastReconnectTryMs = 0;
-    _commGraceUntilMs = millis() + NETWORK_TRANSITION_GRACE_MS;
+    _commGraceUntilMs = millis();
     _publishHoldUntilMs = millis() + MQTT_PUBLISH_HOLD_AFTER_SWITCH_MS;
 
-}
-
-void CommManager::_handleLanRecovery(bool lanLinkPresent, bool wifiConnected) {
-    const unsigned long now = millis();
-
-    if (_activeTransport != NetworkTransport::WIFI) {
-        _lanRecoveryDeadlineMs = 0;
-        return;
-    }
-
-    if (_forceWifiUntilMs != 0 && now >= _forceWifiUntilMs) {
-        _forceWifiUntilMs = 0;
-        _lanMqttFailureCount = 0;
-        _lastLanBeginMs = 0;
-        _dropLanSession();
-        if (lanLinkPresent) {
-            _lanRecoveryDeadlineMs = now + LAN_RECOVERY_GRACE_MS;
-#if DEBUG_DIAG
-            Serial.println("[Opta2] LAN recovery window opened");
-#endif
-        }
-    }
-
-    if (_lanRecoveryDeadlineMs == 0) {
-        return;
-    }
-
-    if (_mqttLan.connected()) {
-        _lanRecoveryDeadlineMs = 0;
-        return;
-    }
-
-    if (now < _lanRecoveryDeadlineMs) {
-        return;
-    }
-
-    _lanRecoveryDeadlineMs = 0;
-    if (lanLinkPresent && wifiConnected) {
-#if DEBUG_DIAG
-        Serial.println("[Opta2] LAN recovery failed during grace period -> software reset");
-        delay(20);
-#endif
-        NVIC_SystemReset();
-    }
 }
 
 void CommManager::_dropLanSession() {
@@ -388,35 +276,6 @@ void CommManager::_ensureLanConnected(bool lanLinkPresent) {
     _lanConfigured = true;
 }
 
-void CommManager::_ensureWifiConnected(bool wifiNeeded) {
-#if !OPTA2_WIFI_ENABLED
-    (void)wifiNeeded;
-#else
-    if (!wifiNeeded) {
-        return;
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-        return;
-    }
-
-    const unsigned long now = millis();
-    if ((now - _lastWifiBeginMs) >= WIFI_RETRY_INTERVAL_MS) {
-        _lastWifiBeginMs = now;
-        WiFi.disconnect();
-        WiFi.begin(OPTA2_WIFI_SSID, OPTA2_WIFI_PASS);
-    }
-
-#if DEBUG_DIAG
-    if ((now - _lastConnectLogMs) >= CONNECT_LOG_INTERVAL_MS) {
-        _lastConnectLogMs = now;
-        Serial.print("[Opta2] WiFi reconnect pending, status=");
-        Serial.println((int)WiFi.status());
-    }
-#endif
-#endif
-}
-
 // ---------------------------------------------------------------------------
 void CommManager::_handleMessage(int messageSize) {
     if (_activeMqtt == nullptr) {
@@ -438,14 +297,17 @@ void CommManager::_handleMessage(int messageSize) {
     }
     else if (strcmp(topic, TOPIC_MASTER_HEARTBEAT) == 0) {
         bool bit = (buf[0] == '1');
-        if (!_heartbeatEverRx || bit != _lastHeartbeatBit) {
-            // Heartbeat toggled → comm is alive
-            _lastHeartbeatBit  = bit;
-            _lastHeartbeatRxMs = millis();
-            _heartbeatEverRx   = true;
-            _commGraceUntilMs  = 0;
-            _status.commOk     = true;
-            _alarms.hottubCommTimeout = false;
+        const bool toggled = (!_heartbeatEverRx || bit != _lastHeartbeatBit);
+
+        // Any valid heartbeat payload means the master link is alive.
+        _lastHeartbeatRxMs = millis();
+        _heartbeatEverRx   = true;
+        _commGraceUntilMs  = 0;
+        _status.commOk     = true;
+        _alarms.hottubCommTimeout = false;
+
+        if (toggled) {
+            _lastHeartbeatBit = bit;
 #if DEBUG_DIAG
             Serial.print("[Opta2] heartbeat rx bit=");
             Serial.println(bit ? "1" : "0");

@@ -4,16 +4,12 @@
 #include <Arduino.h>
 
 #ifndef OPTA2_WIFI_ENABLED
-#define OPTA2_WIFI_ENABLED 1
+#define OPTA2_WIFI_ENABLED 0
 #endif
 
 // ─── Network ───────────────────────────────────────────────────────────────
-// Opta2 prefers LAN with a fixed IP and uses WiFi as fallback.
+// Opta2 runs LAN-only on this hardware.
 static const IPAddress OPTA2_LAN_IP(192, 168, 0, 51);
-#if OPTA2_WIFI_ENABLED
-static const char* OPTA2_WIFI_SSID = "optimusnexus";
-static const char* OPTA2_WIFI_PASS = "kinderpindakaas";
-#endif
 static const uint8_t  BROKER_IP[]  = { 192, 168, 0, 10 };
 static const uint16_t BROKER_PORT  = 1883;
 
@@ -123,14 +119,10 @@ static const char* const TOPIC_CMD_IRRIGATION_ZONE_REQUEST[] = {
 #define DEBUG_DIAG 1
 #define SETTINGS_SAVE_DEBOUNCE_MS 3000UL
 #define LAN_RETRY_INTERVAL_MS 5000UL
-#define WIFI_RETRY_INTERVAL_MS 7000UL
 #define MQTT_RETRY_INTERVAL_MS 5000UL
 #define LAN_LINK_LOSS_DEBOUNCE_MS 2000UL
 #define LAN_LINK_HARD_DOWN_MS 5000UL
-#define LAN_WIFI_FALLBACK_HOLD_MS (60UL * 60UL * 1000UL)
-#define LAN_RECOVERY_GRACE_MS 15000UL
 #define LAN_STARTUP_PROBE_MS 30000UL
-#define NETWORK_TRANSITION_GRACE_MS 90000UL
 #define MQTT_PUBLISH_HOLD_AFTER_SWITCH_MS 2000UL
 #define CONNECT_LOG_INTERVAL_MS 10000UL
 #define LOOP_HEARTBEAT_INTERVAL_MS 5000UL

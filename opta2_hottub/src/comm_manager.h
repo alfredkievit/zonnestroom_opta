@@ -34,9 +34,7 @@ public:
 
 private:
     EthernetClient _ethernetClient;
-    WiFiClient _wifiClient;
     MqttClient     _mqttLan;
-    MqttClient     _mqttWifi;
     MqttClient*    _activeMqtt = nullptr;
 
     Settings&     _settings;
@@ -56,7 +54,6 @@ private:
     unsigned long _lastReconnectTryMs  = 0;
     unsigned long _lastConnectLogMs    = 0;
     unsigned long _lastLanLinkUpMs     = 0;
-    unsigned long _lanRecoveryDeadlineMs = 0;
     unsigned long _startupLanProbeUntilMs = 0;
     unsigned long _commGraceUntilMs    = 0;
     unsigned long _publishHoldUntilMs  = 0;
@@ -69,11 +66,9 @@ private:
     bool          _settingsDirty       = false;
     unsigned long _settingsDirtySinceMs = 0;
     uint8_t       _lanMqttFailureCount = 0;
-    unsigned long _forceWifiUntilMs    = 0;
 
     void _reconnect(const Settings& settings);
     void _ensureLanConnected(bool lanLinkPresent);
-    void _ensureWifiConnected(bool lanAvailable);
     void _handleMessage(int messageSize);
     void _checkCommTimeout(const Settings& settings);
     void _flushPendingSave();
@@ -81,9 +76,7 @@ private:
     void _subscribeTopics(MqttClient& client);
     void _switchTransport(NetworkTransport transport);
     void _configureMqttClient(MqttClient& client);
-    void _handleLanRecovery(bool lanLinkPresent, bool wifiConnected);
     void _dropLanSession();
     bool _isLanAvailable();
-    bool _isWifiAvailable() const;
     MqttClient* _mqttForTransport(NetworkTransport transport);
 };
