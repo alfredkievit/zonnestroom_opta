@@ -50,6 +50,9 @@ private:
     bool          _lastHeartbeatBit    = false;
     bool          _heartbeatEverRx     = false;
     unsigned long _lastHeartbeatRxMs   = 0;
+    bool          _commTimeoutTriggered   = false;
+    unsigned long _commTimeoutAlarmedAtMs = 0;
+    unsigned long _commRecoveredAtMs      = 0;
     unsigned long _lastClockRxMs       = 0;
     unsigned long _lastLanBeginMs      = 0;
     unsigned long _lastWifiBeginMs     = 0;

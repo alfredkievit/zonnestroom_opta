@@ -9,6 +9,12 @@
 
 static constexpr uint8_t LAN_MQTT_FAIL_THRESHOLD = 3;
 
+// Comm-timeout hysteresis: alarm only fires if the timeout condition persists
+// for 1.5x the configured watchdog, and clears once a heartbeat returns
+// within 0.5x the watchdog. Mirrors Opta1's MqttManager timeout hysteresis.
+static constexpr float COMM_TIMEOUT_MULTIPLIER = 1.5f;
+static constexpr float COMM_RECOVERY_DIVISOR   = 2.0f;
+
 CommManager* CommManager::_instance = nullptr;
 
 void CommManager::_onMessageCb(int size) {
@@ -444,8 +450,6 @@ void CommManager::_handleMessage(int messageSize) {
             _lastHeartbeatRxMs = millis();
             _heartbeatEverRx   = true;
             _commGraceUntilMs  = 0;
-            _status.commOk     = true;
-            _alarms.hottubCommTimeout = false;
 #if DEBUG_DIAG
             Serial.print("[Opta2] heartbeat rx bit=");
             Serial.println(bit ? "1" : "0");
@@ -490,22 +494,77 @@ void CommManager::_handleMessage(int messageSize) {
 }
 
 // ---------------------------------------------------------------------------
+// Timeout detection with hysteresis to prevent transient LAN/MQTT hiccups from
+// triggering the hottub comm-timeout alarm. Rising edge: alarm only fires if
+// the timeout condition persists for 1.5x the configured watchdog. Falling
+// edge: alarm clears once a heartbeat returns within 0.5x the watchdog (i.e.
+// it was only briefly stale). Mirrors Opta1's MqttManager::_checkTimeout.
 void CommManager::_checkCommTimeout(const Settings& settings) {
     if (!_heartbeatEverRx) return;
     if (_commGraceUntilMs != 0 && millis() < _commGraceUntilMs) {
         _status.commOk = true;
         _alarms.hottubCommTimeout = false;
         _io.inMasterCommValid = true;
+        _commTimeoutTriggered = false;
         return;
     }
-    unsigned long elapsed = millis() - _lastHeartbeatRxMs;
-    if (elapsed > (unsigned long)settings.tCommWatchdogSec * 1000UL) {
-        _status.commOk              = false;
-        _alarms.hottubCommTimeout   = true;
-        _io.inMasterCommValid       = false;
-        _io.inMasterPermissionHottub = false;   // fail-safe
-    } else {
+
+    const unsigned long now = millis();
+    const unsigned long elapsed = now - _lastHeartbeatRxMs;
+    const unsigned long watchdogMs = (unsigned long)settings.tCommWatchdogSec * 1000UL;
+    const unsigned long alarmThresholdMs = (unsigned long)(watchdogMs * COMM_TIMEOUT_MULTIPLIER);
+    const unsigned long recoveryThresholdMs = (unsigned long)(watchdogMs / COMM_RECOVERY_DIVISOR);
+
+    // Healthy path: no timeout condition active at all
+    if (elapsed <= watchdogMs && !_commTimeoutTriggered) {
         _io.inMasterCommValid = true;
+    }
+
+    // Rising edge: timeout condition detected, start tracking
+    if (elapsed > watchdogMs && !_commTimeoutTriggered) {
+        _commTimeoutTriggered = true;
+        _commTimeoutAlarmedAtMs = now;
+#if DEBUG_DIAG
+        Serial.print("[Opta2] comm timeout condition detected, will alarm if persists > ");
+        Serial.print(alarmThresholdMs);
+        Serial.println(" ms");
+#endif
+    }
+
+    // Hysteresis: only raise alarm if condition persists long enough
+    if (_commTimeoutTriggered && !_alarms.hottubCommTimeout) {
+        unsigned long alarmElapsed = now - _commTimeoutAlarmedAtMs;
+        if (alarmElapsed >= alarmThresholdMs) {
+            _status.commOk              = false;
+            _alarms.hottubCommTimeout    = true;
+            _io.inMasterCommValid        = false;
+            _io.inMasterPermissionHottub = false;   // fail-safe
+#if DEBUG_DIAG
+            Serial.println("[Opta2] comm timeout alarm TRIGGERED (hysteresis threshold reached)");
+#endif
+        }
+    }
+
+    // Falling edge: heartbeat recovered within recovery window
+    if (_commTimeoutTriggered && elapsed <= recoveryThresholdMs) {
+        if (_alarms.hottubCommTimeout) {
+            _commRecoveredAtMs   = now;
+            _status.commOk       = true;
+            _alarms.hottubCommTimeout = false;
+            _io.inMasterCommValid = true;
+            _commTimeoutTriggered = false;
+#if DEBUG_DIAG
+            Serial.print("[Opta2] comm recovered (was briefly stale, elapsed=");
+            Serial.print(elapsed);
+            Serial.println(" ms)");
+#endif
+        } else {
+            // Timeout condition is gone, but alarm never fired -> just reset trigger
+            _commTimeoutTriggered = false;
+#if DEBUG_DIAG
+            Serial.println("[Opta2] comm timeout condition cleared (transient hiccup)");
+#endif
+        }
     }
 
     if (_lastClockRxMs > 0 && (millis() - _lastClockRxMs) > (2UL * 60UL * 1000UL)) {

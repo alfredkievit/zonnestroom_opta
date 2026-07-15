@@ -44,7 +44,11 @@ inline Settings defaultSettings() {
     s.spPumpRun2Hour       = 20;
     s.spPumpRunDurationMin = 5;
     s.tLevelPumpMaxRunSec  = 300;    // 5 min max level pump run
+#if OPTA2_WIFI_ENABLED
     s.tCommWatchdogSec     = 30;
+#else
+    s.tCommWatchdogSec     = 180;
+#endif
     s.enableHottub         = true;
     s.enableAutoPump       = true;
     s.enableLevelPump      = true;

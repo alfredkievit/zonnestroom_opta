@@ -35,6 +35,15 @@ static unsigned long   gLastLoopHeartbeatMs       = 0;
 static unsigned long   gLastExpansionOutputWriteMs = 0;
 static uint8_t         gConsecutiveLoopStalls      = 0;
 
+static void normalizeLanOnlySettings() {
+#if !OPTA2_WIFI_ENABLED
+    if (gSettings.tCommWatchdogSec < 180) {
+        gSettings.tCommWatchdogSec = 180;
+        gStorage.save(gSettings);
+    }
+#endif
+}
+
 static void updateStatusLed(NetworkTransport transport) {
 #if defined(LEDR) && defined(LEDG)
     static unsigned long lastToggleMs = 0;
@@ -187,6 +196,7 @@ void setup() {
     if (!gStorage.load(gSettings)) {
         gSettings = defaultSettings();
     }
+    normalizeLanOnlySettings();
 
     gStatus = {};
     gAlarms = {};

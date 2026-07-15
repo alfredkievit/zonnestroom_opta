@@ -32,6 +32,7 @@ In de standaardvariant gebruikt Opta2 twee netwerkpaden:
 De MQTT-broker blijft `192.168.0.10:1883`.
 
 De `opta2_hottub_nowifi`-variant schakelt WiFi volledig uit en blijft dus alleen op LAN/MQTT draaien.
+Voor deze LAN-only variant gebruikt de hottub-communicatiewatchdog standaard 180 seconden, zodat korte LAN/MQTT haperingen niet direct een hottub fault veroorzaken. Er is namelijk geen WiFi-fallback die zulke haperingen kan opvangen, dus de watchdog moet ruimer staan dan bij de LAN+WiFi-variant (30 sec).
 
 ## Netwerk failover test (LAN prioriteit)
 
