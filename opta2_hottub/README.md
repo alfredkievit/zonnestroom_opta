@@ -193,6 +193,6 @@ Opta1 flashen:
 Bij afwijkende COM-poort:
 
 ```bash
-~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload --upload-port COM7
-~/.platformio/penv/Scripts/pio.exe run -d opta1_master -t upload --upload-port COM7
+~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload --upload-port COM12
+~/.platformio/penv/Scripts/pio.exe run -d opta1_master -t upload --upload-port COM12
 ```

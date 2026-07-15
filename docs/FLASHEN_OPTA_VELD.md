@@ -16,8 +16,7 @@ Benamingen in deze handleiding:
 4. Open een terminal in VS Code.
 
 Opmerking:
-
-- In beide PlatformIO configuraties staat nu standaard COM8.
+- In beide PlatformIO configuraties staat nu standaard COM12.
 - Als jouw laptop een andere COM-poort gebruikt, geef die expliciet mee met --upload-port.
 
 ## 2) Flash Opta2 (hottub)
@@ -32,7 +31,7 @@ Voor de LAN-only Opta2-variant zonder WiFi:
 
 Als COM-poort afwijkt:
 
-    ~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload --upload-port COM7
+    ~/.platformio/penv/Scripts/pio.exe run -d opta2_hottub -t upload --upload-port COM12
 
 ## 3) Flash Opta1 (master)
 
@@ -42,7 +41,7 @@ Voer uit vanaf de project-root:
 
 Als COM-poort afwijkt:
 
-    ~/.platformio/penv/Scripts/pio.exe run -d opta1_master -t upload --upload-port COM7
+    ~/.platformio/penv/Scripts/pio.exe run -d opta1_master -t upload --upload-port COM12
 
 ## 4) Seriële monitor (optioneel)
 

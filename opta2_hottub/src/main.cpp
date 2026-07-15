@@ -161,6 +161,8 @@ static void readInputs() {
 // ─────────────────────────────────────────────────────────────────────────────
 void setup() {
     Serial.begin(115200);
+    delay(250);
+    Serial.println("[Opta2] boot: setup start");
 
     // Configure outputs – safe state
     pinMode(PIN_DO_HOTTUB_HEATER,    OUTPUT);
@@ -192,7 +194,9 @@ void setup() {
 
     analogReadResolution(16);
 
+    Serial.println("[Opta2] boot: storage begin");
     gStorage.begin();
+    Serial.println("[Opta2] boot: storage load");
     if (!gStorage.load(gSettings)) {
         gSettings = defaultSettings();
     }
@@ -202,7 +206,9 @@ void setup() {
     gAlarms = {};
     gIo     = {};
 
+    Serial.println("[Opta2] boot: OptaController begin");
     OptaController.begin();
+    Serial.println("[Opta2] boot: OptaController scan");
     // Run expansion scan in setup() to completion so loop() stays fast.
     // The Opta Blueprint RS485 scan can take several seconds on first call.
     {
@@ -214,8 +220,11 @@ void setup() {
         gIrrigationExpansion = exp;
         gStatus.irrigationExpansionPresent = static_cast<bool>(exp);
     }
+    Serial.println("[Opta2] boot: OptaController scan done");
 
+    Serial.println("[Opta2] boot: comm begin");
     gComm.begin();
+    Serial.println("[Opta2] boot: setup done");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

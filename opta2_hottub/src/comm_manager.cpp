@@ -269,7 +269,7 @@ bool CommManager::_isLanAvailable() {
     }
 
     const bool lanLinkPresent = ((millis() - _lastLanLinkUpMs) < LAN_LINK_LOSS_DEBOUNCE_MS);
-    const bool lanStartupGrace = ((millis() - _lastLanBeginMs) < LAN_RECOVERY_GRACE_MS);
+    const bool lanStartupGrace = ((millis() - _lastLanBeginMs) < LAN_STARTUP_PROBE_MS);
     return lanLinkPresent || lanStartupGrace;
 }
 
@@ -444,12 +444,18 @@ void CommManager::_handleMessage(int messageSize) {
     }
     else if (strcmp(topic, TOPIC_MASTER_HEARTBEAT) == 0) {
         bool bit = (buf[0] == '1');
-        if (!_heartbeatEverRx || bit != _lastHeartbeatBit) {
-            // Heartbeat toggled → comm is alive
-            _lastHeartbeatBit  = bit;
-            _lastHeartbeatRxMs = millis();
-            _heartbeatEverRx   = true;
-            _commGraceUntilMs  = 0;
+        const bool toggled = (!_heartbeatEverRx || bit != _lastHeartbeatBit);
+
+        // Any valid heartbeat payload means the master link is alive, even if
+        // the toggle bit is unchanged since the last message. Comm-timeout
+        // recovery itself is handled with hysteresis in _checkCommTimeout, so
+        // don't clear the alarm flags here directly.
+        _lastHeartbeatRxMs = millis();
+        _heartbeatEverRx   = true;
+        _commGraceUntilMs  = 0;
+
+        if (toggled) {
+            _lastHeartbeatBit = bit;
 #if DEBUG_DIAG
             Serial.print("[Opta2] heartbeat rx bit=");
             Serial.println(bit ? "1" : "0");
