@@ -523,6 +523,7 @@ void CommManager::_checkCommTimeout(const Settings& settings) {
 
     // Healthy path: no timeout condition active at all
     if (elapsed <= watchdogMs && !_commTimeoutTriggered) {
+        _status.commOk = true;
         _io.inMasterCommValid = true;
     }
 
