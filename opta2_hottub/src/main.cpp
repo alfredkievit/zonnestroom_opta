@@ -109,15 +109,10 @@ static void writeOutputWithLed(uint8_t outputPin, int outputState) {
     }
 }
 
-static void forceSafeOutputs() {
+static void forceSafeHottubOutputs() {
     gIo.doHottubHeater = false;
     gIo.doHottubPump = false;
     gIo.doHottubLevelPump = false;
-    gIo.doHottubAlarm = false;
-    gIo.doIrrigationPump = false;
-    for (size_t idx = 0; idx < IRRIGATION_ZONE_COUNT; ++idx) {
-        gIo.doIrrigationZones[idx] = false;
-    }
 }
 
 // ── Helper: write physical outputs ───────────────────────────────────────────
@@ -250,9 +245,9 @@ void loop() {
     // 4. Irrigation control on the expansion module
     gIrrigationLogic.update(gSettings, gIo, gStatus, gAlarms);
 
-    const bool communicationConfirmed = gComm.controlLinkReady();
-    if (!communicationConfirmed) {
-        forceSafeOutputs();
+    const bool hottubControlAllowed = gComm.hottubControlAllowed();
+    if (!hottubControlAllowed) {
+        forceSafeHottubOutputs();
     }
 
     // 5. Write relay outputs
@@ -273,6 +268,8 @@ void loop() {
         Serial.print(gComm.connected() ? "1" : "0");
         Serial.print(" commOk=");
         Serial.print(gStatus.commOk ? "1" : "0");
+        Serial.print(" commDegraded=");
+        Serial.print(gStatus.commDegraded ? "1" : "0");
         Serial.print(" clockOk=");
         Serial.println(gStatus.clockOk ? "1" : "0");
     }

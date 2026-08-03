@@ -28,6 +28,7 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_HA_LEVEL_HIGH       "opta2/status/level_high"
 #define TOPIC_HA_LEVEL_PUMP_ACT   "opta2/status/level_pump_active"
 #define TOPIC_HA_COMM_OK          "opta2/status/comm_ok"
+#define TOPIC_HA_COMM_DEGRADED    "opta2/status/comm_degraded"
 #define TOPIC_HA_ALARM_JSON       "opta2/status/alarms"
 #define TOPIC_HA_CLOCK_OK         "opta2/status/clock_ok"
 #define TOPIC_HA_HEARTBEAT        "opta2/device/heartbeat"
@@ -132,6 +133,8 @@ static const char* const TOPIC_CMD_IRRIGATION_ZONE_REQUEST[] = {
 #define LAN_STARTUP_PROBE_MS 30000UL
 #define NETWORK_TRANSITION_GRACE_MS 90000UL
 #define MQTT_PUBLISH_HOLD_AFTER_SWITCH_MS 2000UL
+#define HOTTUB_COMM_STARTUP_GRACE_MS 120000UL
+#define HOTTUB_COMM_DEGRADED_GRACE_MS 60000UL
 #define CONNECT_LOG_INTERVAL_MS 10000UL
 #define LOOP_HEARTBEAT_INTERVAL_MS 5000UL
 #define LOOP_WARN_MS  500UL

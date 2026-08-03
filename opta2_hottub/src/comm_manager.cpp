@@ -155,6 +155,21 @@ bool CommManager::controlLinkReady() const {
     return (_activeMqtt != nullptr) && _activeMqtt->connected() && _status.commOk && (millis() >= _publishHoldUntilMs);
 }
 
+bool CommManager::hottubControlAllowed() const {
+    return _status.commOk || _status.commDegraded;
+}
+
+bool CommManager::commDegraded() const {
+    return _status.commDegraded;
+}
+
+unsigned long CommManager::heartbeatAgeMs() const {
+    if (!_heartbeatEverRx) {
+        return 0xFFFFFFFFUL;
+    }
+    return millis() - _lastHeartbeatRxMs;
+}
+
 // ---------------------------------------------------------------------------
 void CommManager::publish(const char* topic, const char* payload, bool retain) {
     if (millis() < _publishHoldUntilMs) {
@@ -269,7 +284,7 @@ bool CommManager::_isLanAvailable() {
     }
 
     const bool lanLinkPresent = ((millis() - _lastLanLinkUpMs) < LAN_LINK_LOSS_DEBOUNCE_MS);
-    const bool lanStartupGrace = ((millis() - _lastLanBeginMs) < LAN_STARTUP_PROBE_MS);
+    const bool lanStartupGrace = ((millis() - _lastLanBeginMs) < LAN_RECOVERY_GRACE_MS);
     return lanLinkPresent || lanStartupGrace;
 }
 
@@ -355,10 +370,9 @@ void CommManager::_handleLanRecovery(bool lanLinkPresent, bool wifiConnected) {
     _lanRecoveryDeadlineMs = 0;
     if (lanLinkPresent && wifiConnected) {
 #if DEBUG_DIAG
-        Serial.println("[Opta2] LAN recovery failed during grace period -> software reset");
-        delay(20);
+        Serial.println("[Opta2] LAN recovery grace expired, keep WiFi active and retry LAN later");
 #endif
-        NVIC_SystemReset();
+        _forceWifiUntilMs = now + LAN_WIFI_FALLBACK_HOLD_MS;
     }
 }
 
@@ -453,6 +467,9 @@ void CommManager::_handleMessage(int messageSize) {
         _lastHeartbeatRxMs = millis();
         _heartbeatEverRx   = true;
         _commGraceUntilMs  = 0;
+        _status.commOk     = true;
+        _status.commDegraded = false;
+        _alarms.hottubCommTimeout = false;
 
         if (toggled) {
             _lastHeartbeatBit = bit;
@@ -506,31 +523,44 @@ void CommManager::_handleMessage(int messageSize) {
 // edge: alarm clears once a heartbeat returns within 0.5x the watchdog (i.e.
 // it was only briefly stale). Mirrors Opta1's MqttManager::_checkTimeout.
 void CommManager::_checkCommTimeout(const Settings& settings) {
-    if (!_heartbeatEverRx) return;
+    const unsigned long now = millis();
+    const unsigned long timeoutMs = (unsigned long)settings.tCommWatchdogSec * 1000UL;
+
+    if (!_heartbeatEverRx) {
+        const bool startupGrace = now < HOTTUB_COMM_STARTUP_GRACE_MS;
+        _status.commOk = false;
+        _status.commDegraded = startupGrace;
+        _alarms.hottubCommTimeout = !startupGrace;
+        _io.inMasterCommValid = startupGrace;
+        return;
+    }
+
     if (_commGraceUntilMs != 0 && millis() < _commGraceUntilMs) {
         _status.commOk = true;
+        _status.commDegraded = false;
         _alarms.hottubCommTimeout = false;
         _io.inMasterCommValid = true;
         _commTimeoutTriggered = false;
         return;
     }
-
-    const unsigned long now = millis();
     const unsigned long elapsed = now - _lastHeartbeatRxMs;
-    const unsigned long watchdogMs = (unsigned long)settings.tCommWatchdogSec * 1000UL;
-    const unsigned long alarmThresholdMs = (unsigned long)(watchdogMs * COMM_TIMEOUT_MULTIPLIER);
-    const unsigned long recoveryThresholdMs = (unsigned long)(watchdogMs / COMM_RECOVERY_DIVISOR);
+    const unsigned long alarmThresholdMs = (unsigned long)(timeoutMs * COMM_TIMEOUT_MULTIPLIER);
+    const unsigned long recoveryThresholdMs = (unsigned long)(timeoutMs / COMM_RECOVERY_DIVISOR);
 
-    // Healthy path: no timeout condition active at all
-    if (elapsed <= watchdogMs && !_commTimeoutTriggered) {
+    if (elapsed <= timeoutMs && !_commTimeoutTriggered) {
         _status.commOk = true;
+        _status.commDegraded = false;
+        _alarms.hottubCommTimeout = false;
         _io.inMasterCommValid = true;
     }
 
     // Rising edge: timeout condition detected, start tracking
-    if (elapsed > watchdogMs && !_commTimeoutTriggered) {
+    if (elapsed > timeoutMs && !_commTimeoutTriggered) {
         _commTimeoutTriggered = true;
         _commTimeoutAlarmedAtMs = now;
+        _status.commOk = false;
+        _status.commDegraded = true;
+        _io.inMasterCommValid = true;
 #if DEBUG_DIAG
         Serial.print("[Opta2] comm timeout condition detected, will alarm if persists > ");
         Serial.print(alarmThresholdMs);
@@ -543,6 +573,7 @@ void CommManager::_checkCommTimeout(const Settings& settings) {
         unsigned long alarmElapsed = now - _commTimeoutAlarmedAtMs;
         if (alarmElapsed >= alarmThresholdMs) {
             _status.commOk              = false;
+            _status.commDegraded        = false;
             _alarms.hottubCommTimeout    = true;
             _io.inMasterCommValid        = false;
             _io.inMasterPermissionHottub = false;   // fail-safe
@@ -557,6 +588,7 @@ void CommManager::_checkCommTimeout(const Settings& settings) {
         if (_alarms.hottubCommTimeout) {
             _commRecoveredAtMs   = now;
             _status.commOk       = true;
+            _status.commDegraded = false;
             _alarms.hottubCommTimeout = false;
             _io.inMasterCommValid = true;
             _commTimeoutTriggered = false;
@@ -567,6 +599,10 @@ void CommManager::_checkCommTimeout(const Settings& settings) {
 #endif
         } else {
             // Timeout condition is gone, but alarm never fired -> just reset trigger
+            _status.commOk = true;
+            _status.commDegraded = false;
+            _alarms.hottubCommTimeout = false;
+            _io.inMasterCommValid = true;
             _commTimeoutTriggered = false;
 #if DEBUG_DIAG
             Serial.println("[Opta2] comm timeout condition cleared (transient hiccup)");

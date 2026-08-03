@@ -306,6 +306,12 @@ void HaInterface::publishSettingsSnapshot() {
     _mqtt.publish(TOPIC_CMD_SP_SURPLUS_ELEMENT, _settings.spSurplusElementStartW, true);
     _mqtt.publish(TOPIC_CMD_SP_SURPLUS_HOTTUB,  _settings.spSurplusHottubStartW,  true);
     _mqtt.publish(TOPIC_CMD_SP_SURPLUS_STOP,    _settings.spSurplusStopW,         true);
+
+    // Force manual outputs to safe OFF on every reconnect so stale retained
+    // manual commands cannot unexpectedly energize WP/comfort/hottub.
+    _mqtt.publish(TOPIC_CMD_MANUAL_FORCE_WP, "0", true);
+    _mqtt.publish(TOPIC_CMD_MANUAL_FORCE_HOTTUB, "0", true);
+    _mqtt.publish(TOPIC_CMD_MANUAL_FORCE_COMFORT, "0", true);
 }
 
 // ---------------------------------------------------------------------------

@@ -66,6 +66,7 @@ struct SystemStatus {
     bool  hottubPumpActive;
     bool  levelPumpActive;
     bool  commOk;
+    bool  commDegraded;
     bool  clockOk;
     bool  hottubReady;
 

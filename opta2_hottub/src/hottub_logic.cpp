@@ -85,7 +85,7 @@ void HottubLogic::update(const Settings& settings, IOState& io,
         status.hottubLevelOk      = levelOk;
         status.hottubTempOk       = !alarms.hottubSensorFault;
         status.clockOk            = io.clockMinuteValid;
-        status.hottubReady        = !localFault && levelOk && status.commOk;
+        status.hottubReady        = !localFault && levelOk && (status.commOk || status.commDegraded);
         alarms.hottubGeneral      = localFault || alarms.hottubOvertemp || alarms.hottubLevelHigh;
         alarms.hottubLevelHigh    = io.diHottubLevelHigh;
         io.doHottubAlarm          = alarms.hottubGeneral || alarms.hottubCommTimeout;

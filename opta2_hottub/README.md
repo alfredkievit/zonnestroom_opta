@@ -132,7 +132,12 @@ Opta2 mag de hottub alleen verwarmen als:
 - heartbeat van Opta1 geldig blijft
 - lokale alarmen dit toelaten
 
-Bij communicatieverlies of fout gaat de hottubregeling naar veilige toestand.
+Bij communicatieverlies werkt Opta2 in 2 stappen:
+
+- **Degraded venster**: korte onderbrekingen worden tijdelijk getolereerd zodat de hottub niet direct uitvalt.
+- **Hard fail-safe**: blijft de heartbeat langer weg dan watchdog + degraded venster, dan gaat de hottubregeling alsnog naar veilige toestand.
+
+Lokale veiligheidsvoorwaarden (sensorfout, overtemperatuur, niveaubeveiliging) blijven altijd direct leidend.
 
 ## Bedrijfslogica beregening
 
@@ -143,6 +148,8 @@ De beregening is bewust energie-onafhankelijk en draait volledig lokaal op Opta2
 - de bronpomp start automatisch zodra minimaal 1 zone actief is
 - handmatige pompbediening blijft beschikbaar via Home Assistant
 - tijdschema's zijn nog niet geïmplementeerd, maar de firmwarestructuur is erop voorbereid
+
+Bij tijdelijke netwerk-/MQTT-disconnectie blijft de beregening lokaal doorlopen volgens dezelfde regels.
 
 ## Belastingen
 

@@ -22,6 +22,22 @@ npm install
 | `test_wp_activation.js` | Injecteert surplus en volgt WP-activatie |
 | `test_wp_full.js` | Volledige WP-activatietest over meerdere temperaturen |
 | `test_opta2_network_failover.js` | Monitor tijdens handmatig los-/vastmaken van de Opta2 LAN-kabel |
+| `check_github_sync.sh` | Vergelijkt lokale branch met GitHub cloud (fetch, ahead/behind, kritieke Opta2-bestanden) |
+
+## GitHub local vs cloud check
+
+Voer uit vanaf de repo-root:
+
+```bash
+bash scripts/check_github_sync.sh
+```
+
+Dit script geeft:
+
+- local HEAD vs cloud HEAD
+- behind/ahead aantallen
+- on-gecommitte wijzigingen
+- verschillen op kritieke Opta2-bestanden
 
 ## ⚠️ Veiligheid
 

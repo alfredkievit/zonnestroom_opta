@@ -27,11 +27,11 @@ void Interlocks::apply(const Settings& settings, const IOState& io,
     }
 
     // ── Interlock 3: MQTT invalid → all energy loads off ──────────────────
-    // Manual force flags still permitted without MQTT (local override).
     if (!status.mqttValid) {
-        if (!out.manualForceWp)      out.doWpExtraWW        = false;
+        out.doWpExtraWW = false;
+        out.doWpComfortExtra = false;
         out.doBoilerElement = false;
-        if (!out.manualForceHottub)  out.doMasterPermHottub = false;
+        out.doMasterPermHottub = false;
     }
 
     // ── Interlock 4: Boiler sensor fault → WP and element off ─────────────

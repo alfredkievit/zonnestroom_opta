@@ -24,6 +24,9 @@ public:
 
     bool connected();
     bool controlLinkReady() const;
+    bool hottubControlAllowed() const;
+    bool commDegraded() const;
+    unsigned long heartbeatAgeMs() const;
 
     // Static callback required by ArduinoMqttClient
     static void _onMessageCb(int size);

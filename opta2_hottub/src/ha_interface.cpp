@@ -54,6 +54,10 @@ void HaInterface::update() {
         _comm.publish(TOPIC_HA_COMM_OK, _status.commOk ? "1" : "0");
         _prevCommOk = _status.commOk;
     }
+    if (_status.commDegraded != _prevCommDegraded) {
+        _comm.publish(TOPIC_HA_COMM_DEGRADED, _status.commDegraded ? "1" : "0");
+        _prevCommDegraded = _status.commDegraded;
+    }
     if (_status.clockOk != _prevClockOk) {
         _comm.publish(TOPIC_HA_CLOCK_OK, _status.clockOk ? "1" : "0");
         _prevClockOk = _status.clockOk;
@@ -100,6 +104,7 @@ void HaInterface::_publishAll() {
     _comm.publish(TOPIC_HA_LEVEL_HIGH,    _io.diHottubLevelHigh      ? "1" : "0");
     _comm.publish(TOPIC_HA_LEVEL_PUMP_ACT,_status.levelPumpActive    ? "1" : "0");
     _comm.publish(TOPIC_HA_COMM_OK,       _status.commOk             ? "1" : "0");
+    _comm.publish(TOPIC_HA_COMM_DEGRADED, _status.commDegraded       ? "1" : "0");
     _comm.publish(TOPIC_HA_CLOCK_OK,      _status.clockOk            ? "1" : "0");
     _comm.publish(TOPIC_HA_IRRIGATION_ENABLED, _settings.enableIrrigation ? "1" : "0");
     _comm.publish(TOPIC_HA_IRRIGATION_PUMP_ACTIVE, _status.irrigationPumpActive ? "1" : "0");

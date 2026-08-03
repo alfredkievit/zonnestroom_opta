@@ -42,13 +42,13 @@ void PriorityManager::_setAllOff(IOState& io) {
 // ---------------------------------------------------------------------------
 void PriorityManager::update(const Settings& settings, const SystemStatus& status,
                               const AlarmState& alarms, IOState& io) {
+    const bool manualAllowed = status.mqttValid && !alarms.mqttTimeout && !alarms.invalidPowerData;
+
     // ── Fault state ────────────────────────────────────────────────────────
     if (_state == SystemState::FAULT) {
         _setAllOff(io);
-        // Manual forces always pass through even in fault
-        io.doWpExtraWW        = io.manualForceWp;
-        io.doWpComfortExtra   = io.manualForceComfort;
-        io.doMasterPermHottub = io.manualForceHottub;
+        // In fault state, never energize outputs. Comm or sensor faults must
+        // always force a safe stop.
 
         _faultRequiresReset = _faultRequiresReset || _manualResetRequired(alarms);
         if (!_anyFault(alarms)) {
@@ -63,9 +63,6 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
     // ── Enter FAULT if any fault is detected ───────────────────────────────
     if (_anyFault(alarms)) {
         _setAllOff(io);
-        io.doWpExtraWW        = io.manualForceWp;
-        io.doWpComfortExtra   = io.manualForceComfort;
-        io.doMasterPermHottub = io.manualForceHottub;
         _faultRequiresReset = _manualResetRequired(alarms);
         _state = SystemState::FAULT;
         return;
@@ -88,8 +85,8 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
 
         case SystemState::IDLE:
             _setAllOff(io);
-            io.doWpExtraWW      = io.manualForceWp;      // always freely switchable
-            io.doWpComfortExtra = io.manualForceComfort;  // always freely switchable
+            io.doWpExtraWW      = manualAllowed && io.manualForceWp;
+            io.doWpComfortExtra = manualAllowed && io.manualForceComfort;
             if (wpReady) {
                 _state = SystemState::WP_BOILER;
             } else if (elReady) {
@@ -101,13 +98,13 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
 
         case SystemState::WP_BOILER:
             io.doWpExtraWW        = true;                   // auto: WP running
-            io.doWpComfortExtra   = io.manualForceComfort;
+            io.doWpComfortExtra   = manualAllowed && io.manualForceComfort;
             io.doBoilerElement    = false;
-            io.doMasterPermHottub = io.manualForceHottub || htReady;
+            io.doMasterPermHottub = (manualAllowed && io.manualForceHottub) || htReady;
 
             if (!status.boilerWpRequest) {
                 // Stop immediately – no stop delay
-                io.doWpExtraWW = io.manualForceWp;          // hand-override while WP is off
+                io.doWpExtraWW = manualAllowed && io.manualForceWp;
                 if (elReady) {
                     _state = SystemState::BOILER_ELEMENT;
                 } else if (htReady) {
@@ -119,10 +116,10 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
             break;
 
         case SystemState::BOILER_ELEMENT:
-            io.doWpExtraWW        = io.manualForceWp;       // always freely switchable
-            io.doWpComfortExtra   = io.manualForceComfort;
+            io.doWpExtraWW        = manualAllowed && io.manualForceWp;
+            io.doWpComfortExtra   = manualAllowed && io.manualForceComfort;
             io.doBoilerElement    = true;
-            io.doMasterPermHottub = io.manualForceHottub || htReady;
+            io.doMasterPermHottub = (manualAllowed && io.manualForceHottub) || htReady;
 
             if (!status.boilerElementRequest) {
                 io.doBoilerElement = false;
@@ -138,13 +135,13 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
             break;
 
         case SystemState::HOTTUB:
-            io.doWpExtraWW        = io.manualForceWp;
-            io.doWpComfortExtra   = io.manualForceComfort;
+            io.doWpExtraWW        = manualAllowed && io.manualForceWp;
+            io.doWpComfortExtra   = manualAllowed && io.manualForceComfort;
             io.doBoilerElement    = false;
             io.doMasterPermHottub = true;  // auto: surplus-based request
 
             if (!status.hottubRequest) {
-                io.doMasterPermHottub = io.manualForceHottub;  // auto off → keep if manual
+                io.doMasterPermHottub = manualAllowed && io.manualForceHottub;
                 if (wpReady) {
                     _state = SystemState::WP_BOILER;
                 } else if (elReady) {
@@ -155,10 +152,10 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
             } else {
                 // Higher-priority load reclaims → leave HOTTUB immediately
                 if (wpReady) {
-                    io.doMasterPermHottub = io.manualForceHottub || htReady;
+                    io.doMasterPermHottub = (manualAllowed && io.manualForceHottub) || htReady;
                     _state = SystemState::WP_BOILER;
                 } else if (elReady) {
-                    io.doMasterPermHottub = io.manualForceHottub || htReady;
+                    io.doMasterPermHottub = (manualAllowed && io.manualForceHottub) || htReady;
                     _state = SystemState::BOILER_ELEMENT;
                 }
             }
@@ -166,9 +163,9 @@ void PriorityManager::update(const Settings& settings, const SystemStatus& statu
 
         default:
             _setAllOff(io);
-            io.doWpExtraWW        = io.manualForceWp;
-            io.doWpComfortExtra   = io.manualForceComfort;
-            io.doMasterPermHottub = io.manualForceHottub;
+            io.doWpExtraWW        = manualAllowed && io.manualForceWp;
+            io.doWpComfortExtra   = manualAllowed && io.manualForceComfort;
+            io.doMasterPermHottub = manualAllowed && io.manualForceHottub;
             _state = SystemState::IDLE;
             break;
     }

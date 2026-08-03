@@ -14,6 +14,9 @@ Benamingen in deze handleiding:
 2. Sluit 1 Opta via USB aan.
 3. Controleer welke COM-poort is toegewezen in Apparaatbeheer.
 4. Open een terminal in VS Code.
+5. Controleer eerst local vs cloud status:
+
+    bash scripts/check_github_sync.sh
 
 Opmerking:
 - In beide PlatformIO configuraties staat nu standaard COM12.

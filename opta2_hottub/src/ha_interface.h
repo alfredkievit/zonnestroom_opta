@@ -25,6 +25,7 @@ private:
     bool  _prevLevelHigh    = false;
     bool  _prevLevelPumpAct = false;
     bool  _prevCommOk       = false;
+    bool  _prevCommDegraded = false;
     bool  _prevClockOk      = false;
     bool  _prevIrrigationEnabled = false;
     bool  _prevIrrigationPump = false;
