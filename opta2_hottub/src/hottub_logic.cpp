@@ -1,6 +1,8 @@
 #include "hottub_logic.h"
 #include "config.h"
 
+static constexpr unsigned long HOTTUB_PUMP_POSTRUN_MS = 30UL * 60UL * 1000UL;
+
 void HottubLogic::update(const Settings& settings, IOState& io,
                           SystemStatus& status, AlarmState& alarms) {
     const float temp = io.aiHottubTempC;
@@ -39,9 +41,16 @@ void HottubLogic::update(const Settings& settings, IOState& io,
 
             if (startOk) {
                 io.doHottubHeater = true;
+                _postRunPumpActive = false;
             }
         } else {
             // Stop conditions (direct, no delay)
+            bool stopForTarget =
+                heatAllowed &&
+                !localFault &&
+                levelOk &&
+                !alarms.hottubOvertemp &&
+                temp >= settings.spHottubTargetC;
             bool stopNow =
                 !heatAllowed ||
                 localFault ||
@@ -51,6 +60,12 @@ void HottubLogic::update(const Settings& settings, IOState& io,
 
             if (stopNow) {
                 io.doHottubHeater = false;
+                if (stopForTarget) {
+                    _postRunPumpActive = true;
+                    _postRunPumpStartMs = now;
+                } else {
+                    _postRunPumpActive = false;
+                }
             }
         }
 
@@ -77,8 +92,12 @@ void HottubLogic::update(const Settings& settings, IOState& io,
             }
         }
 
+        if (_postRunPumpActive && (now - _postRunPumpStartMs) >= HOTTUB_PUMP_POSTRUN_MS) {
+            _postRunPumpActive = false;
+        }
+
         bool autoPumpRun = settings.enableAutoPump && _filterPumpRunActive;
-        io.doHottubPump = io.doHottubHeater || io.manualForcePump || autoPumpRun;
+        io.doHottubPump = io.doHottubHeater || io.manualForcePump || autoPumpRun || _postRunPumpActive;
 
         status.hottubHeaterActive = io.doHottubHeater;
         status.hottubPumpActive   = io.doHottubPump;

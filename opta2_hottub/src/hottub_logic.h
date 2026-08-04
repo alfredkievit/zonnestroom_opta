@@ -12,6 +12,8 @@ private:
     bool          _levelPumpRunning  = false;
     unsigned long _filterPumpRunStartMs   = 0;
     bool          _filterPumpRunActive    = false;
+    unsigned long _postRunPumpStartMs     = 0;
+    bool          _postRunPumpActive      = false;
     int           _lastClockMinuteOfDay   = -1;
     int           _clockDayCounter        = 0;
     int           _lastRun1Day            = -1;
