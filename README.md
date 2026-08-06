@@ -30,6 +30,21 @@ Het systeem ondersteunt op dit moment:
 - Persistente settingsopslag in flash (KVStore/TDBStore)
 - Home Assistant MQTT package en Lovelace-dashboard
 
+## Volgorde van de nieuwe regeling
+
+De actuele volgorde is:
+
+1. Home Assistant leest de Solix smart meter entiteiten uit.
+2. Node-RED publiceert die waarden elke 5 seconden naar `homeassistant/Solix_Smartmeter/status`.
+3. Opta1 gebruikt die Solix-status als primaire bron als de data vers is.
+4. Opta1 berekent daaruit het fase-1- en totaal-overschot.
+5. Batterij-ontlading op fase 1 wordt van het overschot afgetrokken.
+6. De surplus-schuiven in het dashboard blijven de drempels bepalen voor WP, element, hottub en stop.
+7. De boilerlogica beslist daarna WP, element en hottub-permissie.
+8. Als de Solix-status stale is, valt Opta1 terug op de oude CH1/CH10/CH13/CH14-meterfeed.
+
+Dus: de settings in het dashboard blijven gewoon in gebruik; alleen de meetbron en de correctie voor batterijgedrag zijn veranderd.
+
 ## Architectuur
 
 ## Opta 1: `opta1_master`

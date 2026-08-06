@@ -6,11 +6,157 @@
 # ============================================================
 
 mqtt:
+  # ──────────────────────────────────────────────────────────
+  #  SOLIX STATUS BRUG
+  # ──────────────────────────────────────────────────────────
 
   # ──────────────────────────────────────────────────────────
   #  OPTA1 – SENSOREN
   # ──────────────────────────────────────────────────────────
   sensor:
+    - name: "Solix Status Leeftijd"
+      unique_id: solix_status_age_ms
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.age_ms }}"
+      unit_of_measurement: "ms"
+      state_class: measurement
+      icon: mdi:timer-outline
+      device:
+        identifiers: [solix_smart_meter_gen2]
+        name: "Anker Solix Smart Meter Gen 2"
+        manufacturer: "Anker"
+        model: "SOLIX Smart Meter Gen 2"
+
+    - name: "Solix Fase 1 Vermogen"
+      unique_id: solix_fase_1_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.fase_1_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Fase 2 Vermogen"
+      unique_id: solix_fase_2_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.fase_2_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Fase 3 Vermogen"
+      unique_id: solix_fase_3_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.fase_3_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Fase 1 Stroom"
+      unique_id: solix_fase_1_a
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.fase_1_a }}"
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Fase 2 Stroom"
+      unique_id: solix_fase_2_a
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.fase_2_a }}"
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Fase 3 Stroom"
+      unique_id: solix_fase_3_a
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.fase_3_a }}"
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Totaal Vermogen"
+      unique_id: solix_totaal_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.totaal_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Import Fase 1"
+      unique_id: solix_import_fase_1_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.derived.import_l1_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Export Fase 1"
+      unique_id: solix_export_fase_1_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.derived.export_l1_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Import Totaal"
+      unique_id: solix_import_total_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.derived.import_total_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Export Totaal"
+      unique_id: solix_export_total_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.derived.export_total_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Batterij Laden"
+      unique_id: solix_battery_charge_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.battery_charge_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
+    - name: "Solix Batterij Ontladen"
+      unique_id: solix_battery_discharge_w
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ value_json.values.battery_discharge_w }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
     - name: "Opta1 Surplus Fase1"
       unique_id: opta1_surplus_fase1
       state_topic: "opta1/status/surplus_fase1_w"
@@ -125,6 +271,16 @@ mqtt:
   #  OPTA1 – BINAIRE SENSOREN
   # ──────────────────────────────────────────────────────────
   binary_sensor:
+    - name: "Solix Status Geldig"
+      unique_id: solix_status_valid
+      state_topic: "homeassistant/Solix_Smartmeter/status"
+      value_template: "{{ 'ON' if value_json.valid else 'OFF' }}"
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      device:
+        identifiers: [solix_smart_meter_gen2]
+
     - name: "MQTT Geldig"
       unique_id: opta1_mqtt_valid
       state_topic: "opta1/status/mqtt_valid"

@@ -76,6 +76,19 @@ Deze bronselectie maakt het mogelijk om de bestaande Opta-regellogica te
 behouden, terwijl schijn-overschot door batterij-ontlading op fase 1 wordt
 weggefilterd.
 
+## Verwerkingsvolgorde
+
+De volgorde in runtime is nu:
+
+1. Home Assistant publiceert de Solix status via Node-RED.
+2. Opta1 ontvangt de Solix status op `homeassistant/Solix_Smartmeter/status`.
+3. Opta1 berekent het fase-1 surplus uit export/import en corrigeert dit met
+	batterij-ontlading.
+4. De bestaande surplus-drempels uit Home Assistant blijven de beslisgrens.
+5. De boilerlogica beslist WP, element en hottub-permissie.
+6. Alleen als de Solix status stale of ongeldig is, valt Opta1 terug op de
+	oude meter-topics `CH1/CH10/CH13/CH14`.
+
 ## Home Assistant
 
 Opta1 publiceert boilerstatus, prioriteit, permissies, alarmen en surpluswaarden naar Home Assistant. Deze README benoemt hiermee alle huidige fysieke en logische I/O die in de firmware zijn vastgelegd.
