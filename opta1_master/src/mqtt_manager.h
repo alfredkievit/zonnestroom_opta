@@ -58,6 +58,9 @@ private:
     unsigned long _lastConnectLogMs     = 0;
     bool          _wifiWasConnected     = false;
     bool          _mqttWasConnected     = false;
+    unsigned long _wifiConnectedSinceMs = 0;
+    unsigned long _mqttRetryBackoffMs   = 0;
+    uint8_t       _mqttConsecutiveFails = 0;
 
     // MQTT timeout hysteresis: debounce transient disconnects
     bool          _mqttTimeoutTriggered = false;
@@ -66,6 +69,7 @@ private:
 
     void _reconnect();
     void _ensureWifiConnected();
+    void _resetMqttBackoff();
     void _handleMessage(int messageSize);
     void _checkTimeout(const Settings& settings);
     int  _parseP(const char* payload, int payloadLen);

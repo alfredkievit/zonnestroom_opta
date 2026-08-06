@@ -7,6 +7,8 @@
 namespace {
 constexpr unsigned long WIFI_RETRY_INTERVAL_MS = 15000UL;
 constexpr unsigned long MQTT_RETRY_INTERVAL_MS = 5000UL;
+constexpr unsigned long MQTT_RETRY_BACKOFF_MAX_MS = 60000UL;
+constexpr unsigned long WIFI_STABLE_BEFORE_MQTT_MS = 3000UL;
 constexpr unsigned long CONNECT_LOG_INTERVAL_MS = 10000UL;
 constexpr unsigned long SOLIX_STALE_MS = 15000UL;
 
@@ -35,8 +37,8 @@ void MqttManager::begin() {
     WiFi.begin(OPTA1_WIFI_SSID, OPTA1_WIFI_PASS);
     delay(500);
     _mqtt.setId("opta1_master");
-    _mqtt.setKeepAliveInterval(15 * 1000L);
-    _mqtt.setConnectionTimeout(5 * 1000L);
+    _mqtt.setKeepAliveInterval(30 * 1000L);
+    _mqtt.setConnectionTimeout(10 * 1000L);
 
     // Register static callback (ArduinoMqttClient does not support lambdas)
     _instance = this;
@@ -49,10 +51,18 @@ void MqttManager::begin() {
 void MqttManager::update(const Settings& settings) {
     _ensureWifiConnected();
 
+    const unsigned long now = millis();
     const bool wifiConnected = (WiFi.status() == WL_CONNECTED);
     if (_wifiWasConnected != wifiConnected) {
         _wifiWasConnected = wifiConnected;
-        Serial.println(wifiConnected ? "[Opta1] WiFi connected" : "[Opta1] WiFi disconnected");
+        if (wifiConnected) {
+            _wifiConnectedSinceMs = now;
+            Serial.println("[Opta1] WiFi connected");
+        } else {
+            _wifiConnectedSinceMs = 0;
+            _mqtt.stop();
+            Serial.println("[Opta1] WiFi disconnected");
+        }
     }
 
     if (!wifiConnected) {
@@ -64,12 +74,22 @@ void MqttManager::update(const Settings& settings) {
         return;
     }
 
+    if (_wifiConnectedSinceMs == 0) {
+        _wifiConnectedSinceMs = now;
+    }
+
+    if ((now - _wifiConnectedSinceMs) < WIFI_STABLE_BEFORE_MQTT_MS) {
+        _checkTimeout(settings);
+        return;
+    }
+
     if (!_mqtt.connected()) {
         _reconnect();
     }
     if (_mqtt.connected()) {
         if (!_mqttWasConnected) {
             _mqttWasConnected = true;
+            _resetMqttBackoff();
             Serial.println("[Opta1] MQTT connected");
         }
         _mqtt.poll();
@@ -138,20 +158,31 @@ void MqttManager::_ensureWifiConnected() {
 // ---------------------------------------------------------------------------
 void MqttManager::_reconnect() {
     const unsigned long now = millis();
-    if ((now - _lastReconnectTryMs) < MQTT_RETRY_INTERVAL_MS) {
+    const unsigned long retryIntervalMs = (_mqttRetryBackoffMs > 0) ? _mqttRetryBackoffMs : MQTT_RETRY_INTERVAL_MS;
+    if ((now - _lastReconnectTryMs) < retryIntervalMs) {
         return;
     }
     _lastReconnectTryMs = now;
 
     IPAddress broker(BROKER_IP[0], BROKER_IP[1], BROKER_IP[2], BROKER_IP[3]);
     if (!_mqtt.connect(broker, BROKER_PORT)) {
+        if (_mqttConsecutiveFails < 255) {
+            _mqttConsecutiveFails++;
+        }
+        if (_mqttRetryBackoffMs == 0) {
+            _mqttRetryBackoffMs = MQTT_RETRY_INTERVAL_MS;
+        } else {
+            _mqttRetryBackoffMs = min(_mqttRetryBackoffMs * 2UL, MQTT_RETRY_BACKOFF_MAX_MS);
+        }
         if ((now - _lastConnectLogMs) >= CONNECT_LOG_INTERVAL_MS) {
             _lastConnectLogMs = now;
-            Serial.println("[Opta1] MQTT connect failed");
+            Serial.print("[Opta1] MQTT connect failed, retry in ms=");
+            Serial.println(_mqttRetryBackoffMs);
         }
         // Connection failed – timeout will fire and force safe state
         return;
     }
+    _resetMqttBackoff();
     Serial.println("[Opta1] MQTT subscribe setup");
 
     // Subscribe to all meter publishes; keepalive is based on any meter topic
@@ -190,13 +221,18 @@ void MqttManager::_reconnect() {
     if (_ha) _ha->publishSettingsSnapshot();
 }
 
+void MqttManager::_resetMqttBackoff() {
+    _mqttConsecutiveFails = 0;
+    _mqttRetryBackoffMs = MQTT_RETRY_INTERVAL_MS;
+}
+
 // ---------------------------------------------------------------------------
 // Called by the ArduinoMqttClient onMessage callback
 void MqttManager::_handleMessage(int messageSize) {
     String topicStr = _mqtt.messageTopic();
     char topic[96] = {};
     topicStr.toCharArray(topic, sizeof(topic));
-    char   buf[256] = {};
+    char   buf[768] = {};
     int    len     = min(messageSize, (int)sizeof(buf) - 1);
     for (int i = 0; i < len; i++) buf[i] = (char)_mqtt.read();
     // Drain any remaining bytes
