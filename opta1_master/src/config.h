@@ -51,6 +51,9 @@ static const uint16_t BROKER_PORT  = 1883;
 // ─── MQTT – External sensor data → Opta1 (live, not retained) ──────────────
 #define TOPIC_EXTERN_COMPRESSOR_FREQ  "opta1/extern/compressor_freq_hz"
 
+// ─── MQTT – Solix smart meter status via Home Assistant / Node-RED ────────
+#define TOPIC_SOLIX_STATUS           "homeassistant/Solix_Smartmeter/status"
+
 // ─── MQTT – Home Assistant → Opta1 command topics (retained) ──────────────
 #define TOPIC_CMD_ENABLE_ELEMENT      "opta1/cmd/enable_boiler_element"
 #define TOPIC_CMD_ENABLE_HOTTUB       "opta1/cmd/enable_hottub"
