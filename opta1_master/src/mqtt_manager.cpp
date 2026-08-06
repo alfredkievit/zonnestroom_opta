@@ -8,6 +8,7 @@ namespace {
 constexpr unsigned long WIFI_RETRY_INTERVAL_MS = 15000UL;
 constexpr unsigned long MQTT_RETRY_INTERVAL_MS = 5000UL;
 constexpr unsigned long CONNECT_LOG_INTERVAL_MS = 10000UL;
+constexpr unsigned long SOLIX_STALE_MS = 15000UL;
 
 // Timeout hysteresis tuning: prevents transient WiFi hiccups from triggering alarms
 // TIMEOUT_MULTIPLIER: alarm only fires if timeout condition persists for 1.5x the configured timeout
@@ -162,6 +163,7 @@ void MqttManager::_reconnect() {
     _mqtt.subscribe(TOPIC_METER_CH10);
     _mqtt.subscribe(TOPIC_METER_CH13);
     _mqtt.subscribe(TOPIC_METER_CH14);
+    _mqtt.subscribe(TOPIC_SOLIX_STATUS);
 
     // Subscribe to HA command topics (retained settings arrive immediately)
     _mqtt.subscribe(TOPIC_CMD_ENABLE_ELEMENT);
@@ -201,7 +203,8 @@ void MqttManager::_handleMessage(int messageSize) {
     while (_mqtt.available()) _mqtt.read();
 
     bool isMeterTopic = (strncmp(topic, TOPIC_METER_PREFIX, strlen(TOPIC_METER_PREFIX)) == 0);
-    if (!isMeterTopic) {
+    bool isSolixTopic = (strcmp(topic, TOPIC_SOLIX_STATUS) == 0);
+    if (!isMeterTopic && !isSolixTopic) {
         // ── HA command topics ────────────────────────────────────────────
         // Forward to HaInterface for command processing
         if (_ha) {
@@ -217,6 +220,19 @@ void MqttManager::_handleMessage(int messageSize) {
     _alarms.mqttTimeout      = false;
     _io.inMqttPowerValid     = true;
 
+    if (isSolixTopic) {
+        if (_applySolixStatus(buf, len)) {
+            _lastSolixUpdateMs = millis();
+            _solixRx = true;
+            _alarms.invalidPowerData = false;
+        } else {
+            _status.mqttValid = false;
+            _io.inMqttPowerValid = false;
+            _alarms.invalidPowerData = true;
+        }
+        return;
+    }
+
     // ── Energy meter channels used for surplus calculation ──────────────
     if (strcmp(topic, TOPIC_METER_CH1) == 0)  { _ch1W  = _parseP(buf, len); _ch1Rx  = true; }
     else if (strcmp(topic, TOPIC_METER_CH10) == 0) { _ch10W = _parseP(buf, len); _ch10Rx = true; }
@@ -226,22 +242,74 @@ void MqttManager::_handleMessage(int messageSize) {
         return;  // keepalive-only meter topic, no power field needed
     }
 
-    // Calculate phase-1 and total surplus independently.
-    // WP logic should not wait for total channels, and hottub logic should not
-    // block phase-1 surplus publication.
-    if (_ch1Rx && _ch10Rx) {
-        _status.surplusFase1W = _ch1W - _ch10W;
-        _io.inSurplusFase1W   = _status.surplusFase1W;
-    }
+    if (!_solixIsFresh()) {
+        // Calculate phase-1 and total surplus independently.
+        // WP logic should not wait for total channels, and hottub logic should not
+        // block phase-1 surplus publication.
+        if (_ch1Rx && _ch10Rx) {
+            _status.surplusFase1W = _ch1W - _ch10W;
+            _io.inSurplusFase1W   = _status.surplusFase1W;
+        }
 
-    if (_ch13Rx && _ch14Rx) {
-        _status.surplusTotaalW = _ch13W - _ch14W;
-        _io.inSurplusTotaalW   = _status.surplusTotaalW;
+        if (_ch13Rx && _ch14Rx) {
+            _status.surplusTotaalW = _ch13W - _ch14W;
+            _io.inSurplusTotaalW   = _status.surplusTotaalW;
+        }
     }
 
     if ((_ch1Rx && _ch10Rx) || (_ch13Rx && _ch14Rx)) {
         _alarms.invalidPowerData = false;
     }
+}
+
+bool MqttManager::_solixIsFresh() const {
+    if (!_solixRx) return false;
+    return (millis() - _lastSolixUpdateMs) <= SOLIX_STALE_MS;
+}
+
+bool MqttManager::_applySolixStatus(const char* payload, int payloadLen) {
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, payload, payloadLen);
+    if (err) {
+        return false;
+    }
+
+    if (!(doc["valid"] | false)) {
+        return false;
+    }
+
+    JsonVariant values = doc["values"];
+    JsonVariant derived = doc["derived"];
+    if (values.isNull() || derived.isNull()) {
+        return false;
+    }
+
+    bool hasFase1 = values["fase_1_w"].is<int>() || values["fase_1_w"].is<float>();
+    bool hasTotaal = values["totaal_w"].is<int>() || values["totaal_w"].is<float>();
+    bool hasExportL1 = derived["export_l1_w"].is<int>() || derived["export_l1_w"].is<float>();
+    bool hasImportL1 = derived["import_l1_w"].is<int>() || derived["import_l1_w"].is<float>();
+    bool hasExportTotal = derived["export_total_w"].is<int>() || derived["export_total_w"].is<float>();
+    bool hasImportTotal = derived["import_total_w"].is<int>() || derived["import_total_w"].is<float>();
+    if (!hasFase1 || !hasTotaal || !hasExportL1 || !hasImportL1 || !hasExportTotal || !hasImportTotal) {
+        return false;
+    }
+
+    const int exportL1W = lround((double)(derived["export_l1_w"] | 0.0f));
+    const int importL1W = lround((double)(derived["import_l1_w"] | 0.0f));
+    const int exportTotalW = lround((double)(derived["export_total_w"] | 0.0f));
+    const int importTotalW = lround((double)(derived["import_total_w"] | 0.0f));
+    _batteryChargeW = lround((double)(values["battery_charge_w"] | 0.0f));
+    _batteryDischargeW = lround((double)(values["battery_discharge_w"] | 0.0f));
+
+    const int rawSurplusFase1W = exportL1W - importL1W;
+    const int correctedSurplusFase1W = rawSurplusFase1W - max(_batteryDischargeW - _batteryChargeW, 0);
+    const int surplusTotaalW = exportTotalW - importTotalW;
+
+    _status.surplusFase1W = correctedSurplusFase1W;
+    _status.surplusTotaalW = surplusTotaalW;
+    _io.inSurplusFase1W = correctedSurplusFase1W;
+    _io.inSurplusTotaalW = surplusTotaalW;
+    return true;
 }
 
 // ---------------------------------------------------------------------------

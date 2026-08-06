@@ -54,11 +54,27 @@ Naast de fysieke klemmen gebruikt Opta1 ook logische I/O via MQTT:
 
 | Logische I/O | Topic / bron | Functie |
 |---|---|---|
+| Solix status | `homeassistant/Solix_Smartmeter/status` | Primaire surplusbron via HA/Node-RED indien vers beschikbaar |
 | Surplus fase 1 | `b0b21c913c34/PUB/CH1` en `CH10` | Beslissing warmtepomp en element |
 | Surplus totaal | `b0b21c913c34/PUB/CH13` en `CH14` | Beslissing hottub-permissie |
 | Compressor frequentie | `opta1/extern/compressor_freq_hz` | Veiligheidsinterlock voor element |
 | Hottub permissie | `opta1/device/permission_hottub` | Logische uitgang naar Opta2 |
 | Heartbeat | `opta1/device/heartbeat` | Bewaking communicatie met Opta2 |
+
+## Solix bronselectie
+
+Als `homeassistant/Solix_Smartmeter/status` verse data levert, gebruikt Opta1 die
+automatisch als primaire surplusbron. Daarbij geldt:
+
+- `surplusFase1W` wordt intern berekend uit de Solix fase-1 export/import
+- batterij-ontlading wordt van fase 1 afgetrokken voordat WP/element beslissen
+- `surplusTotaalW` komt uit de Solix totaal export/import velden
+- als de Solix topic stale wordt, valt Opta1 terug op de legacy meter-topics
+	`CH1/CH10/CH13/CH14`
+
+Deze bronselectie maakt het mogelijk om de bestaande Opta-regellogica te
+behouden, terwijl schijn-overschot door batterij-ontlading op fase 1 wordt
+weggefilterd.
 
 ## Home Assistant
 

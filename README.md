@@ -13,6 +13,7 @@ Lokale energiegestuurde regeling met 2x Arduino Opta PLC en Home Assistant als b
 Het systeem ondersteunt op dit moment:
 
 - MQTT ingest van de energiemeter op Opta1
+- Solix Smart Meter statusbrug via Home Assistant + Node-RED naar MQTT
 - Surplus-berekening op fase 1 en totaal
 - Boiler-prioriteitsregeling op Opta1:
   - warmtepomp extra warm water
@@ -52,6 +53,7 @@ Belangrijk:
 
 - WP + element zitten op fase 1 en mogen nooit tegelijk aan
 - Hottub gebruikt totaaloverschot als besluitbasis
+- Bij verse Solix status gebruikt Opta1 die als primaire bron; legacy CH-topics blijven fallback
 
 ## Opta 2: `opta2_hottub`
 
@@ -218,7 +220,37 @@ Topics:
 - `b0b21c913c34/PUB/CH13` (totaal export)
 - `b0b21c913c34/PUB/CH14` (totaal import)
 
-Payload:
+## Alternatieve meterintegratie
+
+Voor de Anker SOLIX Smart Meter Gen 2 zijn er nu twee Node-RED sporen in de repo:
+
+- `docs/nodered/anker_smartmeter_gen2_modbus_probe.json`
+- `docs/nodered/ha_solix_status_poll.json`
+
+Bijbehorende handleiding en implementatiestappen staan in:
+
+- `docs/ANKER_SMARTMETER_GEN2_MODBUS_NODE_RED.md`
+
+De huidige werkende fase 1 gebruikt Home Assistant entiteiten als bron en
+publiceert elke 5 seconden naar:
+
+- `homeassistant/Solix_Smartmeter/status`
+
+Payload (samengevat):
+
+- `values.fase_1_w`, `values.fase_2_w`, `values.fase_3_w`, `values.totaal_w`
+- `values.fase_1_a`, `values.fase_2_a`, `values.fase_3_a`
+- `values.battery_charge_w`, `values.battery_discharge_w`
+- `derived.export_l1_w`, `derived.import_l1_w`
+- `derived.export_total_w`, `derived.import_total_w`
+- `derived.battery_net_discharge_w`, `derived.battery_net_charge_w`
+
+Tekenconventie:
+
+- export naar net = negatief
+- import van net = positief
+
+Legacy MQTT meterfeed blijft beschikbaar als fallback voor Opta1:
 
 - JSON met veld `"P"` (string), altijd positief
 

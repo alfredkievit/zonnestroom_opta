@@ -1,0 +1,733 @@
+[
+  {
+    "id": "solix_ha_status_tab",
+    "type": "tab",
+    "label": "HA Solix Status Poll",
+    "disabled": false,
+    "info": "Pollt Solix Home Assistant sensoren elke 5 s en publiceert een gecombineerde JSON status naar MQTT. Bevat fasevermogens, totaalvermogen, fasestromen en batterij laad/ontlaadvermogen. Verwachte tekenconventie: export naar net negatief, import positief. Vereist bestaande config nodes: HA server 10e11fca.f917f en MQTT broker ceeee23fff5f978b."
+  },
+  {
+    "id": "solix_ha_status_comment",
+    "type": "comment",
+    "z": "solix_ha_status_tab",
+    "name": "Fase 1 statusflow",
+    "info": "Leest Solix vermogens-, stroom- en batterij-entities via current-state nodes en publiceert 1 JSON payload naar homeassistant/Solix_Smartmeter/status.",
+    "x": 230,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "solix_ha_status_inject",
+    "type": "inject",
+    "z": "solix_ha_status_tab",
+    "name": "Poll HA entities 5s",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "5",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "15",
+    "topic": "solix/poll",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 120,
+    "wires": [
+      [
+        "solix_cs_l1",
+        "solix_cs_l2",
+        "solix_cs_l3",
+        "solix_cs_total",
+        "solix_cs_i1",
+        "solix_cs_i2",
+        "solix_cs_i3",
+        "solix_cs_batt_charge",
+        "solix_cs_batt_discharge"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_l1",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA F1 actief vermogen",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_1_actief_vermogen",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 470,
+    "y": 100,
+    "wires": [
+      [
+        "solix_fn_l1"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_l2",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA F2 actief vermogen",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_2_actief_vermogen",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 470,
+    "y": 160,
+    "wires": [
+      [
+        "solix_fn_l2"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_l3",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA F3 actief vermogen",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_3_actief_vermogen",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 470,
+    "y": 220,
+    "wires": [
+      [
+        "solix_fn_l3"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_total",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA totaal actief vermogen",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_smart_meter_gen_2_080_totale_actieve_vermogen_van_de_hoofd_ct",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 480,
+    "y": 280,
+    "wires": [
+      [
+        "solix_fn_total"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_i1",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA F1 stroom",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_1_stroom",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 450,
+    "y": 360,
+    "wires": [
+      [
+        "solix_fn_i1"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_i2",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA F2 stroom",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_2_stroom",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 450,
+    "y": 420,
+    "wires": [
+      [
+        "solix_fn_i2"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_i3",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA F3 stroom",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_3_stroom",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 450,
+    "y": 480,
+    "wires": [
+      [
+        "solix_fn_i3"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_batt_charge",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA batterij laadvermogen",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_solarbank_max_ac_124_laadvermogen_van_de_batterij",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 470,
+    "y": 540,
+    "wires": [
+      [
+        "solix_fn_batt_charge"
+      ]
+    ]
+  },
+  {
+    "id": "solix_cs_batt_discharge",
+    "type": "api-current-state",
+    "z": "solix_ha_status_tab",
+    "name": "HA batterij ontlaadvermogen",
+    "server": "10e11fca.f917f",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.anker_solix_solarbank_max_ac_124_ontlaadvermogen_van_de_batterij",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 480,
+    "y": 600,
+    "wires": [
+      [
+        "solix_fn_batt_discharge"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_l1",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize f1",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'fase_1_w';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_1_actief_vermogen';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 760,
+    "y": 100,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_l2",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize f2",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'fase_2_w';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_2_actief_vermogen';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 760,
+    "y": 160,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_l3",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize f3",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'fase_3_w';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_3_actief_vermogen';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 760,
+    "y": 220,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_total",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize total",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'totaal_w';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_smart_meter_gen_2_080_totale_actieve_vermogen_van_de_hoofd_ct';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 770,
+    "y": 280,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_i1",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize i1",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'fase_1_a';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_1_stroom';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 750,
+    "y": 360,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_i2",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize i2",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'fase_2_a';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_2_stroom';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 750,
+    "y": 420,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_i3",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize i3",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'fase_3_a';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_smart_meter_gen_2_080_hoofd_ct_fase_3_stroom';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 750,
+    "y": 480,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_batt_charge",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize batt charge",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'battery_charge_w';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_solarbank_max_ac_124_laadvermogen_van_de_batterij';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 790,
+    "y": 540,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_batt_discharge",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "normalize batt discharge",
+    "func": "const value = Number(msg.payload);\nmsg.topic = 'battery_discharge_w';\nmsg.payload = Number.isFinite(value) ? value : null;\nmsg.entity_id = 'sensor.anker_solix_solarbank_max_ac_124_ontlaadvermogen_van_de_batterij';\nmsg.attributes = msg.data && msg.data.attributes ? msg.data.attributes : {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 810,
+    "y": 600,
+    "wires": [
+      [
+        "solix_join_values"
+      ]
+    ]
+  },
+  {
+    "id": "solix_join_values",
+    "type": "join",
+    "z": "solix_ha_status_tab",
+    "name": "join 9 values",
+    "mode": "custom",
+    "build": "object",
+    "property": "payload",
+    "propertyType": "msg",
+    "key": "topic",
+    "joiner": "\n",
+    "joinerType": "str",
+    "useparts": false,
+    "accumulate": false,
+    "timeout": "2",
+    "count": "9",
+    "reduceRight": false,
+    "reduceExp": "",
+    "reduceInit": "",
+    "reduceInitType": "",
+    "reduceFixup": "",
+    "x": 1040,
+    "y": 320,
+    "wires": [
+      [
+        "solix_fn_build_payload"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_build_payload",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "build MQTT status JSON",
+    "func": "const values = msg.payload || {};\nconst requiredKeys = ['fase_1_w', 'fase_2_w', 'fase_3_w', 'totaal_w', 'fase_1_a', 'fase_2_a', 'fase_3_a', 'battery_charge_w', 'battery_discharge_w'];\nconst missing = requiredKeys.filter((key) => !Object.prototype.hasOwnProperty.call(values, key) || values[key] === null);\nconst now = Date.now();\nconst fase1 = values.fase_1_w ?? null;\nconst fase2 = values.fase_2_w ?? null;\nconst fase3 = values.fase_3_w ?? null;\nconst totaal = values.totaal_w ?? null;\nconst current1 = values.fase_1_a ?? null;\nconst current2 = values.fase_2_a ?? null;\nconst current3 = values.fase_3_a ?? null;\nconst batteryCharge = values.battery_charge_w ?? null;\nconst batteryDischarge = values.battery_discharge_w ?? null;\nfunction exportW(value) {\n  return value === null ? null : Math.max(-value, 0);\n}\nfunction importW(value) {\n  return value === null ? null : Math.max(value, 0);\n}\nconst payload = {\n  source: 'home_assistant',\n  meter: 'anker_solix_smart_meter_gen2',\n  interval_s: 5,\n  ts: new Date(now).toISOString(),\n  ts_ms: now,\n  age_ms: 0,\n  valid: missing.length === 0,\n  missing: missing,\n  sign_convention: {\n    export_to_grid: 'negative',\n    import_from_grid: 'positive'\n  },\n  values: {\n    fase_1_w: fase1,\n    fase_2_w: fase2,\n    fase_3_w: fase3,\n    totaal_w: totaal,\n    fase_1_a: current1,\n    fase_2_a: current2,\n    fase_3_a: current3,\n    battery_charge_w: batteryCharge,\n    battery_discharge_w: batteryDischarge\n  },\n  derived: {\n    export_l1_w: exportW(fase1),\n    import_l1_w: importW(fase1),\n    export_total_w: exportW(totaal),\n    import_total_w: importW(totaal),\n    battery_net_discharge_w: batteryDischarge === null || batteryCharge === null ? null : Math.max(batteryDischarge - batteryCharge, 0),\n    battery_net_charge_w: batteryDischarge === null || batteryCharge === null ? null : Math.max(batteryCharge - batteryDischarge, 0)\n  }\n};\nmsg.topic = 'homeassistant/Solix_Smartmeter/status';\nmsg.payload = payload;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 1300,
+    "y": 320,
+    "wires": [
+      [
+        "solix_mqtt_out",
+        "solix_debug_out"
+      ]
+    ]
+  },
+  {
+    "id": "solix_mqtt_out",
+    "type": "mqtt out",
+    "z": "solix_ha_status_tab",
+    "name": "Publish status JSON",
+    "topic": "",
+    "qos": "1",
+    "retain": "true",
+    "respTopic": "",
+    "contentType": "application/json",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "ceeee23fff5f978b",
+    "x": 1540,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "solix_debug_out",
+    "type": "debug",
+    "z": "solix_ha_status_tab",
+    "name": "debug status payload",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 1540,
+    "y": 220,
+    "wires": []
+  },
+  {
+    "id": "solix_catch",
+    "type": "catch",
+    "z": "solix_ha_status_tab",
+    "name": "Catch flow errors",
+    "scope": [
+      "solix_cs_l1",
+      "solix_cs_l2",
+      "solix_cs_l3",
+      "solix_cs_total",
+      "solix_cs_i1",
+      "solix_cs_i2",
+      "solix_cs_i3",
+      "solix_cs_batt_charge",
+      "solix_cs_batt_discharge",
+      "solix_fn_build_payload"
+    ],
+    "uncaught": false,
+    "x": 200,
+    "y": 360,
+    "wires": [
+      [
+        "solix_fn_error_payload"
+      ]
+    ]
+  },
+  {
+    "id": "solix_fn_error_payload",
+    "type": "function",
+    "z": "solix_ha_status_tab",
+    "name": "build error payload",
+    "func": "const now = Date.now();\nmsg.topic = 'homeassistant/Solix_Smartmeter/status';\nmsg.payload = {\n  source: 'home_assistant',\n  meter: 'anker_solix_smart_meter_gen2',\n  interval_s: 5,\n  ts: new Date(now).toISOString(),\n  ts_ms: now,\n  age_ms: 0,\n  valid: false,\n  missing: [],\n  error: msg.error ? msg.error.message : 'unknown_error'\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 470,
+    "y": 360,
+    "wires": [
+      [
+        "solix_mqtt_out",
+        "solix_debug_error"
+      ]
+    ]
+  },
+  {
+    "id": "solix_debug_error",
+    "type": "debug",
+    "z": "solix_ha_status_tab",
+    "name": "debug flow error",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "true",
+    "targetType": "full",
+    "x": 740,
+    "y": 360,
+    "wires": []
+  }
+]
