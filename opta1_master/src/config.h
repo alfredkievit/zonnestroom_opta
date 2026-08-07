@@ -11,16 +11,6 @@ static const uint8_t  OPTA1_MAC[]  = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01 };
 static const uint8_t  BROKER_IP[]  = { 192, 168, 0, 10 };
 static const uint16_t BROKER_PORT  = 1883;
 
-// ─── MQTT – energy meter topics (energiemeter ID: b0b21c913c34) ───────────
-#define TOPIC_METER_ROOT  "b0b21c913c34/PUB/#"    // wildcard: any meter publish
-#define TOPIC_METER_PREFIX "b0b21c913c34/PUB/"    // prefix for keepalive detection
-// Fase 1: WP + elektrisch element
-#define TOPIC_METER_CH1   "b0b21c913c34/PUB/CH1"    // fase 1 export [W]
-#define TOPIC_METER_CH10  "b0b21c913c34/PUB/CH10"   // fase 1 import [W]
-// Totaal: gebruikt voor hottub beslissing
-#define TOPIC_METER_CH13  "b0b21c913c34/PUB/CH13"   // totaal export [W]
-#define TOPIC_METER_CH14  "b0b21c913c34/PUB/CH14"   // totaal import [W]
-
 // ─── MQTT – Opta1 → Opta2 device topics ───────────────────────────────────
 #define TOPIC_MASTER_PERM_HOTTUB  "opta1/device/permission_hottub"
 #define TOPIC_MASTER_HEARTBEAT    "opta1/device/heartbeat"
@@ -52,6 +42,8 @@ static const uint16_t BROKER_PORT  = 1883;
 #define TOPIC_EXTERN_COMPRESSOR_FREQ  "opta1/extern/compressor_freq_hz"
 
 // ─── MQTT – Solix smart meter status via Home Assistant / Node-RED ────────
+// Enige surplusbron voor Opta1 (fase 1 CT-klem + batterijcorrectie).
+// De oude b0b21c913c34/PUB/CH1..CH14 meterfeed wordt hier niet meer gebruikt.
 #define TOPIC_SOLIX_STATUS           "homeassistant/Solix_Smartmeter/status"
 
 // ─── MQTT – Home Assistant → Opta1 command topics (retained) ──────────────

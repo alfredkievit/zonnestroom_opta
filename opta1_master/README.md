@@ -54,27 +54,25 @@ Naast de fysieke klemmen gebruikt Opta1 ook logische I/O via MQTT:
 
 | Logische I/O | Topic / bron | Functie |
 |---|---|---|
-| Solix status | `homeassistant/Solix_Smartmeter/status` | Primaire surplusbron via HA/Node-RED indien vers beschikbaar |
-| Surplus fase 1 | `b0b21c913c34/PUB/CH1` en `CH10` | Beslissing warmtepomp en element |
-| Surplus totaal | `b0b21c913c34/PUB/CH13` en `CH14` | Beslissing hottub-permissie |
+| Solix status | `homeassistant/Solix_Smartmeter/status` | Enige surplusbron via HA/Node-RED |
 | Compressor frequentie | `opta1/extern/compressor_freq_hz` | Veiligheidsinterlock voor element |
 | Hottub permissie | `opta1/device/permission_hottub` | Logische uitgang naar Opta2 |
 | Heartbeat | `opta1/device/heartbeat` | Bewaking communicatie met Opta2 |
 
 ## Solix bronselectie
 
-Als `homeassistant/Solix_Smartmeter/status` verse data levert, gebruikt Opta1 die
-automatisch als primaire surplusbron. Daarbij geldt:
+`homeassistant/Solix_Smartmeter/status` is de enige surplusbron van Opta1.
+Er is geen fallback meer naar de oude meter-topics. Daarbij geldt:
 
 - `surplusFase1W` wordt intern berekend uit de Solix fase-1 export/import
 - batterij-ontlading wordt van fase 1 afgetrokken voordat WP/element beslissen
 - `surplusTotaalW` komt uit de Solix totaal export/import velden
-- als de Solix topic stale wordt, valt Opta1 terug op de legacy meter-topics
-	`CH1/CH10/CH13/CH14`
+- als de Solix topic stale wordt (MQTT-timeout hysteresis), gaan WP/element/hottub
+	naar de veilige uit-stand — er wordt niet meer teruggevallen op een andere meter
 
-Deze bronselectie maakt het mogelijk om de bestaande Opta-regellogica te
-behouden, terwijl schijn-overschot door batterij-ontlading op fase 1 wordt
-weggefilterd.
+Deze bronselectie filtert schijn-overschot door batterij-ontlading op fase 1
+weg, en houdt de firmware af van een tweede, hoogfrequente MQTT-feed die eerder
+tot een vastgelopen Opta1 leidde (zie "Waarom geen fallback meer" hieronder).
 
 ## Verwerkingsvolgorde
 
@@ -86,8 +84,21 @@ De volgorde in runtime is nu:
 	batterij-ontlading.
 4. De bestaande surplus-drempels uit Home Assistant blijven de beslisgrens.
 5. De boilerlogica beslist WP, element en hottub-permissie.
-6. Alleen als de Solix status stale of ongeldig is, valt Opta1 terug op de
-	oude meter-topics `CH1/CH10/CH13/CH14`.
+6. Bij een Solix-timeout gaan alle energielasten uit (interlock `mqttValid`);
+	er is geen alternatieve meter meer die overneemt.
+
+## Waarom geen fallback meer naar `b0b21c913c34/PUB/*`
+
+De oude energiemeter blijft fysiek aangesloten en publiceert nog (CH6
+warmtepomp-verbruik en boiler-elementverbruik zijn nog steeds nuttig — zie de
+hoofdrepo-README onder "Alternatieve meterintegratie"), maar Opta1 subscribet
+er niet meer op. Reden: elk bericht op die feed werd altijd met een
+heap-allocatie geparsed, ook als het resultaat meteen werd weggegooid omdat
+Solix al vers was. Na een snellere publicatiecadans op die meter liep Opta1
+vast en stopte met publiceren op zijn device/status-topics — zonder
+zelfherstel, omdat de software-only loop-stall-detectie in `main.cpp` alleen
+werkt als `loop()` uiteindelijk teruggeeft. Volledige ontkoppeling verkleint
+de aanvalsoppervlakte (subscripties, JSON-parsing, heap-gebruik) het meest.
 
 ## Home Assistant
 

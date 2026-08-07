@@ -228,16 +228,15 @@ Broker:
 
 - `192.168.0.10`
 
-Topics:
-
-- `b0b21c913c34/PUB/CH1`  (fase 1 export)
-- `b0b21c913c34/PUB/CH10` (fase 1 import)
-- `b0b21c913c34/PUB/CH13` (totaal export)
-- `b0b21c913c34/PUB/CH14` (totaal import)
+Opta1 gebruikt sinds de Solix-migratie **uitsluitend** de Anker SOLIX Smart
+Meter Gen 2 als surplusbron. De oude `b0b21c913c34/PUB/CH1/CH10/CH13/CH14`
+meterfeed wordt niet meer door de firmware gelezen (zie
+"Alternatieve meterintegratie" hieronder voor de reden en wat er nog wél op
+die meter draait).
 
 ## Alternatieve meterintegratie
 
-Voor de Anker SOLIX Smart Meter Gen 2 zijn er nu twee Node-RED sporen in de repo:
+Voor de Anker SOLIX Smart Meter Gen 2 zijn er twee Node-RED sporen in de repo:
 
 - `docs/nodered/anker_smartmeter_gen2_modbus_probe.json`
 - `docs/nodered/ha_solix_status_poll.json`
@@ -265,15 +264,25 @@ Tekenconventie:
 - export naar net = negatief
 - import van net = positief
 
-Legacy MQTT meterfeed blijft beschikbaar als fallback voor Opta1:
+### Status: b0b21c913c34-meter (P1/Modbus)
 
-- JSON met veld `"P"` (string), altijd positief
+De oude energiemeter (`b0b21c913c34`) blijft fysiek aangesloten, maar Opta1
+subscribet er niet meer op:
 
-Voorbeeld:
-
-```json
-{"ident":"b0b21c913c34","CHname":"fase 1 export","P":"1234"}
-```
+- Fase 1/2/3 export/import komt nu van de Solix CT-klem (`homeassistant/Solix_Smartmeter/status`).
+- Export platte-dak zonnepanelen: niet meer nodig, vervangen door de Grott-topic.
+- **CH6 (warmtepomp-verbruik)** en **boiler-elementverbruik**: nog steeds nuttig
+  om te monitoren, maar dit hoeft niet via Opta1 te lopen. Home
+  Assistant/Node-RED kan die twee kanalen rechtstreeks van de broker blijven
+  lezen (zie `homeassistant/mqtt.yaml`) — Opta1 was daar nooit de bron van en
+  hoeft er dus niet tussen te zitten.
+- Reden voor de volledige ontkoppeling van Opta1: elk bericht op deze feed
+  werd door de firmware met een heap-allocatie geparsed, ook wanneer het
+  resultaat door de Solix-fallback meteen werd weggegooid. Na een snellere
+  publicatiecadans op deze meter leidde dat tot een vastgelopen Opta1 die
+  geen device/status-topics meer publiceerde. Volledige ontkoppeling is
+  veiliger dan een extra freshness-check, omdat het de aanvalsoppervlakte
+  (subscripties, parsing, heap-gebruik) het meest verkleint.
 
 ## Scripts
 

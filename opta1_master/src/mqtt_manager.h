@@ -38,21 +38,10 @@ private:
     AlarmState&   _alarms;
     IOState&      _io;
 
-    // Raw channel values from energy meter
-    int  _ch1W  = 0;   // fase 1 export
-    int  _ch10W = 0;   // fase 1 import
-    int  _ch13W = 0;   // totaal export
-    int  _ch14W = 0;   // totaal import
+    // Raw values from the Solix status payload
     int  _batteryChargeW = 0;
     int  _batteryDischargeW = 0;
 
-    // Track which channels have been received at least once
-    bool _ch1Rx  = false;
-    bool _ch10Rx = false;
-    bool _ch13Rx = false;
-    bool _ch14Rx = false;
-    bool _solixRx = false;
-    unsigned long _lastSolixUpdateMs = 0;
     unsigned long _lastWifiBeginMs      = 0;
     unsigned long _lastReconnectTryMs   = 0;
     unsigned long _lastConnectLogMs     = 0;
@@ -72,8 +61,6 @@ private:
     void _resetMqttBackoff();
     void _handleMessage(int messageSize);
     void _checkTimeout(const Settings& settings);
-    int  _parseP(const char* payload, int payloadLen);
     bool _applySolixStatus(const char* payload, int payloadLen);
-    bool _solixIsFresh() const;
 
 };

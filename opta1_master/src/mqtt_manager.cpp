@@ -10,7 +10,6 @@ constexpr unsigned long MQTT_RETRY_INTERVAL_MS = 5000UL;
 constexpr unsigned long MQTT_RETRY_BACKOFF_MAX_MS = 60000UL;
 constexpr unsigned long WIFI_STABLE_BEFORE_MQTT_MS = 3000UL;
 constexpr unsigned long CONNECT_LOG_INTERVAL_MS = 10000UL;
-constexpr unsigned long SOLIX_STALE_MS = 15000UL;
 
 // Timeout hysteresis tuning: prevents transient WiFi hiccups from triggering alarms
 // TIMEOUT_MULTIPLIER: alarm only fires if timeout condition persists for 1.5x the configured timeout
@@ -185,15 +184,7 @@ void MqttManager::_reconnect() {
     _resetMqttBackoff();
     Serial.println("[Opta1] MQTT subscribe setup");
 
-    // Subscribe to all meter publishes; keepalive is based on any meter topic
-    _mqtt.subscribe(TOPIC_METER_ROOT);
-
-    // Subscribe explicitly to the four channels used for surplus calculation.
-    // This makes retained and live values for the calculation channels reliable.
-    _mqtt.subscribe(TOPIC_METER_CH1);
-    _mqtt.subscribe(TOPIC_METER_CH10);
-    _mqtt.subscribe(TOPIC_METER_CH13);
-    _mqtt.subscribe(TOPIC_METER_CH14);
+    // Solix status is the sole surplus source; keepalive is based on it.
     _mqtt.subscribe(TOPIC_SOLIX_STATUS);
 
     // Subscribe to HA command topics (retained settings arrive immediately)
@@ -238,9 +229,8 @@ void MqttManager::_handleMessage(int messageSize) {
     // Drain any remaining bytes
     while (_mqtt.available()) _mqtt.read();
 
-    bool isMeterTopic = (strncmp(topic, TOPIC_METER_PREFIX, strlen(TOPIC_METER_PREFIX)) == 0);
     bool isSolixTopic = (strcmp(topic, TOPIC_SOLIX_STATUS) == 0);
-    if (!isMeterTopic && !isSolixTopic) {
+    if (!isSolixTopic) {
         // ── HA command topics ────────────────────────────────────────────
         // Forward to HaInterface for command processing
         if (_ha) {
@@ -249,58 +239,20 @@ void MqttManager::_handleMessage(int messageSize) {
         return;
     }
 
-    // Any publish from the configured meter means the meter is alive.
+    // A Solix status publish means the meter is alive.
     _status.mqttLastUpdateMs = millis();
     _status.mqttRxOk         = true;
     _status.mqttValid        = true;
     _alarms.mqttTimeout      = false;
     _io.inMqttPowerValid     = true;
 
-    if (isSolixTopic) {
-        if (_applySolixStatus(buf, len)) {
-            _lastSolixUpdateMs = millis();
-            _solixRx = true;
-            _alarms.invalidPowerData = false;
-        } else {
-            _status.mqttValid = false;
-            _io.inMqttPowerValid = false;
-            _alarms.invalidPowerData = true;
-        }
-        return;
-    }
-
-    // ── Energy meter channels used for surplus calculation ──────────────
-    if (strcmp(topic, TOPIC_METER_CH1) == 0)  { _ch1W  = _parseP(buf, len); _ch1Rx  = true; }
-    else if (strcmp(topic, TOPIC_METER_CH10) == 0) { _ch10W = _parseP(buf, len); _ch10Rx = true; }
-    else if (strcmp(topic, TOPIC_METER_CH13) == 0) { _ch13W = _parseP(buf, len); _ch13Rx = true; }
-    else if (strcmp(topic, TOPIC_METER_CH14) == 0) { _ch14W = _parseP(buf, len); _ch14Rx = true; }
-    else {
-        return;  // keepalive-only meter topic, no power field needed
-    }
-
-    if (!_solixIsFresh()) {
-        // Calculate phase-1 and total surplus independently.
-        // WP logic should not wait for total channels, and hottub logic should not
-        // block phase-1 surplus publication.
-        if (_ch1Rx && _ch10Rx) {
-            _status.surplusFase1W = _ch1W - _ch10W;
-            _io.inSurplusFase1W   = _status.surplusFase1W;
-        }
-
-        if (_ch13Rx && _ch14Rx) {
-            _status.surplusTotaalW = _ch13W - _ch14W;
-            _io.inSurplusTotaalW   = _status.surplusTotaalW;
-        }
-    }
-
-    if ((_ch1Rx && _ch10Rx) || (_ch13Rx && _ch14Rx)) {
+    if (_applySolixStatus(buf, len)) {
         _alarms.invalidPowerData = false;
+    } else {
+        _status.mqttValid = false;
+        _io.inMqttPowerValid = false;
+        _alarms.invalidPowerData = true;
     }
-}
-
-bool MqttManager::_solixIsFresh() const {
-    if (!_solixRx) return false;
-    return (millis() - _lastSolixUpdateMs) <= SOLIX_STALE_MS;
 }
 
 bool MqttManager::_applySolixStatus(const char* payload, int payloadLen) {
@@ -405,23 +357,4 @@ void MqttManager::_checkTimeout(const Settings& settings) {
 #endif
         }
     }
-}
-
-// ---------------------------------------------------------------------------
-// Parse "P" field from JSON payload: {"P":"123", ...}
-int MqttManager::_parseP(const char* payload, int payloadLen) {
-    JsonDocument doc;
-    DeserializationError err = deserializeJson(doc, payload, payloadLen);
-    if (err) {
-        _alarms.invalidPowerData = true;
-        return 0;
-    }
-    // "P" is transmitted as string by this meter firmware
-    const char* pStr = doc["P"];
-    if (pStr == nullptr) {
-        // Try numeric
-        int pVal = doc["P"] | 0;
-        return pVal;
-    }
-    return atoi(pStr);
 }
