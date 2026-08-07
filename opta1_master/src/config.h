@@ -114,3 +114,10 @@ static const uint16_t BROKER_PORT  = 1883;
 #define LOOP_WARN_MS 250UL
 #define LOOP_RESET_MS 3000UL
 #define LOOP_RESET_CONSECUTIVE 3
+
+// Hardware watchdog (IWDG via mbed::Watchdog): last-resort recovery for a
+// genuine hang (blocking call that never returns) that the software
+// loop-stall check above cannot catch, since that check only runs once
+// loop() itself returns. Timeout must clear the worst-case legitimate
+// single-loop duration (MQTT connect timeout below is 10s) with margin.
+#define WATCHDOG_TIMEOUT_MS 15000UL

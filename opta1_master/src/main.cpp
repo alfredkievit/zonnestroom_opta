@@ -9,6 +9,7 @@
 // All energy loads off on surplus <= 0 or MQTT timeout.
 // ============================================================================
 #include <Arduino.h>
+#include <mbed.h>
 #include "config.h"
 #include "types.h"
 #include "analog_input.h"
@@ -100,6 +101,12 @@ static void readInputs() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 void setup() {
+    // Hardware watchdog: last-resort self-recovery from a genuine hang
+    // (blocking WiFi/MQTT call, heap issue, ...) that the software
+    // loop-stall reset in loop() cannot catch because it only runs once
+    // loop() returns. Started first so setup() itself is covered too.
+    mbed::Watchdog::get_instance().start(WATCHDOG_TIMEOUT_MS);
+
     Serial.begin(115200);
 
     // Configure outputs
@@ -166,10 +173,17 @@ void setup() {
     gMqtt.setHaInterface(&gHa);
 
     gMqtt.begin();
+
+    // Reset the countdown right before entering the main loop, so the first
+    // loop() iteration gets the full watchdog budget regardless of how long
+    // setup() (incl. the initial MQTT connect attempt) took.
+    mbed::Watchdog::get_instance().kick();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 void loop() {
+    mbed::Watchdog::get_instance().kick();
+
     const unsigned long loopStartMs = millis();
 
     // 1. MQTT: receive messages, update surplus values, check timeout

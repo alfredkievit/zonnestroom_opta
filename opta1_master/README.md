@@ -100,6 +100,23 @@ zelfherstel, omdat de software-only loop-stall-detectie in `main.cpp` alleen
 werkt als `loop()` uiteindelijk teruggeeft. Volledige ontkoppeling verkleint
 de aanvalsoppervlakte (subscripties, JSON-parsing, heap-gebruik) het meest.
 
+## Hardware watchdog
+
+Naast bovenstaande ontkoppeling heeft Opta1 nu ook een echte hardware
+watchdog (`mbed::Watchdog`, IWDG-peripheral), gestart in `setup()` met een
+timeout van `WATCHDOG_TIMEOUT_MS` (15s, zie `config.h`) en gekickt aan het
+begin van elke `loop()`-iteratie.
+
+Dit is een ander vangnet dan de bestaande software-detectie
+(`gConsecutiveLoopStalls` / `LOOP_RESET_MS` in `main.cpp`), die alleen werkt
+als `loop()` uiteindelijk teruggeeft. Bij een echte hang — een blocking
+WiFi/MQTT-call die nooit terugkeert, of iets dat we nog niet kennen — komt
+`loop()` nooit meer terug en wordt de software-teller dus nooit bereikt. De
+hardware watchdog reset de chip dan alsnog zelfstandig binnen 15s, zonder dat
+er fysiek ingegrepen hoeft te worden. De timeout is ruim boven de bekende
+langst-mogelijke legitieme loop-duur gekozen (MQTT connect-timeout = 10s)
+zodat een trage maar normale reconnect geen onterechte reset veroorzaakt.
+
 ## Home Assistant
 
 Opta1 publiceert boilerstatus, prioriteit, permissies, alarmen en surpluswaarden naar Home Assistant. Deze README benoemt hiermee alle huidige fysieke en logische I/O die in de firmware zijn vastgelegd.

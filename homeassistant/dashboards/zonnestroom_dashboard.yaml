@@ -54,24 +54,34 @@ views:
               green: 1500
 
       - type: entities
-        title: Import / Export Nu
+        title: Solix / Netstroom Nu
         entities:
-          - entity: sensor.export_fase_1
-            name: Export Fase 1
-          - entity: sensor.export_fase_2
-            name: Export Fase 2
-          - entity: sensor.export_fase_3
-            name: Export Fase 3
-          - entity: sensor.export_totaal
-            name: Export Totaal
+          - entity: binary_sensor.solix_status_geldig
+            name: Status Geldig
+          - entity: sensor.solix_status_leeftijd
+            name: Status Leeftijd
+          - entity: sensor.solix_fase_1_vermogen
+            name: Fase 1 Vermogen
+          - entity: sensor.solix_fase_1_stroom
+            name: Fase 1 Stroom
+          - entity: sensor.solix_fase_2_vermogen
+            name: Fase 2 Vermogen
+          - entity: sensor.solix_fase_2_stroom
+            name: Fase 2 Stroom
+          - entity: sensor.solix_fase_3_vermogen
+            name: Fase 3 Vermogen
+          - entity: sensor.solix_fase_3_stroom
+            name: Fase 3 Stroom
+          - entity: sensor.solix_totaal_vermogen
+            name: Totaal Vermogen
           - type: divider
-          - entity: sensor.import_fase_1
+          - entity: sensor.solix_export_fase_1
+            name: Export Fase 1
+          - entity: sensor.solix_export_totaal
+            name: Export Totaal
+          - entity: sensor.solix_import_fase_1
             name: Import Fase 1
-          - entity: sensor.import_fase_2
-            name: Import Fase 2
-          - entity: sensor.import_fase_3
-            name: Import Fase 3
-          - entity: sensor.import_totaal
+          - entity: sensor.solix_import_totaal
             name: Import Totaal
 
       - type: entity
@@ -100,7 +110,6 @@ views:
               action: none
           - entity: binary_sensor.opta1_energie_master_handmatige_modus_actief
             name: Handmatig
-            state_color: true
             tap_action:
               action: none
 
@@ -114,36 +123,71 @@ views:
             name: Surplus Fase 1
 
       - type: history-graph
-        title: Automatische Starts Historiek
-        hours_to_show: 2
-        entities:
-          - entity: binary_sensor.opta1_energie_master_automatisch_wp_gestart
-            name: Auto WP
-          - entity: binary_sensor.opta1_energie_master_automatisch_element_gestart
-            name: Auto Element
-          - entity: binary_sensor.opta1_energie_master_automatisch_hottub_gestart
-            name: Auto Hottub
-
-      - type: history-graph
-        title: Import / Export Historiek
+        title: Solix Historiek
         hours_to_show: 4
         entities:
-          - entity: sensor.export_fase_1
-            name: Export F1
-          - entity: sensor.export_fase_2
-            name: Export F2
-          - entity: sensor.export_fase_3
-            name: Export F3
-          - entity: sensor.export_totaal
-            name: Export Totaal
-          - entity: sensor.import_fase_1
-            name: Import F1
-          - entity: sensor.import_fase_2
-            name: Import F2
-          - entity: sensor.import_fase_3
-            name: Import F3
-          - entity: sensor.import_totaal
+          - entity: sensor.solix_fase_1_vermogen
+            name: Fase 1
+          - entity: sensor.solix_fase_1_stroom
+            name: Fase 1 A
+          - entity: sensor.solix_totaal_vermogen
+            name: Totaal
+          - entity: sensor.solix_import_totaal
             name: Import Totaal
+          - entity: sensor.solix_export_totaal
+            name: Export Totaal
+
+      - type: custom:apexcharts-card
+        grid_options:
+          columns: full
+          rows: 6
+        experimental:
+          disable_config_validation: true
+        header:
+          show: true
+          title: Batterij Laden / Ontladen
+        graph_span: 24h
+        apex_config:
+          chart:
+            type: bar
+            height: 300
+          colors:
+            - '#4caf50'
+            - '#f44336'
+          fill:
+            opacity: 1
+            colors:
+              - '#4caf50'
+              - '#f44336'
+          stroke:
+            width: 0
+          plotOptions:
+            bar:
+              columnWidth: 90%
+          legend:
+            show: true
+          yaxis:
+            title:
+              text: W
+          annotations:
+            yaxis:
+              - y: 0
+                borderColor: '#666'
+        series:
+          - entity: sensor.solix_battery_charge_w
+            name: Laden
+            type: column
+            color: '#4caf50'
+            group_by:
+              duration: 5min
+              func: avg
+          - entity: sensor.solix_battery_discharge_w
+            name: Ontladen
+            type: column
+            color: '#f44336'
+            group_by:
+              duration: 5min
+              func: avg
 
   - title: Hottub
     path: '1'
@@ -345,85 +389,6 @@ views:
             name: Element Thermostaat OK
           - entity: binary_sensor.opta1_energie_master_mqtt_geldig
             name: MQTT Valid
-          - entity: sensor.opta1_energie_master_opta1_heartbeat
-            name: Opta1 Heartbeat
-          - entity: sensor.opta2_hottub_controller_opta2_heartbeat
-            name: Opta2 Heartbeat
-          - entity: sensor.opta1_verbinding
-            name: Opta1 Verbinding
-          - entity: sensor.opta2_verbinding
-            name: Opta2 Verbinding
 
-  - title: Beregening
-    path: '4'
-    icon: mdi:sprinkler-variant
-    badges: []
-    cards:
-      - type: entities
-        title: Beregening Systeem
-        show_header_toggle: false
-        entities:
-          - entity: switch.opta2_hottub_controller_beregening_inschakelen
-            name: Beregening Inschakelen
-          - entity: switch.opta2_hottub_controller_beregening_pomp_handmatig
-            name: Bronpomp Handmatig
-          - entity: sensor.opta2_hottub_controller_beregening_actieve_zones
-            name: Actieve Zones
-          - entity: sensor.opta2_hottub_controller_opta2_netwerk_transport
-            name: Netwerk Transport
-
-      - type: glance
-        title: Beregening Status
-        entities:
-          - entity: binary_sensor.opta2_hottub_controller_beregening_ingeschakeld
-            name: Beregening Aan
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_beregening_expansie_aanwezig
-            name: Expansie OK
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_beregening_pomp_actief
-            name: Bronpomp
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_opta2_communicatie_ok
-            name: MQTT Comm
-            state_color: true
-
-      - type: entities
-        title: Zone Bediening
-        show_header_toggle: false
-        entities:
-          - entity: switch.opta2_hottub_controller_beregening_zone_1
-            name: Zone 1
-          - entity: switch.opta2_hottub_controller_beregening_zone_2
-            name: Zone 2
-          - entity: switch.opta2_hottub_controller_beregening_zone_3
-            name: Zone 3
-          - entity: switch.opta2_hottub_controller_beregening_zone_4
-            name: Zone 4
-          - entity: switch.opta2_hottub_controller_beregening_zone_5
-            name: Zone 5
-          - entity: switch.opta2_hottub_controller_beregening_zone_6
-            name: Zone 6
-
-      - type: glance
-        title: Zone Activiteit
-        entities:
-          - entity: binary_sensor.opta2_hottub_controller_beregening_zone_1_actief
-            name: Zone 1
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_beregening_zone_2_actief
-            name: Zone 2
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_beregening_zone_3_actief
-            name: Zone 3
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_beregening_zone_4_actief
-            name: Zone 4
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_beregening_zone_5_actief
-            name: Zone 5
-            state_color: true
-          - entity: binary_sensor.opta2_hottub_controller_beregening_zone_6_actief
-            name: Zone 6
-            state_color: true
-
+    visible:
+      - user: f057295099d8495f99262b99f384e82f
