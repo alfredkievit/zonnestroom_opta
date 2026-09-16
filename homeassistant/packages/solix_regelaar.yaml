@@ -1,0 +1,196 @@
+# ============================================================
+#  Solix Regelaar – vrijgavelaag (stap 2, herziene volgorde sep 2026)
+#
+#  Batterij blijft in Anker "self_consumption". Node-RED herdefinieert
+#  alleen derived.* op het Opta-topic (stap 3). Dit package levert:
+#   - bediening/tuning van de vrijgavelaag (Node-RED leest deze helpers)
+#   - observatie-sensoren uit homeassistant/Solix_Regelaar/status
+#   - meldingen (fase-1 stroom, Opta-bytes, Node-RED weg, data stil)
+#
+#  Diagnose-topic bevat bewust GEEN key 'values' (botst in Jinja met
+#  dict.values). Gebruik value_json.<key> of value_json['<key>'].
+# ============================================================
+
+input_select:
+  solix_vrijgave_modus:
+    name: Solix vrijgave modus
+    icon: mdi:transmission-tower-export
+    options:
+      - uit               # derived.* = rauwe meting (gedrag van vandaag)
+      - alleen_vrijgeven  # k in [-1, 0]: Opta mag meer zien, nooit minder
+      - volledig          # k in [-1, +1]: onder SoC laag krijgt batterij voorrang
+    initial: uit
+
+input_number:
+  solix_soc_prio_laag:
+    name: Solix SoC prio laag (batterij voorrang onder)
+    min: 0
+    max: 100
+    step: 1
+    initial: 55
+    unit_of_measurement: "%"
+    mode: box
+  solix_soc_prio_hoog:
+    name: Solix SoC prio hoog (lasten voorrang boven)
+    min: 0
+    max: 100
+    step: 1
+    initial: 65
+    unit_of_measurement: "%"
+    mode: box
+  solix_aanbod_max_w:
+    name: Solix aanbod max
+    min: 0
+    max: 4000
+    step: 100
+    initial: 1500     # start: alleen WP kan triggeren (>1500), element (>3200) nog niet
+    unit_of_measurement: W
+    mode: box
+  solix_i_shed_a:
+    name: Solix L1 shed-grens
+    min: 15
+    max: 25
+    step: 0.5
+    initial: 23
+    unit_of_measurement: A
+    mode: box
+
+mqtt:
+  binary_sensor:
+    - name: "Solix regelaar online"
+      unique_id: solix_regelaar_online
+      state_topic: "homeassistant/Solix_Regelaar/availability"
+      payload_on: "online"
+      payload_off: "offline"
+      device_class: connectivity
+
+  sensor:
+    - name: "Solix regelaar laatste bericht"
+      unique_id: solix_regelaar_ts
+      state_topic: "homeassistant/Solix_Regelaar/status"
+      availability_topic: "homeassistant/Solix_Regelaar/availability"
+      value_template: "{{ (value_json.ts_ms / 1000) | timestamp_custom('%Y-%m-%dT%H:%M:%S+00:00', false) }}"
+      device_class: timestamp
+
+    - name: "Solix regelaar opta bytes"
+      unique_id: solix_regelaar_opta_bytes
+      state_topic: "homeassistant/Solix_Regelaar/status"
+      availability_topic: "homeassistant/Solix_Regelaar/availability"
+      value_template: "{{ value_json.opta_bytes }}"
+      unit_of_measurement: B
+      state_class: measurement
+      icon: mdi:code-json
+
+    - name: "Solix regelaar P batterij"
+      unique_id: solix_regelaar_p_batt_w
+      state_topic: "homeassistant/Solix_Regelaar/status"
+      availability_topic: "homeassistant/Solix_Regelaar/availability"
+      value_template: "{{ value_json.calc.p_batt_w }}"
+      unit_of_measurement: W
+      device_class: power
+      state_class: measurement
+
+    - name: "Solix regelaar P net zonder batterij"
+      unique_id: solix_regelaar_p_net_zb_w
+      state_topic: "homeassistant/Solix_Regelaar/status"
+      availability_topic: "homeassistant/Solix_Regelaar/availability"
+      value_template: "{{ value_json.calc.p_net_zb_w }}"
+      unit_of_measurement: W
+      device_class: power
+      state_class: measurement
+
+    - name: "Solix regelaar P L1 zonder batterij"
+      unique_id: solix_regelaar_p_l1_zb_w
+      state_topic: "homeassistant/Solix_Regelaar/status"
+      availability_topic: "homeassistant/Solix_Regelaar/availability"
+      value_template: "{{ value_json.calc.p_l1_zb_w }}"
+      unit_of_measurement: W
+      device_class: power
+      state_class: measurement
+
+    - name: "Solix regelaar surplus bruto"
+      unique_id: solix_regelaar_surplus_bruto_w
+      state_topic: "homeassistant/Solix_Regelaar/status"
+      availability_topic: "homeassistant/Solix_Regelaar/availability"
+      value_template: "{{ value_json.calc.surplus_bruto_w }}"
+      unit_of_measurement: W
+      device_class: power
+      state_class: measurement
+
+    - name: "Solix regelaar surplus bruto L1"
+      unique_id: solix_regelaar_surplus_bruto_l1_w
+      state_topic: "homeassistant/Solix_Regelaar/status"
+      availability_topic: "homeassistant/Solix_Regelaar/availability"
+      value_template: "{{ value_json.calc.surplus_bruto_l1_w }}"
+      unit_of_measurement: W
+      device_class: power
+      state_class: measurement
+
+automation:
+  - id: solix_regelaar_melding_fase1_stroom
+    alias: "Solix – L1 stroom hoog"
+    mode: single
+    trigger:
+      - platform: template
+        value_template: >
+          {{ states('sensor.anker_solix_smart_meter_gen_2_solix_fase_1_stroom')
+             | float(0) | abs > states('input_number.solix_i_shed_a') | float(23) }}
+        for: "00:00:30"
+    action:
+      - service: persistent_notification.create
+        data:
+          notification_id: solix_fase1_stroom
+          title: "Solix: L1 stroom hoog"
+          message: >
+            L1 = {{ states('sensor.anker_solix_smart_meter_gen_2_solix_fase_1_stroom') }} A
+            (grens {{ states('input_number.solix_i_shed_a') }} A) sinds 30 s.
+            Batterij {{ states('sensor.anker_solix_smart_meter_gen_2_solix_batterij_laden') }} W laden /
+            {{ states('sensor.anker_solix_smart_meter_gen_2_solix_batterij_ontladen') }} W ontladen.
+
+  - id: solix_regelaar_melding_opta_bytes
+    alias: "Solix – Opta payload bijna te groot"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.solix_regelaar_opta_bytes
+        above: 700
+    action:
+      - service: persistent_notification.create
+        data:
+          notification_id: solix_opta_bytes
+          title: "Solix: Opta payload {{ states('sensor.solix_regelaar_opta_bytes') }} B"
+          message: "Grens in de Opta-firmware is 768 B (mqtt_manager.cpp). Boven die grens gaat de Opta in FAULT."
+
+  - id: solix_regelaar_melding_offline
+    alias: "Solix – Node-RED regelaar offline"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.solix_regelaar_online
+        to: "off"
+        for: "00:02:00"
+    action:
+      - service: persistent_notification.create
+        data:
+          notification_id: solix_offline
+          title: "Solix: Node-RED regelaar offline"
+          message: "Geen verbinding van de Solix-pollflow met de broker sinds 2 min. De Opta gaat na zijn MQTT-timeout naar de veilige uit-stand."
+
+  - id: solix_regelaar_melding_stil
+    alias: "Solix – geen verse data"
+    mode: single
+    trigger:
+      - platform: template
+        value_template: >
+          {% set t = as_datetime(states('sensor.solix_regelaar_laatste_bericht')) %}
+          {{ t is not none and (now() - t).total_seconds() > 60 }}
+    condition:
+      - condition: state
+        entity_id: binary_sensor.solix_regelaar_online
+        state: "on"
+    action:
+      - service: persistent_notification.create
+        data:
+          notification_id: solix_stil
+          title: "Solix: geen verse data"
+          message: "Node-RED is online maar het diagnose-topic is > 60 s niet ververst (laatste: {{ states('sensor.solix_regelaar_laatste_bericht') }}). Waarschijnlijk hangt de HA-websocket in de pollflow."
