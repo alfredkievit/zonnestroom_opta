@@ -3,7 +3,7 @@ views:
   #  OVERZICHT – wat gebeurt er nu (enige plek voor live energiestroom)
   # ════════════════════════════════════════════════════════════════════
   - title: Overzicht
-    path: '0'
+    path: overzicht
     icon: mdi:solar-power-variant
     badges: []
     cards:
@@ -49,8 +49,6 @@ views:
           - type: divider
           - entity: sensor.anker_solix_smart_meter_gen_2_solix_totaal_vermogen
             name: Net totaal (+ import / − export)
-          - entity: input_select.solix_vrijgave_modus
-            name: Vrijgave modus
       - type: glance
         title: Actieve Apparaten
         entities:
@@ -90,7 +88,7 @@ views:
   #  HOTTUB – ongewijzigd
   # ════════════════════════════════════════════════════════════════════
   - title: Hottub
-    path: '1'
+    path: hottub
     icon: mdi:hot-tub
     badges: []
     cards:
@@ -178,7 +176,7 @@ views:
   #  WP & BOILER – ongewijzigd
   # ════════════════════════════════════════════════════════════════════
   - title: WP & Boiler
-    path: '2'
+    path: wp-boiler
     icon: mdi:heat-pump
     badges: []
     cards:
@@ -249,7 +247,7 @@ views:
   #  (live getallen staan in de grafieklegenda's, niet nog eens apart)
   # ════════════════════════════════════════════════════════════════════
   - title: Batterij & Vrijgave
-    path: '5'
+    path: batterij
     icon: mdi:home-battery
     badges: []
     cards:
@@ -320,7 +318,7 @@ views:
   #  INSTELLINGEN – drempels + alle diagnostiek op één plek
   # ════════════════════════════════════════════════════════════════════
   - title: Instellingen
-    path: '3'
+    path: instellingen
     icon: mdi:cog
     badges: []
     cards:
@@ -390,7 +388,7 @@ views:
   #  BEREGENING – ongewijzigd
   # ════════════════════════════════════════════════════════════════════
   - title: Beregening
-    path: '4'
+    path: beregening
     icon: mdi:sprinkler-variant
     badges: []
     cards:
