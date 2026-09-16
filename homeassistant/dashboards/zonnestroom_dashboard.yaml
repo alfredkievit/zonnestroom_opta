@@ -1,4 +1,7 @@
 views:
+  # ════════════════════════════════════════════════════════════════════
+  #  OVERZICHT – wat gebeurt er nu (enige plek voor live energiestroom)
+  # ════════════════════════════════════════════════════════════════════
   - title: Overzicht
     path: '0'
     icon: mdi:solar-power-variant
@@ -18,12 +21,36 @@ views:
             state_color: true
           - type: entity
             entity: binary_sensor.opta1_energie_master_mqtt_geldig
-            name: MQTT Valid
+            name: Opta MQTT
+            state_color: true
+          - type: entity
+            entity: binary_sensor.solix_regelaar_online
+            name: Node-RED
             state_color: true
       - type: entity
         entity: sensor.systeem_prioriteit_tekst
         name: Systeem Status
         state_color: true
+      - type: entities
+        title: Energie nu
+        show_header_toggle: false
+        entities:
+          - entity: sensor.fp4all_vermogen
+            name: PV FP4All (L1)
+            icon: mdi:solar-panel
+          - entity: sensor.growatt_actueel_vermogen
+            name: PV Growatt platdak (L3)
+            icon: mdi:solar-panel-large
+          - type: divider
+          - entity: sensor.solix_regelaar_p_batterij
+            name: Batterij (+ laden / − ontladen)
+          - entity: sensor.anker_solix_solarbank_max_ac_124_soc
+            name: Batterij SoC
+          - type: divider
+          - entity: sensor.anker_solix_smart_meter_gen_2_solix_totaal_vermogen
+            name: Net totaal (+ import / − export)
+          - entity: input_select.solix_vrijgave_modus
+            name: Vrijgave modus
       - type: glance
         title: Actieve Apparaten
         entities:
@@ -49,15 +76,19 @@ views:
             tap_action:
               action: none
       - type: history-graph
-        title: Automatische Starts Historiek
-        hours_to_show: 2
+        title: Lasten (24 u)
+        hours_to_show: 24
         entities:
-          - entity: binary_sensor.opta1_energie_master_automatisch_wp_gestart
-            name: Auto WP
-          - entity: binary_sensor.opta1_energie_master_automatisch_element_gestart
-            name: Auto Element
-          - entity: binary_sensor.opta1_energie_master_automatisch_hottub_gestart
-            name: Auto Hottub
+          - entity: binary_sensor.opta1_energie_master_warmtepomp_actief
+            name: WP extra WW
+          - entity: binary_sensor.opta1_energie_master_boiler_element_actief
+            name: Element
+          - entity: binary_sensor.opta1_energie_master_hottub_permissie
+            name: Hottub perm.
+
+  # ════════════════════════════════════════════════════════════════════
+  #  HOTTUB – ongewijzigd
+  # ════════════════════════════════════════════════════════════════════
   - title: Hottub
     path: '1'
     icon: mdi:hot-tub
@@ -142,6 +173,10 @@ views:
         entities:
           - entity: sensor.opta2_hottub_controller_hottub_temperatuur
             name: Hottub °C
+
+  # ════════════════════════════════════════════════════════════════════
+  #  WP & BOILER – ongewijzigd
+  # ════════════════════════════════════════════════════════════════════
   - title: WP & Boiler
     path: '2'
     icon: mdi:heat-pump
@@ -208,6 +243,82 @@ views:
             name: Doel Temperatuur Element
           - entity: number.opta1_energie_master_boiler_element_hysterese
             name: Hysterese Element
+
+  # ════════════════════════════════════════════════════════════════════
+  #  BATTERIJ & VRIJGAVE – analyse: echt overschot vs wat de Opta ziet
+  #  (live getallen staan in de grafieklegenda's, niet nog eens apart)
+  # ════════════════════════════════════════════════════════════════════
+  - title: Batterij & Vrijgave
+    path: '5'
+    icon: mdi:home-battery
+    badges: []
+    cards:
+      - type: history-graph
+        title: Overschot totaal – echt vs Opta (24 u)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.solix_regelaar_surplus_bruto
+            name: Echt (incl. L3)
+          - entity: sensor.opta1_energie_master_opta1_surplus_totaal
+            name: Opta ziet
+          - entity: sensor.solix_regelaar_p_batterij
+            name: Batterij
+      - type: history-graph
+        title: Overschot L1 – echt vs Opta (24 u)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.solix_regelaar_surplus_bruto_l1
+            name: Echt L1
+          - entity: sensor.opta1_energie_master_opta1_surplus_fase1
+            name: Opta ziet L1
+      - type: history-graph
+        title: PV per fase (24 u)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.fp4all_vermogen
+            name: FP4All (L1)
+          - entity: sensor.growatt_actueel_vermogen
+            name: Growatt (L3)
+      - type: statistics-graph
+        title: L1 stroom – uurmaximum (7 dagen)
+        days_to_show: 7
+        period: hour
+        stat_types:
+          - max
+          - mean
+        chart_type: line
+        entities:
+          - entity: sensor.anker_solix_smart_meter_gen_2_solix_fase_1_stroom
+            name: L1 stroom
+      - type: statistics-graph
+        title: Overschot – daggemiddelde en max (7 dagen)
+        days_to_show: 7
+        period: day
+        stat_types:
+          - mean
+          - max
+        chart_type: bar
+        entities:
+          - entity: sensor.solix_regelaar_surplus_bruto
+            name: Echt overschot
+      - type: entities
+        title: Vrijgave instellingen
+        show_header_toggle: false
+        entities:
+          - entity: input_select.solix_vrijgave_modus
+            name: Modus
+          - entity: input_number.solix_soc_prio_laag
+            name: SoC batterij-voorrang onder
+          - entity: input_number.solix_soc_prio_hoog
+            name: SoC lasten-voorrang boven
+          - entity: input_number.solix_aanbod_max_w
+            name: Max vrijgegeven aanbod
+          - entity: input_number.solix_i_shed_a
+            name: L1 shed-grens
+
+  # ════════════════════════════════════════════════════════════════════
+  #  INSTELLINGEN – drempels + alle diagnostiek op één plek
+  # ════════════════════════════════════════════════════════════════════
   - title: Instellingen
     path: '3'
     icon: mdi:cog
@@ -251,22 +362,33 @@ views:
       - type: entities
         title: Debug / Diagnostiek
         entities:
-          - entity: sensor.systeem_prioriteit_tekst
-            name: Prioriteit (tekst)
           - entity: sensor.opta1_energie_master_wp_start_blokkade_reden
             name: WP Start Blokkade Reden
           - entity: binary_sensor.opta1_energie_master_boiler_element_thermostaat_ok
             name: Element Thermostaat OK
-          - entity: binary_sensor.opta1_energie_master_mqtt_geldig
-            name: MQTT Valid
           - entity: sensor.opta1_energie_master_opta1_heartbeat
             name: Opta1 Heartbeat
           - entity: sensor.opta2_hottub_controller_opta2_heartbeat
             name: Opta2 Heartbeat
-          - entity: sensor.opta1_verbinding
-            name: Opta1 Verbinding
-          - entity: sensor.opta2_verbinding
-            name: Opta2 Verbinding
+          - type: divider
+          - entity: sensor.solix_regelaar_laatste_bericht
+            name: Solix laatste bericht
+          - entity: sensor.solix_regelaar_opta_bytes
+            name: Opta payload (max 768)
+      - type: history-graph
+        title: Automatische Starts Historiek
+        hours_to_show: 24
+        entities:
+          - entity: binary_sensor.opta1_energie_master_automatisch_wp_gestart
+            name: Auto WP
+          - entity: binary_sensor.opta1_energie_master_automatisch_element_gestart
+            name: Auto Element
+          - entity: binary_sensor.opta1_energie_master_automatisch_hottub_gestart
+            name: Auto Hottub
+
+  # ════════════════════════════════════════════════════════════════════
+  #  BEREGENING – ongewijzigd
+  # ════════════════════════════════════════════════════════════════════
   - title: Beregening
     path: '4'
     icon: mdi:sprinkler-variant
@@ -336,111 +458,3 @@ views:
           - entity: binary_sensor.opta2_hottub_controller_beregening_zone_6_actief
             name: Zone 6
             state_color: true
-  - title: Batterij & Vrijgave
-    path: '5'
-    icon: mdi:home-battery
-    badges: []
-    cards:
-      - type: glance
-        title: Solix regelaar
-        entities:
-          - entity: input_select.solix_vrijgave_modus
-            name: Modus
-          - entity: binary_sensor.solix_regelaar_online
-            name: Node-RED
-            state_color: true
-          - entity: binary_sensor.opta1_energie_master_mqtt_geldig
-            name: Opta MQTT
-            state_color: true
-          - entity: sensor.solix_regelaar_opta_bytes
-            name: Opta bytes
-          - entity: sensor.anker_solix_solarbank_max_ac_124_soc
-            name: SoC
-      - type: entities
-        title: Overschot nu
-        entities:
-          - entity: sensor.solix_regelaar_surplus_bruto
-            name: Echt overschot totaal (zonder batterij)
-          - entity: sensor.opta1_energie_master_opta1_surplus_totaal
-            name: Opta ziet totaal
-          - type: divider
-          - entity: sensor.solix_regelaar_surplus_bruto_l1
-            name: Echt overschot L1 (zonder batterij)
-          - entity: sensor.opta1_energie_master_opta1_surplus_fase1
-            name: Opta ziet L1
-          - type: divider
-          - entity: sensor.solix_regelaar_p_batterij
-            name: Batterij (+ laden / − ontladen)
-          - entity: sensor.fp4all_vermogen
-            name: FP4All (L1)
-      - type: history-graph
-        entities:
-          - entity: sensor.solix_regelaar_surplus_bruto
-            name: Echt
-          - entity: sensor.opta1_energie_master_opta1_surplus_totaal
-            name: Opta ziet
-          - entity: sensor.solix_regelaar_p_batterij
-            name: Batterij
-        title: Overschot totaal – echt vs Opta (24 u)
-        hours_to_show: 24
-      - type: history-graph
-        title: Overschot L1 – echt vs Opta (24 u)
-        hours_to_show: 24
-        entities:
-          - entity: sensor.solix_regelaar_surplus_bruto_l1
-            name: Echt L1
-          - entity: sensor.opta1_energie_master_opta1_surplus_fase1
-            name: Opta ziet L1
-      - type: history-graph
-        title: Lasten (24 u)
-        hours_to_show: 24
-        entities:
-          - entity: binary_sensor.opta1_energie_master_warmtepomp_actief
-            name: WP extra WW
-          - entity: binary_sensor.opta1_energie_master_boiler_element_actief
-            name: Element
-          - entity: binary_sensor.opta1_energie_master_hottub_permissie
-            name: Hottub perm.
-      - type: statistics-graph
-        title: L1 stroom – uurmaximum (7 dagen)
-        days_to_show: 7
-        period: hour
-        stat_types:
-          - max
-          - mean
-        chart_type: line
-        entities:
-          - entity: sensor.anker_solix_smart_meter_gen_2_solix_fase_1_stroom
-            name: L1 stroom
-      - type: statistics-graph
-        title: Overschot – daggemiddelde en max (7 dagen)
-        days_to_show: 7
-        period: day
-        stat_types:
-          - mean
-          - max
-        chart_type: bar
-        entities:
-          - entity: sensor.solix_regelaar_surplus_bruto
-            name: Echt overschot
-      - type: entities
-        title: Vrijgave instellingen
-        show_header_toggle: false
-        entities:
-          - entity: input_select.solix_vrijgave_modus
-            name: Modus
-          - entity: input_number.solix_soc_prio_laag
-            name: SoC batterij-voorrang onder
-          - entity: input_number.solix_soc_prio_hoog
-            name: SoC lasten-voorrang boven
-          - entity: input_number.solix_aanbod_max_w
-            name: Max vrijgegeven aanbod
-          - entity: input_number.solix_i_shed_a
-            name: L1 shed-grens
-          - type: divider
-          - entity: number.opta1_energie_master_surplus_start_wp
-            name: Opta start WP ≥
-          - entity: number.opta1_energie_master_surplus_start_element
-            name: Opta start element ≥
-          - entity: number.opta1_energie_master_surplus_start_hottub
-            name: Opta start hottub ≥
