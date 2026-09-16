@@ -30,7 +30,7 @@ mqtt:
     - name: "Solix Fase 1 Vermogen"
       unique_id: solix_fase_1_w
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.fase_1_w }}"
+      value_template: "{{ value_json['values'].fase_1_w }}"
       unit_of_measurement: "W"
       device_class: power
       state_class: measurement
@@ -40,7 +40,7 @@ mqtt:
     - name: "Solix Fase 2 Vermogen"
       unique_id: solix_fase_2_w
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.fase_2_w }}"
+      value_template: "{{ value_json['values'].fase_2_w }}"
       unit_of_measurement: "W"
       device_class: power
       state_class: measurement
@@ -50,7 +50,7 @@ mqtt:
     - name: "Solix Fase 3 Vermogen"
       unique_id: solix_fase_3_w
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.fase_3_w }}"
+      value_template: "{{ value_json['values'].fase_3_w }}"
       unit_of_measurement: "W"
       device_class: power
       state_class: measurement
@@ -60,7 +60,7 @@ mqtt:
     - name: "Solix Fase 1 Stroom"
       unique_id: solix_fase_1_a
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.fase_1_a }}"
+      value_template: "{{ value_json['values'].fase_1_a }}"
       unit_of_measurement: "A"
       device_class: current
       state_class: measurement
@@ -70,7 +70,7 @@ mqtt:
     - name: "Solix Fase 2 Stroom"
       unique_id: solix_fase_2_a
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.fase_2_a }}"
+      value_template: "{{ value_json['values'].fase_2_a }}"
       unit_of_measurement: "A"
       device_class: current
       state_class: measurement
@@ -80,7 +80,7 @@ mqtt:
     - name: "Solix Fase 3 Stroom"
       unique_id: solix_fase_3_a
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.fase_3_a }}"
+      value_template: "{{ value_json['values'].fase_3_a }}"
       unit_of_measurement: "A"
       device_class: current
       state_class: measurement
@@ -90,7 +90,7 @@ mqtt:
     - name: "Solix Totaal Vermogen"
       unique_id: solix_totaal_w
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.totaal_w }}"
+      value_template: "{{ value_json['values'].totaal_w }}"
       unit_of_measurement: "W"
       device_class: power
       state_class: measurement
@@ -140,7 +140,7 @@ mqtt:
     - name: "Solix Batterij Laden"
       unique_id: solix_battery_charge_w
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.battery_charge_w }}"
+      value_template: "{{ value_json['values'].battery_charge_w }}"
       unit_of_measurement: "W"
       device_class: power
       state_class: measurement
@@ -150,7 +150,7 @@ mqtt:
     - name: "Solix Batterij Ontladen"
       unique_id: solix_battery_discharge_w
       state_topic: "homeassistant/Solix_Smartmeter/status"
-      value_template: "{{ value_json.values.battery_discharge_w }}"
+      value_template: "{{ value_json['values'].battery_discharge_w }}"
       unit_of_measurement: "W"
       device_class: power
       state_class: measurement
