@@ -1,69 +1,506 @@
- # omdat het all als MQTT is aangemerkt hoeft niet nog een keer init van MQTT plaats te vinden
- 
-  
-  
-  
-  
-  sensor:
-        # hieronder alle export topics
-        
-    - name: "Export Fase 1"
-      state_topic: "b0b21c913c34/PUB/CH1"
-      value_template: "{{ value_json.P }}"
-      unique_id: "export_fase1"
-    - name: "Export Fase 2"
-      state_topic: "b0b21c913c34/PUB/CH2"
-      value_template: "{{ value_json.P }}"
-      unique_id: "export_fase2"
-    - name: "Export Fase 3"
-      state_topic: "b0b21c913c34/PUB/CH3"
-      value_template: "{{ value_json.P }}"
-      unique_id: "export_fase3"
-    - name: "Export Totaal"
-      state_topic: "b0b21c913c34/PUB/CH13"
-      value_template: "{{ value_json.P }}"
-      unique_id: "Export_Totaal"
-      
-       # hieronder alle import topics
-       
-    - name: "Import Fase 1"
-      state_topic: "b0b21c913c34/PUB/CH10"
-      value_template: "{{ value_json.P }}"
-      unique_id: "import_fase1"
-    - name: "Import Fase 2"
-      state_topic: "b0b21c913c34/PUB/CH11"
-      value_template: "{{ value_json.P }}"
-      unique_id: "import_fase2"
-    - name: "Import Fase 3"
-      state_topic: "b0b21c913c34/PUB/CH12"
-      value_template: "{{ value_json.P }}"
-      unique_id: "import_fase3"
-    - name: "Import Totaal"
-      state_topic: "b0b21c913c34/PUB/CH14"
-      value_template: "{{ value_json.P }}"
-      unique_id: "import_totaal"
-      
-        # hieronder alle import topics voor dynamische heating
-        
-    - name: "Status Electrische Heater"
-      state_topic: "DynamischeEnergie/ElectrischeHeater"
-      unique_id: "DynamischeEnergie_ElectrischeHeater"
-    - name: "Start Waarde Heater"
-      state_topic: "DynamischeEnergie/StartHeater"
-      unique_id: "DynamischeEnergie_StartHeater"
-    - name: "Extra Warmte"
-      state_topic: "DynamischeEnergie/extrawarmte"
-      unique_id: "DynamischeEnergie_Extrawarmte"
-    - name: "Extra Warmwater"
-      state_topic: "DynamischeEnergie/extrawarmwater"
-      unique_id: "DynamischeEnergie_Extrawarmwater"
-      
-        # hieronder alle sensor topics 
-        
-    - name: "Temperatuur Tuin"
-      state_topic: "Sensors/Temperatuur Tuin"
-      unique_id: "Sensors_Temperatuur Tuin"
-    - name: "Luchtvochtigheid Tuin"
-      state_topic: "Sensors/Luchtvochtigheid Tuin"
-      unique_id: "Sensors_Luchtvochtigheid Tuin"
-    
+# mqtt.yaml
+# Dit bestand hoort onder de MQTT-configuratie.
+# Gebruik dit bijvoorbeeld met: mqtt: !include mqtt.yaml
+# Daarom staat hier GEEN extra 'mqtt:' bovenaan.
+
+sensor:
+  # Hieronder alle export topics
+  - name: "Export Fase 1"
+    state_topic: "b0b21c913c34/PUB/CH1"
+    value_template: "{{ value_json.P }}"
+    unique_id: "export_fase1"
+
+  - name: "Export Fase 2"
+    state_topic: "b0b21c913c34/PUB/CH2"
+    value_template: "{{ value_json.P }}"
+    unique_id: "export_fase2"
+
+  - name: "Export Fase 3"
+    state_topic: "b0b21c913c34/PUB/CH3"
+    value_template: "{{ value_json.P }}"
+    unique_id: "export_fase3"
+
+  - name: "Export Totaal"
+    state_topic: "b0b21c913c34/PUB/CH13"
+    value_template: "{{ value_json.P }}"
+    unique_id: "export_totaal"
+
+  # Hieronder alle import topics
+  - name: "Import Fase 1"
+    state_topic: "b0b21c913c34/PUB/CH10"
+    value_template: "{{ value_json.P }}"
+    unique_id: "import_fase1"
+
+  - name: "Import Fase 2"
+    state_topic: "b0b21c913c34/PUB/CH11"
+    value_template: "{{ value_json.P }}"
+    unique_id: "import_fase2"
+
+  - name: "Import Fase 3"
+    state_topic: "b0b21c913c34/PUB/CH12"
+    value_template: "{{ value_json.P }}"
+    unique_id: "import_fase3"
+
+  - name: "Import Totaal"
+    state_topic: "b0b21c913c34/PUB/CH14"
+    value_template: "{{ value_json.P }}"
+    unique_id: "import_totaal"
+
+  # ============================================================
+  # Stap 3a - droogloop: observatie-sensoren
+  # Bron: homeassistant/Solix_Regelaar/droogloop (niet retained).
+  # De vrijgavelaag stuurt in 3a niets aan; dit is alleen loggen.
+  # De bijbehorende binary_sensors staan onderaan dit bestand.
+  # ============================================================
+
+  - name: "Solix droogloop vrijgave L1"
+    unique_id: solix_dl_vrij_l1_w
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.vrij_l1_vol_w }}"
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+
+  - name: "Solix droogloop vrijgave L1 EMA"
+    unique_id: solix_dl_vrij_l1_ema_w
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.vrij_l1_ema_w }}"
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+
+  - name: "Solix droogloop L1 zoals Opta ziet"
+    unique_id: solix_dl_opta_l1_w
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.opta_l1_w }}"
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+
+  - name: "Solix droogloop vrijgave totaal"
+    unique_id: solix_dl_vrij_tot_w
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.vrij_tot_vol_w }}"
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+
+  - name: "Solix droogloop aanbod"
+    unique_id: solix_dl_aanbod_w
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.aanbod_w }}"
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+
+  - name: "Solix droogloop k"
+    unique_id: solix_dl_k
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.k }}"
+    state_class: measurement
+    icon: mdi:tune-variant
+
+  - name: "Solix droogloop element starts vandaag"
+    unique_id: solix_dl_elem_starts
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.element_starts_vandaag }}"
+    state_class: measurement
+    icon: mdi:restart
+
+  - name: "Solix droogloop element aan vandaag"
+    unique_id: solix_dl_elem_aan_min
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.element_aan_min_vandaag }}"
+    unit_of_measurement: min
+    state_class: measurement
+    icon: mdi:water-boiler
+
+  # ============================
+  # Energy Dashboard sensoren
+  # ============================
+
+  - name: "Net Import Energy"
+    state_topic: "b0b21c913c34/PUB/CH0"
+    unique_id: "net_import_energy"
+    value_template: >
+      {{ ((value_json.CIH | float(0)) + (value_json.CIL | float(0))) / 1000 }}
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - name: "Net Export Energy"
+    state_topic: "b0b21c913c34/PUB/CH0"
+    unique_id: "net_export_energy"
+    value_template: >
+      {{ ((value_json.CEH | float(0)) + (value_json.CEL | float(0))) / 1000 }}
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - name: "Gas Meter"
+    state_topic: "b0b21c913c34/PUB/CH0"
+    unique_id: "gas_meter_energy"
+    value_template: >
+      {{ (value_json.CG | float(0)) / 1000 }}
+    unit_of_measurement: "m³"
+    device_class: gas
+    state_class: total_increasing
+
+  # Hieronder alle import topics voor dynamische heating
+  - name: "Status Electrische Heater"
+    state_topic: "DynamischeEnergie/ElectrischeHeater"
+    unique_id: "DynamischeEnergie_ElectrischeHeater"
+
+  - name: "Start Waarde Heater"
+    state_topic: "DynamischeEnergie/StartHeater"
+    unique_id: "DynamischeEnergie_StartHeater"
+
+  - name: "Extra Warmte"
+    state_topic: "DynamischeEnergie/extrawarmte"
+    unique_id: "DynamischeEnergie_Extrawarmte"
+
+  - name: "Extra Warmwater"
+    state_topic: "DynamischeEnergie/extrawarmwater"
+    unique_id: "DynamischeEnergie_Extrawarmwater"
+
+  # Hieronder alle sensor topics
+  - name: "Temperatuur Tuin"
+    state_topic: "Sensors/Temperatuur Tuin"
+    unique_id: "Sensors_Temperatuur Tuin"
+
+  - name: "Luchtvochtigheid Tuin"
+    state_topic: "Sensors/Luchtvochtigheid Tuin"
+    unique_id: "Sensors_Luchtvochtigheid Tuin"
+
+  # Hieronder alle Growatt/Grott topics
+  # Topic: homeassistant/grott/RGL1CGH03B/state (Grott publiceert hier al gedeelde waarden,
+  # dus GEEN extra deling door 10/100 nodig — zie voorbeeldpayload)
+
+  - name: "Growatt Status"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_status"
+    value_template: >-
+      {% set s = value_json.pvstatus | int(0) %}
+      {% if s == 1 %}
+        Productie
+      {% elif s == 0 %}
+        Standby
+      {% else %}
+        Status {{ s }}
+      {% endif %}
+
+  - name: "Growatt Actueel Vermogen"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_actueel_vermogen"
+    value_template: "{{ (value_json.pvpowerout | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "Growatt PV Ingang"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_pv_ingang"
+    value_template: "{{ (value_json.pvpowerin | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "Growatt Netvermogen"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_netvermogen"
+    value_template: "{{ (value_json.pvgridpower | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "Growatt Vandaag"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_vandaag"
+    value_template: "{{ (value_json.pvenergytoday | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - name: "Growatt Totaal"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_totaal"
+    value_template: "{{ (value_json.pvenergytotal | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - name: "Growatt EPV Totaal"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_epv_totaal"
+    value_template: "{{ (value_json.epvtotal | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - name: "Growatt PV1 Vermogen"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_pv1_vermogen"
+    value_template: "{{ (value_json.pv1watt | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "Growatt PV2 Vermogen"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_pv2_vermogen"
+    value_template: "{{ (value_json.pv2watt | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "Growatt PV1 Spanning"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_pv1_spanning"
+    value_template: "{{ (value_json.pv1voltage | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+
+  - name: "Growatt PV2 Spanning"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_pv2_spanning"
+    value_template: "{{ (value_json.pv2voltage | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+
+  - name: "Growatt PV1 Stroom"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_pv1_stroom"
+    value_template: "{{ (value_json.pv1current | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+
+  - name: "Growatt PV2 Stroom"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_pv2_stroom"
+    value_template: "{{ (value_json.pv2current | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+
+  - name: "Growatt Netspanning"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_netspanning"
+    value_template: "{{ (value_json.pvgridvoltage | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+
+  - name: "Growatt Netstroom"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_netstroom"
+    value_template: "{{ (value_json.pvgridcurrent | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+
+  - name: "Growatt Frequentie"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_frequentie"
+    value_template: "{{ (value_json.pvfrequentie | float(0) / 100) | round(2) }}"
+    unit_of_measurement: "Hz"
+    device_class: frequency
+    state_class: measurement
+
+  - name: "Growatt Temperatuur"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_temperatuur"
+    value_template: "{{ (value_json.pvtemperature | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+
+  - name: "Growatt IPM Temperatuur"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_ipm_temperatuur"
+    value_template: "{{ (value_json.pvipmtemperature | float(0) / 10) | round(1) }}"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+
+  - name: "Growatt Werkuren"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_werkuren"
+    value_template: "{{ (value_json.totworktime | float(0) / 7200) | round(1) }}"
+    unit_of_measurement: "h"
+    state_class: total_increasing
+
+  - name: "Growatt Laatste Update"
+    state_topic: "homeassistant/grott/RGL1CGH03B/state"
+    unique_id: "growatt_laatste_update"
+    value_template: "{{ value_json.grott_last_push }}"
+    device_class: timestamp
+
+  # ============================
+  # FP4All Solar Logger (lokaal, status.xml)
+  # ============================
+
+  - name: "FP4All Vermogen"
+    state_topic: "homeassistant/fp4all/status"
+    unique_id: "fp4all_vermogen"
+    value_template: "{{ value_json.power_w }}"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "FP4All Temperatuur"
+    state_topic: "homeassistant/fp4all/status"
+    unique_id: "fp4all_temperatuur"
+    value_template: "{{ value_json.temp_c }}"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+
+  - name: "FP4All Vpv"
+    state_topic: "homeassistant/fp4all/status"
+    unique_id: "fp4all_vpv"
+    value_template: "{{ value_json.vpv }}"
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+
+  - name: "FP4All Iac"
+    state_topic: "homeassistant/fp4all/status"
+    unique_id: "fp4all_iac"
+    value_template: "{{ value_json.iac }}"
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+
+  - name: "FP4All Energie Vandaag"
+    state_topic: "homeassistant/fp4all/status"
+    unique_id: "fp4all_energie_vandaag"
+    value_template: "{{ value_json.energy_today_kwh }}"
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - name: "FP4All Energie Totaal"
+    state_topic: "homeassistant/fp4all/status"
+    unique_id: "fp4all_energie_totaal"
+    value_template: "{{ value_json.energy_total_kwh }}"
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - name: "FP4All Werkuren"
+    state_topic: "homeassistant/fp4all/status"
+    unique_id: "fp4all_werkuren"
+    value_template: "{{ value_json.hours_total }}"
+    unit_of_measurement: "h"
+    state_class: total_increasing
+
+  # ============================
+  # Warmtepomp (Modbus/MQTT, device CH6)
+  # ============================
+
+  - name: "Warmtepomp Vermogen"
+    state_topic: "b0b21c913c34/PUB/CH6"
+    value_template: "{{ value_json.P }}"
+    unique_id: "warmtepomp_vermogen"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "Warmtepomp Spanning"
+    state_topic: "b0b21c913c34/PUB/CH6"
+    value_template: "{{ value_json.U }}"
+    unique_id: "warmtepomp_spanning"
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+
+  - name: "Warmtepomp Stroom"
+    state_topic: "b0b21c913c34/PUB/CH6"
+    value_template: "{{ value_json.I }}"
+    unique_id: "warmtepomp_stroom"
+    unit_of_measurement: "mA"
+    device_class: current
+    state_class: measurement
+
+  - name: "Warmtepomp Energie Totaal"
+    state_topic: "b0b21c913c34/PUB/CH6"
+    unique_id: "warmtepomp_energie_totaal"
+    value_template: >
+      {{ ((value_json.CH | float(0)) + (value_json.CL | float(0))) / 1000 }}
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  # ============================
+  # Boiler Element (Modbus/MQTT, device CH8, schakelt bij energie overschot)
+  # ============================
+
+  - name: "Boiler Element Vermogen"
+    state_topic: "b0b21c913c34/PUB/CH8"
+    value_template: "{{ value_json.P }}"
+    unique_id: "boiler_element_vermogen"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+
+  - name: "Boiler Element Spanning"
+    state_topic: "b0b21c913c34/PUB/CH8"
+    value_template: "{{ value_json.U }}"
+    unique_id: "boiler_element_spanning"
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+
+  - name: "Boiler Element Stroom"
+    state_topic: "b0b21c913c34/PUB/CH8"
+    value_template: "{{ value_json.I }}"
+    unique_id: "boiler_element_stroom"
+    unit_of_measurement: "mA"
+    device_class: current
+    state_class: measurement
+
+  - name: "Boiler Element Energie Totaal"
+    state_topic: "b0b21c913c34/PUB/CH8"
+    unique_id: "boiler_element_energie_totaal"
+    value_template: >
+      {{ ((value_json.CH | float(0)) + (value_json.CL | float(0))) / 1000 }}
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+# ============================================================
+# Stap 3a - droogloop: binary_sensors
+# payload_on/payload_off bestaan alleen bij binary_sensor,
+# niet bij sensor. Daarom staan deze twee hier apart.
+# ============================================================
+
+binary_sensor:
+  - name: "Solix droogloop element zou aan zijn"
+    unique_id: solix_dl_element_sim
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.element_sim }}"
+    payload_on: "True"
+    payload_off: "False"
+    icon: mdi:water-boiler
+
+  # 'on' betekent hier OK, geen probleem, dus bewust geen device_class
+  - name: "Solix droogloop faseguard ok"
+    unique_id: solix_dl_faseguard_ok
+    state_topic: "homeassistant/Solix_Regelaar/droogloop"
+    availability_topic: "homeassistant/Solix_Regelaar/availability"
+    value_template: "{{ value_json.faseguard_ok }}"
+    payload_on: "True"
+    payload_off: "False"
+    icon: mdi:current-ac

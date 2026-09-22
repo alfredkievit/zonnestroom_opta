@@ -43,7 +43,7 @@ input_number:
     min: 0
     max: 4000
     step: 100
-    initial: 1500     # start: alleen WP kan triggeren (>1500), element (>3200) nog niet
+    initial: 2500     # start: alleen WP kan triggeren (>2500), element (>3200) nog niet
     unit_of_measurement: W
     mode: box
   solix_i_shed_a:
