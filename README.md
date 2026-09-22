@@ -159,36 +159,27 @@ Home Assistant OS draait op een Raspberry Pi 5 op `192.168.0.60`. SSH-toegang st
 
 ```bash
 ssh HAS "ha core info"     # algemene status/versie
-ssh HAS "ha core restart"  # nodig na een dashboard-YAML wijziging, zie hieronder
+ssh HAS "ha core restart"  # nodig na wijzigingen in packages of mqtt.yaml
 ```
 
 Bruikbaar voor dashboard-deploys (zie hieronder), logs/diagnostiek, of andere `ha`-CLI-taken op de Supervisor. Geen extra setup nodig bij een nieuwe sessie op dit project — de alias en key staan al lokaal geconfigureerd.
 
 ### Dashboard beheer
 
-Het live dashboard staat in **YAML-modus** en leest van `/config/dashboards/`.
+Het live dashboard staat in **storage-modus** (id `dashboard_zonnestroom`, URL `/dashboard-zonnestroom`).
 
-Lokale kopie: `homeassistant/dashboards/zonnestroom_dashboard.yaml`
+Lokale bron: `homeassistant/dashboards/zonnestroom_dashboard.yaml`
 
-Server pad: `/config/dashboards/zonnestroom_dashboard.yaml`
+Server: `/config/.storage/lovelace.dashboard_zonnestroom` (beheerd door HA, niet handmatig bewerken)
 
 **Wijzigingen aanbrengen:**
 
 1. Bewerk `homeassistant/dashboards/zonnestroom_dashboard.yaml` lokaal
-2. Deploy via SCP:
+2. In HA: **Zonnestroom → ⋮ → Bewerken → ⋮ → Raw configuratie-editor**, vervang de inhoud door de YAML en klik **Opslaan**
+3. Direct zichtbaar, er is geen herstart nodig
 
-   ```bash
-   scp homeassistant/dashboards/zonnestroom_dashboard.yaml \
-       HAS:/config/dashboards/zonnestroom_dashboard.yaml
-   ```
-
-3. **HA herstarten is verplicht** – browser refresh alleen is niet genoeg:
-
-   ```bash
-   ssh HAS "ha core restart"
-   ```
-
-> Browser refresh (Ctrl+Shift+R) werkt **niet** – HA herleest YAML alleen bij opstart.
+> Wijzig je iets in de UI, kopieer dan de Raw config terug naar het YAML-bestand en commit het, zodat repo en live gelijk blijven.
+> `homeassistant/deploy.sh` deployt alleen packages + `mqtt.yaml`, niet het dashboard.
 
 Belangrijke bediening in Home Assistant:
 

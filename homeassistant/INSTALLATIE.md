@@ -7,29 +7,27 @@ De bestanden staan klaar in je workspace:
 | Bestand | Doel |
 |---|---|
 | `homeassistant/packages/zonnestroom.yaml` | Alle MQTT entities (sensors, switches, numbers) |
-| `homeassistant/lovelace.zonnestroom_dashboard.json` | Lovelace dashboard (4 tabs) – HA storage formaat |
-| `homeassistant/deploy.sh` | Automatisch deployen via SSH |
+| `homeassistant/packages/solix_regelaar.yaml` | Solix vrijgave-helpers, calc-sensoren, meldingen |
+| `homeassistant/mqtt.yaml` | Meter-, Growatt-, FP4All- en droogloop-sensoren (`mqtt: !include mqtt.yaml`) |
+| `homeassistant/dashboards/zonnestroom_dashboard.yaml` | Lovelace dashboard (6 tabs) – bron voor de Raw configuratie-editor |
+| `homeassistant/deploy.sh` | Packages + mqtt.yaml deployen via SSH |
 
-> **Let op:** Het dashboard werkt via HA's interne storage (`/config/.storage/`), **niet** via een YAML config-bestand.
+> **Let op:** Het dashboard draait in **storage-modus** (`/config/.storage/lovelace.dashboard_zonnestroom`,
+> id `dashboard_zonnestroom`, URL `/dashboard-zonnestroom`). Een YAML-bestand in `/config/dashboards/`
+> wordt door HA **niet** gelezen.
 
 ---
 
 ## Dashboard wijzigen en deployen
 
 1. Bewerk `homeassistant/dashboards/zonnestroom_dashboard.yaml` lokaal in VS Code
-2. Deploy via SCP:
-   ```bash
-   scp homeassistant/dashboards/zonnestroom_dashboard.yaml \
-       HAS:/config/dashboards/zonnestroom_dashboard.yaml
-   ```
-3. **HA herstarten is verplicht** – browser refresh alleen is niet voldoende:
-   ```bash
-   ssh HAS "ha core restart"
-   ```
+2. Open in HA het dashboard **Zonnestroom → ⋮ → Bewerken → ⋮ → Raw configuratie-editor**
+3. Vervang de volledige inhoud door de YAML en klik **Opslaan**. Het resultaat is direct zichtbaar, er is geen herstart nodig.
 
-> Het dashboard staat in YAML-modus (`mode: yaml`). HA herleest de YAML alleen bij opstart.
+Andersom werkt het ook: na een wijziging in de UI kopieer je de Raw config terug naar
+`homeassistant/dashboards/zonnestroom_dashboard.yaml` en commit je die, zodat repo en live gelijk blijven.
 
-Of gebruik `bash homeassistant/deploy.sh` om alles (packages + dashboard + herstart) in één keer te doen.
+`bash homeassistant/deploy.sh` deployt alleen packages + `mqtt.yaml` (met config check en herstart), niet het dashboard.
 
 ---
 
@@ -117,7 +115,7 @@ homeassistant:
 
 ## Stap 4 – Dashboard aanmaken
 
-### Optie A – YAML bestanden dashboard (aanbevolen)
+### Optie A – Nieuw dashboard (storage-modus, aanbevolen)
 1. Ga naar **Instellingen → Dashboards**
 2. Klik **+ Dashboard toevoegen**
 3. Kies naam: `Zonnestroom`

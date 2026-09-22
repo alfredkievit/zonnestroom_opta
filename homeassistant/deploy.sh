@@ -5,12 +5,15 @@
 #  Gebruiksaanwijzing: bash homeassistant/deploy.sh
 #
 #  Wat wordt gedeployed:
-#   - homeassistant/packages/zonnestroom.yaml  →  /config/packages/
-#   - homeassistant/dashboards/zonnestroom_dashboard.yaml
-#                                              →  /config/dashboards/
+#   - homeassistant/packages/zonnestroom.yaml     →  /config/packages/
+#   - homeassistant/packages/solix_regelaar.yaml  →  /config/packages/
+#   - homeassistant/mqtt.yaml                     →  /config/mqtt.yaml
 #
-#  Het live dashboard draait in YAML-modus.
-#  Na deploy is een HA HERSTART VERPLICHT – browser refresh is niet genoeg.
+#  Het dashboard wordt NIET gedeployed: het live dashboard draait in
+#  storage-modus (/config/.storage/lovelace.dashboard_zonnestroom).
+#  Wijzig het via de Raw configuratie-editor, zie INSTALLATIE.md.
+#
+#  Na deploy volgt een config check en een HA herstart.
 # ============================================================
 
 set -e
@@ -33,19 +36,19 @@ fi
 echo "==> SSH OK. Bestanden kopiëren..."
 
 # Maak directories aan
-$HA_SSH "mkdir -p $HA_CONFIG/packages $HA_CONFIG/dashboards $HA_CONFIG/.storage"
+$HA_SSH "mkdir -p $HA_CONFIG/packages"
 
 # Kopieer package YAML
 $HA_SCP homeassistant/packages/zonnestroom.yaml \
-        HAS:$HA_CONFIG/packages/zonnestroom.yaml
+        homeassistant/packages/solix_regelaar.yaml \
+        HAS:$HA_CONFIG/packages/
 
-echo "==> Package YAML gekopieerd."
+echo "==> Packages gekopieerd."
 
-# Kopieer dashboard YAML (YAML-modus – vereist HA herstart)
-$HA_SCP homeassistant/dashboards/zonnestroom_dashboard.yaml \
-        HAS:$HA_CONFIG/dashboards/zonnestroom_dashboard.yaml
+# Kopieer MQTT-entities (mqtt: !include mqtt.yaml in configuration.yaml)
+$HA_SCP homeassistant/mqtt.yaml HAS:$HA_CONFIG/mqtt.yaml
 
-echo "==> Dashboard YAML gekopieerd."
+echo "==> mqtt.yaml gekopieerd."
 
 # Controleer of packages al in configuration.yaml staan
 if ! $HA_SSH "grep -q 'packages' $HA_CONFIG/configuration.yaml"; then
@@ -58,9 +61,9 @@ if ! $HA_SSH "grep -q 'packages' $HA_CONFIG/configuration.yaml"; then
   echo ""
 fi
 
-# HA config check + herstarten (verplicht voor YAML dashboard)
+# HA config check + herstarten (nodig voor nieuwe/gewijzigde entities)
 echo "==> HA configuratie valideren en herstarten..."
-$HA_SSH "ha core check" || echo "!! Config check mislukt – controleer de YAML syntax"
+$HA_SSH "ha core check" || { echo "!! Config check mislukt – controleer de YAML syntax"; exit 1; }
 $HA_SSH "ha core restart"
 
 echo ""
