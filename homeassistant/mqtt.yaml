@@ -23,7 +23,7 @@ sensor:
   - name: "Export Totaal"
     state_topic: "b0b21c913c34/PUB/CH13"
     value_template: "{{ value_json.P }}"
-    unique_id: "export_totaal"
+    unique_id: "export_totaal"   # live entity: sensor.export_totaal_2 (sinds 2026-07-01)
 
   # Hieronder alle import topics
   - name: "Import Fase 1"
@@ -181,8 +181,9 @@ sensor:
     unique_id: "Sensors_Luchtvochtigheid Tuin"
 
   # Hieronder alle Growatt/Grott topics
-  # Topic: homeassistant/grott/RGL1CGH03B/state (Grott publiceert hier al gedeelde waarden,
-  # dus GEEN extra deling door 10/100 nodig — zie voorbeeldpayload)
+  # Topic: homeassistant/grott/RGL1CGH03B/state
+  # Grott publiceert ruwe registerwaarden: deling door 10 (frequentie door 100) is nodig
+  # en in de praktijk geverifieerd.
 
   - name: "Growatt Status"
     state_topic: "homeassistant/grott/RGL1CGH03B/state"

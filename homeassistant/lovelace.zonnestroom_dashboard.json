@@ -86,7 +86,7 @@
                   "name": "Export Fase 3"
                 },
                 {
-                  "entity": "sensor.export_totaal",
+                  "entity": "sensor.export_totaal_2",
                   "name": "Export Totaal"
                 },
                 {
@@ -210,7 +210,7 @@
                   "name": "Export F3"
                 },
                 {
-                  "entity": "sensor.export_totaal",
+                  "entity": "sensor.export_totaal_2",
                   "name": "Export Totaal"
                 },
                 {
