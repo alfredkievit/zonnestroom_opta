@@ -9,7 +9,7 @@
 
 // ─── Network ───────────────────────────────────────────────────────────────
 // Opta2 prefers LAN with a fixed IP and uses WiFi as fallback.
-static const IPAddress OPTA2_LAN_IP(192, 168, 0, 51);
+static const IPAddress OPTA2_LAN_IP(192, 168, 0, 70);
 #if OPTA2_WIFI_ENABLED
 static const char* OPTA2_WIFI_SSID = "optimusnexus";
 static const char* OPTA2_WIFI_PASS = "kinderpindakaas";

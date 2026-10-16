@@ -23,7 +23,7 @@ Opta2 ondersteunt twee firmwarevarianten:
 
 In de standaardvariant gebruikt Opta2 twee netwerkpaden:
 
-- LAN is primair en gebruikt een vast IP-adres: `192.168.0.51`
+- LAN is primair en gebruikt een vast IP-adres: `192.168.0.70`
 - WiFi blijft beschikbaar als fallback
 - bij verlies van de LAN-link valt Opta2 na korte debounce direct terug op WiFi
 - zodra LAN fysiek terug beschikbaar is, schakelt Opta2 automatisch terug naar LAN
