@@ -138,7 +138,6 @@ zonnestroom_opta/
 │       ├── hottub_logic.h/.cpp
 │       ├── ha_interface.h/.cpp
 │       └── settings_storage.h/.cpp
-├── homeassistant/          # MQTT package + Lovelace dashboard
 ├── scripts/                # MQTT diagnose-/testscripts (Node.js), zie scripts/README.md
 └── docs/
     ├── FLASHEN_OPTA_VELD.md # actuele veldflash-procedure
@@ -168,18 +167,17 @@ Bruikbaar voor dashboard-deploys (zie hieronder), logs/diagnostiek, of andere `h
 
 Het live dashboard staat in **storage-modus** (id `dashboard_zonnestroom`, URL `/dashboard-zonnestroom`).
 
-Lokale bron: `homeassistant/dashboards/zonnestroom_dashboard.yaml`
+Lokale bron: repo `homeassistant-config` (`git@github.com:alfredkievit/homeassistant-config.git`), bestand `dashboards/zonnestroom.yaml`.
 
 Server: `/config/.storage/lovelace.dashboard_zonnestroom` (beheerd door HA, niet handmatig bewerken)
 
 **Wijzigingen aanbrengen:**
 
-1. Bewerk `homeassistant/dashboards/zonnestroom_dashboard.yaml` lokaal
+1. Bewerk de YAML in `homeassistant-config` (of wijzig in de UI en draai `scripts/sync-from-ha.sh` daar)
 2. In HA: **Zonnestroom → ⋮ → Bewerken → ⋮ → Raw configuratie-editor**, vervang de inhoud door de YAML en klik **Opslaan**
 3. Direct zichtbaar, er is geen herstart nodig
 
-> Wijzig je iets in de UI, kopieer dan de Raw config terug naar het YAML-bestand en commit het, zodat repo en live gelijk blijven.
-> `homeassistant/deploy.sh` deployt alleen packages + `mqtt.yaml`, niet het dashboard.
+> De HA-packages (`zonnestroom.yaml`, `solix_regelaar.yaml`, `zonblokkering_regel.yaml`), `mqtt.yaml` en het deploy-script staan sinds oktober 2026 in `homeassistant-config` (`config/` en `scripts/deploy-to-ha.sh`), niet meer in deze repo.
 
 Belangrijke bediening in Home Assistant:
 
@@ -265,7 +263,7 @@ subscribet er niet meer op:
 - **CH6 (warmtepomp-verbruik)** en **boiler-elementverbruik**: nog steeds nuttig
   om te monitoren, maar dit hoeft niet via Opta1 te lopen. Home
   Assistant/Node-RED kan die twee kanalen rechtstreeks van de broker blijven
-  lezen (zie `homeassistant/mqtt.yaml`) — Opta1 was daar nooit de bron van en
+  lezen (zie `config/mqtt.yaml` in `homeassistant-config`) — Opta1 was daar nooit de bron van en
   hoeft er dus niet tussen te zitten.
 - Reden voor de volledige ontkoppeling van Opta1: elk bericht op deze feed
   werd door de firmware met een heap-allocatie geparsed, ook wanneer het
