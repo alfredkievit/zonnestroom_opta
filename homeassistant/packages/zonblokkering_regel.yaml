@@ -1,0 +1,154 @@
+# ============================================================
+#  Zonblokkering WP – regel v1 (automatische verlaging bij zonverwachting)
+#  Sluit Opta1 D1 -> SMO AUX3 (externe afstelling 1.9.2, kamer 17,5 °C)
+#  in de nacht/ochtend vóór een zonnige dag, zodat BT50 niet doorschiet.
+#
+#  Besluit om 00:00 en opnieuw om 03:00 op forecast_solar "vandaag".
+#  03:00 kan alleen toevoegen, niet intrekken (wijziging 8 okt).
+#  BT50 onbeschikbaar => kamersensor (8 okt).
+#  Vrijgave op het einduur, of eerder als BT50 te ver zakt.
+#
+#  input_boolean.zonblok_sturing = off  => schaduwmodus: het besluit wordt
+#  gelogd (input_boolean.zonblok_besluit), D1 wordt NIET geschakeld.
+#
+#  Let op: de vrijgave loopt via HA. Ligt HA of de Opta-verbinding eruit,
+#  dan blijft D1 dicht tot de eerstvolgende uurcontrole die wel lukt.
+#  Logging staat in zonblokkering_log.yaml.
+# ============================================================
+
+input_boolean:
+  zonblok_sturing:
+    name: "Zonblok – D1 echt schakelen"
+    icon: mdi:toggle-switch
+  zonblok_besluit:
+    name: "Zonblok – verlaging actief (besluit)"
+    icon: mdi:weather-sunny-alert
+
+input_number:
+  zonblok_drempel_kwh:
+    name: "Zonblok – drempel zonverwachting"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "kWh"
+    mode: box
+    icon: mdi:solar-power-variant
+  zonblok_bt50_min_start:
+    name: "Zonblok – BT50 minimaal om te verlagen"
+    min: 18
+    max: 26
+    step: 0.5
+    unit_of_measurement: "°C"
+    mode: box
+    icon: mdi:home-thermometer
+  zonblok_bt50_vrijgave:
+    name: "Zonblok – BT50 vrijgave onder"
+    min: 17
+    max: 24
+    step: 0.5
+    unit_of_measurement: "°C"
+    mode: box
+    icon: mdi:home-thermometer-outline
+  zonblok_eind_uur:
+    name: "Zonblok – einduur verlaging"
+    min: 4
+    max: 14
+    step: 1
+    unit_of_measurement: "h"
+    mode: box
+    icon: mdi:clock-end
+
+template:
+  - sensor:
+      - name: "Zonblok besluit actief"
+        unique_id: zonblok_besluit_actief
+        state_class: measurement
+        icon: mdi:weather-sunny-alert
+        # uurgemiddelde in LTS = fractie van het uur dat de regel wilde verlagen
+        state: "{{ 1 if is_state('input_boolean.zonblok_besluit', 'on') else 0 }}"
+
+automation:
+  - id: zonblok_besluit
+    alias: "Zonblok – besluit verlaging"
+    mode: single
+    trigger:
+      - platform: time
+        at: "00:00:30"
+        id: t00
+      - platform: time
+        at: "03:00:30"
+        id: t03
+    variables:
+      fc: "{{ states('sensor.energy_production_today_4') | float(-1) }}"
+      # BT50 komt via myUplink en valt rond middernacht vaak weg; dan de kamersensor (loopt sinds 2 okt gelijk)
+      bt50: >
+        {% set b = states('sensor.smo_40_room_temperature_bt50') %}
+        {{ b | float if is_number(b) else states('sensor.kamersensor_woonkamer_temperatuur') | float(0) }}
+      bt50_bron: "{{ 'BT50' if is_number(states('sensor.smo_40_room_temperature_bt50')) else 'kamersensor' }}"
+      # onbekende voorspelling of BT50 => niet verlagen
+      verlagen: >
+        {{ fc >= states('input_number.zonblok_drempel_kwh') | float(999)
+           and bt50 >= states('input_number.zonblok_bt50_min_start') | float(99)
+           and now().hour < states('input_number.zonblok_eind_uur') | int(0) }}
+    action:
+      # 00:00 en 03:00 kunnen alleen een verlaging starten; intrekken gebeurt alleen via zonblok_vrijgave
+      - choose:
+          - conditions: "{{ verlagen }}"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.zonblok_besluit
+              - if: "{{ is_state('input_boolean.zonblok_sturing', 'on') }}"
+                then:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.opta1_energie_master_handmatig_wp_comfort_verwarming
+      - service: logbook.log
+        data:
+          name: "Zonblok"
+          entity_id: input_boolean.zonblok_besluit
+          message: >
+            besluit {{ trigger.id }}: voorspelling {{ fc }} kWh
+            (drempel {{ states('input_number.zonblok_drempel_kwh') }}),
+            {{ bt50_bron }} {{ bt50 }} => {{ 'verlagen' if verlagen else 'niet verlagen' }}
+            {{ '' if is_state('input_boolean.zonblok_sturing', 'on') else '(schaduwmodus)' }}
+
+  - id: zonblok_vrijgave
+    alias: "Zonblok – vrijgave verlaging"
+    mode: single
+    trigger:
+      # elk uur: vrijgave op het einduur én herkansing als een eerdere vrijgave mislukte
+      - platform: time_pattern
+        minutes: 0
+        id: uur
+      - platform: numeric_state
+        entity_id: sensor.smo_40_room_temperature_bt50
+        below: input_number.zonblok_bt50_vrijgave
+        id: koud
+      - platform: homeassistant
+        event: start
+        id: start
+    condition:
+      - condition: state
+        entity_id: input_boolean.zonblok_besluit
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ trigger.id == 'koud'
+             or now().hour >= states('input_number.zonblok_eind_uur') | int(0) }}
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.opta1_energie_master_handmatig_wp_comfort_verwarming
+      # besluit pas wissen als D1 aantoonbaar open is; anders volgend uur opnieuw
+      - wait_template: "{{ is_state('switch.opta1_energie_master_handmatig_wp_comfort_verwarming', 'off') }}"
+        timeout: "00:01:00"
+        continue_on_timeout: false
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.zonblok_besluit
+      - service: logbook.log
+        data:
+          name: "Zonblok"
+          entity_id: input_boolean.zonblok_besluit
+          message: "vrijgave ({{ trigger.id }}), BT50 {{ states('sensor.smo_40_room_temperature_bt50') }}"

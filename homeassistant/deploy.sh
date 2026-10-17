@@ -7,6 +7,7 @@
 #  Wat wordt gedeployed:
 #   - homeassistant/packages/zonnestroom.yaml     →  /config/packages/
 #   - homeassistant/packages/solix_regelaar.yaml  →  /config/packages/
+#   - homeassistant/packages/zonblokkering_regel.yaml  →  /config/packages/
 #   - homeassistant/mqtt.yaml                     →  /config/mqtt.yaml
 #
 #  Het dashboard wordt NIET gedeployed: het live dashboard draait in
@@ -41,6 +42,7 @@ $HA_SSH "mkdir -p $HA_CONFIG/packages"
 # Kopieer package YAML
 $HA_SCP homeassistant/packages/zonnestroom.yaml \
         homeassistant/packages/solix_regelaar.yaml \
+        homeassistant/packages/zonblokkering_regel.yaml \
         HAS:$HA_CONFIG/packages/
 
 echo "==> Packages gekopieerd."

@@ -1,0 +1,866 @@
+views:
+- type: sections
+  title: Kamers
+  max_columns: 3
+  sections:
+  - type: grid
+    cards:
+    - type: heading
+      heading: 'Kamers: gewenste temperatuur'
+      heading_style: title
+      icon: mdi:thermometer
+    - type: custom:bubble-card
+      card_type: button
+      button_type: slider
+      entity: input_number.alfred_gewenste_temperatuur
+      name: Alfred
+      icon: mdi:home-thermometer-outline
+      show_name: true
+      card_layout: large1-1-rows
+      grid_options:
+        columns: 12
+        rows: 1
+      sub_button:
+        main:
+        - entity: sensor.kamersensor_alfred_temperatuur_2
+          name: Huidig
+          icon: mdi:thermometer
+          show_background: false
+          state_background: false
+          state_content: state
+        - entity: sensor.kamersensor_alfred_luchtvochtigheid_2
+          name: RH
+          icon: mdi:water-percent
+          show_background: false
+          state_background: false
+          state_content: state
+        bottom: []
+      tap_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.alfred_gewenste_temperatuur
+        data:
+          value: 21
+      max_value: 30
+      double_tap_action:
+        action: none
+      hold_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.alfred_gewenste_temperatuur
+        data:
+          value: 15
+      state_content: state
+    - type: custom:bubble-card
+      card_type: button
+      button_type: slider
+      entity: input_number.eetkamer_gewenste_temperatuur
+      name: Eetkamer
+      icon: mdi:home-thermometer-outline
+      show_name: true
+      card_layout: large1-1-rows
+      grid_options:
+        columns: 12
+        rows: 1
+      sub_button:
+        main:
+        - entity: sensor.kamersensor_eetkamer_temperatuur
+          name: Huidig
+          icon: mdi:thermometer
+          show_background: false
+          state_background: false
+          state_content: state
+        - entity: sensor.kamersensor_eetkamer_luchtvochtigheid
+          name: RH
+          icon: mdi:water-percent
+          show_background: false
+          state_background: false
+          state_content: state
+        bottom: []
+      tap_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.eetkamer_gewenste_temperatuur
+        data:
+          value: 21
+      max_value: 30
+      double_tap_action:
+        action: none
+      hold_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.eetkamer_gewenste_temperatuur
+        data:
+          value: 15
+      state_content: state
+    - type: custom:bubble-card
+      card_type: button
+      button_type: slider
+      entity: input_number.hal_gewenste_temperatuur
+      name: Hal
+      icon: mdi:home-thermometer-outline
+      show_name: true
+      card_layout: large1-1-rows
+      grid_options:
+        columns: 12
+        rows: 1
+      sub_button:
+        main:
+        - entity: sensor.kamersensor_hal_temperatuur
+          name: Huidig
+          icon: mdi:thermometer
+          show_background: false
+          state_background: false
+          state_content: state
+        - entity: sensor.kamersensor_hal_luchtvochtigheid
+          name: RH
+          icon: mdi:water-percent
+          show_background: false
+          state_background: false
+          state_content: state
+        bottom: []
+      tap_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.hal_gewenste_temperatuur
+        data:
+          value: 21
+      max_value: 30
+      double_tap_action:
+        action: none
+      hold_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.hal_gewenste_temperatuur
+        data:
+          value: 15
+      state_content: state
+    - type: custom:bubble-card
+      card_type: button
+      button_type: slider
+      entity: input_number.madoe_gewenste_temperatuur
+      name: Madoe
+      icon: mdi:home-thermometer-outline
+      show_name: true
+      card_layout: large1-1-rows
+      grid_options:
+        columns: 12
+        rows: 1
+      sub_button:
+        main:
+        - entity: sensor.kamersensor_madoe_temperatuur
+          name: Huidig
+          icon: mdi:thermometer
+          show_background: false
+          state_background: false
+          state_content: state
+        - entity: sensor.kamersensor_madoe_luchtvochtigheid
+          name: RH
+          icon: mdi:water-percent
+          show_background: false
+          state_background: false
+          state_content: state
+        bottom: []
+      tap_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.madoe_gewenste_temperatuur
+        data:
+          value: 21
+      max_value: 30
+      double_tap_action:
+        action: none
+      hold_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.madoe_gewenste_temperatuur
+        data:
+          value: 15
+      state_content: state
+    - type: custom:bubble-card
+      card_type: button
+      button_type: slider
+      entity: input_number.slaapkamer_beneden_gewenste_temperatuur
+      name: Slaapkamer AlMo
+      icon: mdi:home-thermometer-outline
+      show_name: true
+      card_layout: large1-1-rows
+      grid_options:
+        columns: 12
+        rows: 1
+      sub_button:
+        main:
+        - entity: sensor.kamersensor_slaapkamer_beneden_temperatuur
+          name: Huidig
+          icon: mdi:thermometer
+          show_background: false
+          state_background: false
+          state_content: state
+        - entity: sensor.kamersensor_slaapkamer_beneden_luchtvochtigheid
+          name: RH
+          icon: mdi:water-percent
+          show_background: false
+          state_background: false
+          state_content: state
+        bottom: []
+      tap_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.slaapkamer_beneden_gewenste_temperatuur
+        data:
+          value: 21
+      max_value: 30
+      double_tap_action:
+        action: none
+      hold_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.slaapkamer_beneden_gewenste_temperatuur
+        data:
+          value: 15
+      state_content: state
+    - type: custom:bubble-card
+      card_type: button
+      button_type: slider
+      entity: input_number.woonkamer_gewenste_temperatuur
+      name: Woonkamer
+      icon: mdi:home-thermometer-outline
+      show_name: true
+      card_layout: large1-1-rows
+      grid_options:
+        columns: 12
+        rows: 1
+      sub_button:
+        main:
+        - entity: sensor.kamersensor_woonkamer_temperatuur
+          name: Huidig
+          icon: mdi:thermometer
+          show_background: false
+          state_background: false
+          state_content: state
+        - entity: sensor.kamersensor_woonkamer_luchtvochtigheid
+          name: RH
+          icon: mdi:water-percent
+          show_background: false
+          state_background: false
+          state_content: state
+        bottom: []
+      tap_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.woonkamer_gewenste_temperatuur
+        data:
+          value: 21
+      max_value: 30
+      double_tap_action:
+        action: none
+      hold_action:
+        action: perform-action
+        perform_action: input_number.set_value
+        target:
+          entity_id: input_number.woonkamer_gewenste_temperatuur
+        data:
+          value: 15
+      state_content: state
+    - type: tile
+      entity: sensor.cv_ruimtesensor_temperatuur
+      name: CV-ruimte
+    - type: tile
+      entity: sensor.smo_40_current_outd_temp_bt1
+      name: Buiten
+    - type: tile
+      entity: sensor.smo_40_room_temperature_bt50
+      name: Warmtepomp kamersensor (BT50)
+  - type: grid
+    cards:
+    - type: heading
+      heading: Luchtvochtigheid (rood boven 65%)
+      heading_style: title
+      icon: mdi:water-percent
+    - type: gauge
+      entity: sensor.kamersensor_woonkamer_luchtvochtigheid
+      name: Woonkamer
+      min: 0
+      max: 100
+      needle: true
+      segments:
+      - from: 0
+        color: '#ff9800'
+      - from: 30
+        color: '#4caf50'
+      - from: 60
+        color: '#ff9800'
+      - from: 65
+        color: '#f44336'
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: gauge
+      entity: sensor.kamersensor_eetkamer_luchtvochtigheid
+      name: Eetkamer
+      min: 0
+      max: 100
+      needle: true
+      segments:
+      - from: 0
+        color: '#ff9800'
+      - from: 30
+        color: '#4caf50'
+      - from: 60
+        color: '#ff9800'
+      - from: 65
+        color: '#f44336'
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: gauge
+      entity: sensor.kamersensor_alfred_luchtvochtigheid_2
+      name: Alfred
+      min: 0
+      max: 100
+      needle: true
+      segments:
+      - from: 0
+        color: '#ff9800'
+      - from: 30
+        color: '#4caf50'
+      - from: 60
+        color: '#ff9800'
+      - from: 65
+        color: '#f44336'
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: gauge
+      entity: sensor.kamersensor_hal_luchtvochtigheid
+      name: Hal
+      min: 0
+      max: 100
+      needle: true
+      segments:
+      - from: 0
+        color: '#ff9800'
+      - from: 30
+        color: '#4caf50'
+      - from: 60
+        color: '#ff9800'
+      - from: 65
+        color: '#f44336'
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: gauge
+      entity: sensor.kamersensor_madoe_luchtvochtigheid
+      name: Madoe
+      min: 0
+      max: 100
+      needle: true
+      segments:
+      - from: 0
+        color: '#ff9800'
+      - from: 30
+        color: '#4caf50'
+      - from: 60
+        color: '#ff9800'
+      - from: 65
+        color: '#f44336'
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: gauge
+      entity: sensor.kamersensor_slaapkamer_beneden_luchtvochtigheid
+      name: Slaapkamer AlMo
+      min: 0
+      max: 100
+      needle: true
+      segments:
+      - from: 0
+        color: '#ff9800'
+      - from: 30
+        color: '#4caf50'
+      - from: 60
+        color: '#ff9800'
+      - from: 65
+        color: '#f44336'
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: gauge
+      entity: sensor.cv_ruimtesensor_luchtvochtigheid
+      name: CV-ruimte
+      min: 0
+      max: 100
+      needle: true
+      segments:
+      - from: 0
+        color: '#ff9800'
+      - from: 30
+        color: '#4caf50'
+      - from: 60
+        color: '#ff9800'
+      - from: 65
+        color: '#f44336'
+      grid_options:
+        columns: 6
+        rows: auto
+  - type: grid
+    cards:
+    - type: heading
+      heading: Batterijen
+      heading_style: title
+      icon: mdi:battery
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_woonkamer_batterij
+        above: 14.99
+      card:
+        type: tile
+        entity: sensor.kamersensor_woonkamer_batterij
+        name: Woonkamer
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_woonkamer_batterij
+        below: 15
+      card:
+        type: tile
+        entity: sensor.kamersensor_woonkamer_batterij
+        name: Woonkamer
+        color: red
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_eetkamer_batterij
+        above: 14.99
+      card:
+        type: tile
+        entity: sensor.kamersensor_eetkamer_batterij
+        name: Eetkamer
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_eetkamer_batterij
+        below: 15
+      card:
+        type: tile
+        entity: sensor.kamersensor_eetkamer_batterij
+        name: Eetkamer
+        color: red
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_alfred_batterij
+        above: 14.99
+      card:
+        type: tile
+        entity: sensor.kamersensor_alfred_batterij
+        name: Alfred
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_alfred_batterij
+        below: 15
+      card:
+        type: tile
+        entity: sensor.kamersensor_alfred_batterij
+        name: Alfred
+        color: red
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_hal_batterij
+        above: 14.99
+      card:
+        type: tile
+        entity: sensor.kamersensor_hal_batterij
+        name: Hal
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_hal_batterij
+        below: 15
+      card:
+        type: tile
+        entity: sensor.kamersensor_hal_batterij
+        name: Hal
+        color: red
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_madoe_batterij
+        above: 14.99
+      card:
+        type: tile
+        entity: sensor.kamersensor_madoe_batterij
+        name: Madoe
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_madoe_batterij
+        below: 15
+      card:
+        type: tile
+        entity: sensor.kamersensor_madoe_batterij
+        name: Madoe
+        color: red
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_slaapkamer_beneden_batterij
+        above: 14.99
+      card:
+        type: tile
+        entity: sensor.kamersensor_slaapkamer_beneden_batterij
+        name: Slaapkamer AlMo
+    - type: conditional
+      conditions:
+      - condition: numeric_state
+        entity: sensor.kamersensor_slaapkamer_beneden_batterij
+        below: 15
+      card:
+        type: tile
+        entity: sensor.kamersensor_slaapkamer_beneden_batterij
+        name: Slaapkamer AlMo
+        color: red
+  - type: grid
+    cards:
+    - type: heading
+      heading: Verloop
+      heading_style: title
+      icon: mdi:chart-line
+    - type: history-graph
+      title: Temperatuur (48 uur, incl. buiten)
+      hours_to_show: 48
+      entities:
+      - entity: sensor.kamersensor_woonkamer_temperatuur
+        name: Woonkamer
+      - entity: sensor.kamersensor_eetkamer_temperatuur
+        name: Eetkamer
+      - entity: sensor.kamersensor_alfred_temperatuur_2
+        name: Alfred
+      - entity: sensor.kamersensor_hal_temperatuur
+        name: Hal
+      - entity: sensor.kamersensor_madoe_temperatuur
+        name: Madoe
+      - entity: sensor.kamersensor_slaapkamer_beneden_temperatuur
+        name: Slaapkamer AlMo
+      - entity: sensor.cv_ruimtesensor_temperatuur
+        name: CV-ruimte
+      - entity: sensor.smo_40_current_outd_temp_bt1
+        name: Buiten
+      grid_options:
+        columns: 18
+        rows: auto
+    - type: history-graph
+      title: Luchtvochtigheid (48 uur)
+      hours_to_show: 48
+      entities:
+      - entity: sensor.kamersensor_woonkamer_luchtvochtigheid
+        name: Woonkamer
+      - entity: sensor.kamersensor_eetkamer_luchtvochtigheid
+        name: Eetkamer
+      - entity: sensor.kamersensor_alfred_luchtvochtigheid_2
+        name: Alfred
+      - entity: sensor.kamersensor_hal_luchtvochtigheid
+        name: Hal
+      - entity: sensor.kamersensor_madoe_luchtvochtigheid
+        name: Madoe
+      - entity: sensor.kamersensor_slaapkamer_beneden_luchtvochtigheid
+        name: Slaapkamer AlMo
+      - entity: sensor.cv_ruimtesensor_luchtvochtigheid
+        name: CV-ruimte
+      grid_options:
+        columns: 18
+        rows: auto
+    - type: statistics-graph
+      title: Dagminimum, gemiddelde en maximum (14 dagen)
+      chart_type: line
+      period: day
+      days_to_show: 14
+      stat_types:
+      - min
+      - mean
+      - max
+      entities:
+      - entity: sensor.kamersensor_woonkamer_temperatuur
+        name: Woonkamer
+      - entity: sensor.kamersensor_eetkamer_temperatuur
+        name: Eetkamer
+      - entity: sensor.kamersensor_alfred_temperatuur_2
+        name: Alfred
+      - entity: sensor.kamersensor_hal_temperatuur
+        name: Hal
+      - entity: sensor.kamersensor_madoe_temperatuur
+        name: Madoe
+      - entity: sensor.kamersensor_slaapkamer_beneden_temperatuur
+        name: Slaapkamer AlMo
+      grid_options:
+        columns: 36
+        rows: auto
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Warmtepomp - gemiddelde buitentemperatuur en stookgrens (14 dagen)
+        show_states: true
+        colorize_states: true
+      graph_span: 14d
+      yaxis:
+      - id: temp
+        decimals: 0
+        apex_config:
+          forceNiceScale: true
+          title:
+            text: °C
+      apex_config:
+        chart:
+          height: 250px
+        stroke:
+          width:
+          - 3
+          - 2
+      series:
+      - entity: sensor.smo_40_average_outdoor_temp_bt1
+        name: Gem. buiten (BT1)
+        yaxis_id: temp
+        type: line
+        color: '#2196f3'
+        stroke_width: 3
+        group_by:
+          duration: 1h
+          func: last
+          fill: last
+      - entity: number.smo_40_stop_heating
+        name: Stop verwarming
+        yaxis_id: temp
+        type: line
+        curve: stepline
+        color: '#f44336'
+        stroke_width: 2
+        group_by:
+          duration: 1h
+          func: last
+          fill: last
+      grid_options:
+        columns: 36
+        rows: auto
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: 'CV vraag (14 dagen, per uur: was er vraag)'
+        show_states: false
+      graph_span: 14d
+      apex_config:
+        chart:
+          type: bar
+          height: 200px
+          stacked: true
+        plotOptions:
+          bar:
+            columnWidth: 100%
+        stroke:
+          width: 0
+        yaxis:
+          min: -1
+          max: 1
+          tickAmount: 2
+          title:
+            text: Status
+          labels:
+            formatter: "EVAL:function(val) {\n  if (val === 1) return 'Actief';\n  if (val === -1) return 'Niet actief';\n  return '';\n}\n"
+        annotations:
+          yaxis:
+          - y: 0
+            borderColor: '#666'
+      series:
+      - entity: binary_sensor.cv_pomp_detectie_cv_pomp_vraag
+        name: CV vraag actief
+        type: column
+        color: '#4caf50'
+        group_by:
+          duration: 1h
+          func: max
+          fill: last
+          start_with_last: true
+        transform: 'return x === ''on'' ? 1 : 0;'
+      - entity: binary_sensor.cv_pomp_detectie_cv_pomp_vraag
+        name: CV vraag niet actief
+        type: column
+        color: '#9e9e9e'
+        group_by:
+          duration: 1h
+          func: min
+          fill: last
+          start_with_last: true
+        transform: 'return x === ''on'' ? 0 : -1;'
+      grid_options:
+        columns: 36
+        rows: auto
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Zonblok - zonverwachting om 03:00 tegen drempel (14 dagen)
+        show_states: true
+        colorize_states: true
+      graph_span: 14d
+      yaxis:
+      - min: 0
+        decimals: 0
+        apex_config:
+          forceNiceScale: true
+          title:
+            text: kWh
+      apex_config:
+        chart:
+          height: 250px
+        stroke:
+          width:
+          - 0
+          - 2
+        plotOptions:
+          bar:
+            columnWidth: 60%
+      series:
+      - entity: sensor.zonblok_voorspelling_vandaag_03u
+        name: Verwachting (03:00)
+        type: column
+        color: '#ffc107'
+        group_by:
+          duration: 1d
+          func: last
+          fill: last
+      - entity: input_number.zonblok_drempel_kwh
+        name: Drempel verlagen
+        type: line
+        curve: stepline
+        color: '#f44336'
+        stroke_width: 2
+        group_by:
+          duration: 1d
+          func: last
+          fill: last
+      grid_options:
+        columns: 36
+        rows: auto
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Zonblok - warmtepomp verlagen bij zon (14 dagen)
+        show_states: true
+        colorize_states: true
+      graph_span: 14d
+      yaxis:
+      - id: temp
+        decimals: 1
+        apex_config:
+          forceNiceScale: true
+          title:
+            text: °C
+      apex_config:
+        chart:
+          height: 250px
+        stroke:
+          width:
+          - 3
+          - 2
+          - 2
+      series:
+      - entity: sensor.smo_40_room_temperature_bt50
+        name: Kamertemperatuur WP (BT50)
+        yaxis_id: temp
+        type: line
+        color: '#2196f3'
+        stroke_width: 3
+        group_by:
+          duration: 30min
+          func: avg
+          fill: last
+      - entity: input_number.zonblok_bt50_min_start
+        name: Min. om te verlagen
+        yaxis_id: temp
+        type: line
+        curve: stepline
+        color: '#ff9800'
+        stroke_width: 2
+        group_by:
+          duration: 1h
+          func: last
+          fill: last
+      - entity: input_number.zonblok_bt50_vrijgave
+        name: 'Ondergrens: WP start weer'
+        yaxis_id: temp
+        type: line
+        curve: stepline
+        color: '#f44336'
+        stroke_width: 2
+        group_by:
+          duration: 1h
+          func: last
+          fill: last
+      grid_options:
+        columns: 36
+        rows: auto
+    - type: custom:apexcharts-card
+      header:
+        show: true
+        title: Zonblok D1 - WP verlaagd (14 dagen, per uur)
+        show_states: false
+      graph_span: 14d
+      apex_config:
+        chart:
+          type: bar
+          height: 200px
+          stacked: true
+        plotOptions:
+          bar:
+            columnWidth: 100%
+        stroke:
+          width: 0
+        yaxis:
+          min: -1
+          max: 1
+          tickAmount: 2
+          title:
+            text: Status
+          labels:
+            formatter: "EVAL:function(val) {\n  if (val === 1) return 'Verlaagd';\n  if (val === -1) return 'Normaal';\n  return '';\n}\n"
+        annotations:
+          yaxis:
+          - y: 0
+            borderColor: '#666'
+      series:
+      - entity: binary_sensor.opta1_energie_master_wp_comfort_verwarming_actief
+        name: D1 verlaagd
+        type: column
+        color: '#ff9800'
+        group_by:
+          duration: 1h
+          func: max
+          fill: last
+          start_with_last: true
+        transform: 'return x === ''on'' ? 1 : 0;'
+      - entity: binary_sensor.opta1_energie_master_wp_comfort_verwarming_actief
+        name: D1 normaal
+        type: column
+        color: '#9e9e9e'
+        group_by:
+          duration: 1h
+          func: min
+          fill: last
+          start_with_last: true
+        transform: 'return x === ''on'' ? 0 : -1;'
+      grid_options:
+        columns: 36
+        rows: auto
+    column_span: 3
